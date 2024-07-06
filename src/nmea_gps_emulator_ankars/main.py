@@ -11,7 +11,6 @@ from utils import position_input, ip_port_input, trans_proto_input, heading_inpu
     change_input, serial_config_input, alt_input
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
-
 class Menu:
     """
     Display a menu and respond to choices when run.
@@ -37,11 +36,8 @@ class Menu:
 .##..##..##..........##..........##......##...##..##..##..##......##..##....##....##..##..##..##.
 ..####...##.......####...........######..##...##...####...######..##..##....##.....####...##..##.
 -------------------------------------------------------------------------------------------------
-        ''')
-        print('### -------------------------------- ###')
-        print('### GPS Emulator                     ###')
-        print('###  based on source code by luk-kop ###')
-        print('### -------------------------------- ###')
+based on source code by luk-kop
+                      ''')
         print('### Choose emulator option: ###')
         print('### -------------------------------- ###')
         print('1 - NMEA Serial port output')
