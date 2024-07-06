@@ -10,7 +10,7 @@ dependencies = [
     "certifi==2024.6.2",
 ]
 readme = "README.md"
-requires-python = ">= 3.8"
+requires-python = ">= 3.12"
 license = "MIT"
 
 [build-system]
