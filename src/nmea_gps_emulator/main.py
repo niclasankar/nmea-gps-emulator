@@ -6,10 +6,10 @@ import threading
 import uuid
 import logging
 
-from nmea_gps_full import NmeaMsg
+from nmea_gps import NmeaMsg
 from utils import position_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
-    heading_speed_input, serial_config_input
-from custom_thread import NmeaStreamThread, NmeaSerialThread, run_telnet_server_thread
+    change_input, serial_config_input, alt_input
+from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
 
 class Menu:
@@ -23,24 +23,24 @@ class Menu:
             '1': self.nmea_serial,
             '2': self.nmea_tcp_server,
             '3': self.nmea_stream,
-            '4': self.quit,
+            '4': self.nmea_output,
+            #'5': self.values_output,
+            '0': self.quit,
         }
 
     def display_menu(self):
-        print(r'''
-
-..####...#####....####...........######..##...##..##..##..##.......####...######...####...#####..
-.##......##..##..##..............##......###.###..##..##..##......##..##....##....##..##..##..##.
-.##.###..#####....####...........####....##.#.##..##..##..##......######....##....##..##..#####..
-.##..##..##..........##..........##......##...##..##..##..##......##..##....##....##..##..##..##.
-..####...##.......####...........######..##...##...####...######..##..##....##.....####...##..##.
-.................................................................................................
-        ''')
+        print('### -------------------------------- ###')
+        print('### GPS Emulator                     ###')
+        print('###  based on source code by luk-kop ###')
+        print('### -------------------------------- ###')
         print('### Choose emulator option: ###')
-        print('1 - NMEA Serial')
+        print('### -------------------------------- ###')
+        print('1 - NMEA Serial port output')
         print('2 - NMEA TCP Server')
         print('3 - NMEA TCP or UDP Stream')
-        print('4 - Quit')
+        print('4 - NMEA console debug output (only GPGGA)')
+        print('5 - Values only console output')
+        print('0 - Quit')
 
     def run(self):
         """
@@ -59,13 +59,14 @@ class Menu:
                 nav_data_dict = {
                     'gps_speed': 10.035,
                     'gps_heading': 45.0,
-                    'gps_altitude_amsl': 15.2,
+                    'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
-                # Position, initial course and speed queries
+                # Position, initial course, speed and altitude queries
                 nav_data_dict['position'] = position_input()
                 nav_data_dict['gps_heading'] = heading_input()
                 nav_data_dict['gps_speed'] = speed_input()
+                nav_data_dict['gps_altitude_amsl'] = alt_input()
 
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position=nav_data_dict['position'],
@@ -85,25 +86,28 @@ class Menu:
                     time.sleep(2)
                     first_run = False
                 try:
-                    prompt = input('Press "Enter" to change course/speed or "Ctrl + c" to exit ...\n')
+                    prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit ...\n')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
                 if prompt == '':
-                    new_head, new_speed = heading_speed_input()
+                    new_heading, new_speed, new_altitude = change_input()
                     # Get all 'nmea_srv*' telnet server threads
                     thread_list = [thread for thread in threading.enumerate() if thread.name.startswith('nmea_srv')]
                     if thread_list:
                         for thr in thread_list:
-                            # Update speed and heading
+                            # Update speed, heading and altitude
                             # a = time.time()
-                            thr.set_heading(new_head)
+                            thr.set_heading(new_heading)
                             thr.set_speed(new_speed)
+                            thr.set_altitude(new_altitude)
                             # print(time.time() - a)
                     else:
-                        # Set targeted head and speed without connected clients
-                        self.nmea_obj.heading_targeted = new_head
+                        # Set targeted head, speed and altitude without connected clients
+                        print("Updated data")
+                        self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
+                        self.nmea_obj.altitude_targeted = new_altitude
                     print()
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -122,9 +126,31 @@ class Menu:
                                        nmea_object=self.nmea_obj)
         self.nmea_thread.start()
 
+    def nmea_output(self):
+        """
+        Runs in debug mode which outputs NMEA messages to console
+        """
+        output_type = 0
+        self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
+                                       daemon=True,
+                                       output_type=0,
+                                       nmea_object=self.nmea_obj)
+        self.nmea_thread.start()
+
+    def values_output(self):
+        """
+        Runs in debug mode which outputs values to console
+        """
+        output_type = 1
+        self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
+                                       daemon=True,
+                                       output_type=1,
+                                       nmea_object=self.nmea_obj)
+        self.nmea_thread.start()
+
     def nmea_tcp_server(self):
         """
-        Runs telnet server witch emulates NMEA device.
+        Runs telnet server which emulates NMEA device.
         """
         # Local TCP server IP address and port number.
         srv_ip_address, srv_port = ip_port_input('telnet')
@@ -161,7 +187,5 @@ if __name__ == '__main__':
     # Logging config
     log_format = '%(asctime)s: %(message)s'
     logging.basicConfig(format=log_format, level=logging.INFO, datefmt='%H:%M:%S')
-
+    # Open menu
     Menu().run()
-
-
