@@ -1,19 +1,17 @@
 [project]
-name = "nmea-gps-emulator"
-version = "0.1.0"
+name = "nmea-gps-emulator-ankars"
+version = "0.1.1"
 description = "GNSS Emulator for serial or network output"
+author = "Niclas Ankar <niclasankar@outlook.com>"
 dependencies = [
     "psutil>=5.8.0",
-    "pyproj>=3.0.0",
+    "pyproj>=3.6.0",
     "pyserial>=3.5",
-    "certifi>=2024.6.2",
+    "certifi==2024.6.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
 license = "MIT"
-
-[project.scripts]
-"nmea-gps-emulator" = "nmea_gps_emulator:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -21,10 +19,16 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = []
+dev-dependencies = [
+    "pytest>=8.2.2",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/nmea_gps_emulator"]
+packages = ["src/nmea_gps_emulator_ankars"]
+
+[scripts]
+start-emu = "__init__:hello"
+start-main = "main:run"
