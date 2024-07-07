@@ -9,6 +9,7 @@ import logging
 from nmea_gps import NmeaMsg
 from utils import position_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
     change_input, serial_config_input, alt_input
+
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
 class Menu:
@@ -22,8 +23,8 @@ class Menu:
             '1': self.nmea_serial,
             '2': self.nmea_tcp_server,
             '3': self.nmea_stream,
-            '4': self.nmea_output,
-            #'5': self.values_output,
+            '4': self.nmea_logging,
+            '5': self.values_logging,
             '0': self.quit,
         }
 
@@ -43,8 +44,7 @@ based on source code by luk-kop
         print('1 - NMEA Serial port output')
         print('2 - NMEA TCP Server')
         print('3 - NMEA TCP or UDP Stream')
-        print('4 - NMEA console debug output (only GPGGA)')
-        print('5 - Values only console output')
+        print('4 - NMEA output to log (only GPGGA)')
         print('0 - Quit')
 
     def run(self):
@@ -131,9 +131,9 @@ based on source code by luk-kop
                                        nmea_object=self.nmea_obj)
         self.nmea_thread.start()
 
-    def nmea_output(self):
+    def nmea_logging(self):
         """
-        Runs in debug mode which outputs NMEA messages to console
+        Runs in debug mode which outputs NMEA messages to log
         """
         output_type = 0
         self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
@@ -142,9 +142,9 @@ based on source code by luk-kop
                                        nmea_object=self.nmea_obj)
         self.nmea_thread.start()
 
-    def values_output(self):
+    def values_logging(self):
         """
-        Runs in debug mode which outputs values to console
+        Runs in debug mode which outputs values to log (not implemented)
         """
         output_type = 1
         self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
@@ -189,9 +189,22 @@ based on source code by luk-kop
 
 
 if __name__ == '__main__':
-    # Logging config
-    log_format = '%(asctime)s: %(message)s'
-    logging.basicConfig(format=log_format, level=logging.INFO, datefmt='%H:%M:%S')
+    # System logging config
+    #system_log_format = '%(asctime)s: %(message)s'
+    #system_handler = logging.FileHandler('emulator_system.log')        
+    #system_handler.setFormatter(system_log_format)
+    #system_logger = logging.getLogger('system')
+    #system_logger.setLevel(logging.INFO)
+    #system_logger.addHandler(system_handler)
+    # logging.basicConfig(filename='emulator.log', format=system_log_format, level=logging.INFO, datefmt='%H:%M:%S')
+    # Data logging config
+    #data_log_format = '%(message)s'
+    #data_handler = logging.FileHandler('emulator_data.log')        
+    #data_handler.setFormatter(data_log_format)
+    #data_logger = logging.getLogger('data')
+    #data_logger.setLevel(logging.INFO)
+    #data_logger.addHandler(data_handler)
+    # logging.basicConfig(filename='data.log', format=system_log_format, level=logging.INFO, datefmt='%H:%M:%S')
     # Open menu
     Menu().run()
 

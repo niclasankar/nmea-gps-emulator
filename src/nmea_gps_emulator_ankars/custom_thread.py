@@ -8,7 +8,7 @@ import uuid
 
 import serial.tools.list_ports
 
-from utils import exit_script
+from utils import exit_script, system_log, data_log, error_log
 
 def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> None:
     """
@@ -33,7 +33,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             # The server is blocked (suspended) and is waiting for a client connection.
             conn, ip_add = s.accept()
             # print(f'\n*** Connected with {ip_add[0]}:{ip_add[1]} ***')
-            logging.info(f'Connected with {ip_add[0]}:{ip_add[1]}')
+            system_log(f'Connected with {ip_add[0]}:{ip_add[1]}')
             thread_list = [thread.name for thread in threading.enumerate()]
             if len([thread_name for thread_name in thread_list if thread_name.startswith('nmea_srv')]) < max_threads:
                 nmea_srv_thread = NmeaSrvThread(name=f'nmea_srv{uuid.uuid4().hex}',
@@ -46,7 +46,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
                 # Close connection if number of scheduler jobs > max_sched_jobs
                 conn.close()
                 # print(f'\n*** Connection closed with {ip_add[0]}:{ip_add[1]} ***')
-                logging.info(f'Connection closed with {ip_add[0]}:{ip_add[1]}')
+                system_log(f'Connection closed with {ip_add[0]}:{ip_add[1]}')
 
 
 class NmeaSrvThread(threading.Thread):
@@ -107,7 +107,7 @@ class NmeaSrvThread(threading.Thread):
                 except (BrokenPipeError, OSError):
                     self.conn.close()
                     # print(f'\n*** Connection closed with {self.ip_add[0]}:{self.ip_add[1]} ***')
-                    logging.info(f'Connection closed with {self.ip_add[0]}:{self.ip_add[1]}')
+                    system_log(f'Connection closed with {self.ip_add[0]}:{self.ip_add[1]}')
                     # Close thread
                     sys.exit()
             time.sleep(1 - (time.perf_counter() - timer_start))
@@ -128,6 +128,7 @@ class NmeaStreamThread(NmeaSrvThread):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.connect((self.ip_add, self.port))
                     print(f'\n*** Sending NMEA data - TCP stream to {self.ip_add}:{self.port}... ***\n')
+                    system_log(f'Started sending NMEA data - TCP stream to {self.ip_add}:{self.port}')
                     while True:
                         timer_start = time.perf_counter()
                         with self._lock:
@@ -143,11 +144,7 @@ class NmeaStreamThread(NmeaSrvThread):
                                 self._altitude_cache = self.altitude
                             nmea_list = [f'{_}' for _ in next(self.nmea_object)]
                             for nmea in nmea_list:
-                                # Temp added filter only GPGGA
-                                gpgga_regex_pattern = r'(\$GPGGA)'
-                                mo = re.match(gpgga_regex_pattern, nmea)
-                                if mo:
-                                    s.send(nmea.encode())
+                                s.send(nmea.encode())
                                 time.sleep(0.05)
                             # Start next loop after 1 sec
                         time.sleep(1 - (time.perf_counter() - timer_start))
@@ -157,6 +154,7 @@ class NmeaStreamThread(NmeaSrvThread):
         elif self.proto == 'udp':
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 print(f'\n*** Sending NMEA data - UDP stream to {self.ip_add}:{self.port}... ***\n')
+                system_log(f'Started sending NMEA data - UDP stream to {self.ip_add}:{self.port}')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
@@ -173,11 +171,7 @@ class NmeaStreamThread(NmeaSrvThread):
                         nmea_list = [f'{_}' for _ in next(self.nmea_object)]
                         for nmea in nmea_list:
                             try:
-                                # Temp added filter only GPGGA
-                                gpgga_regex_pattern = r'(\$GPGGA)'
-                                mo = re.match(gpgga_regex_pattern, nmea)
-                                if mo:
-                                    s.sendto(nmea.encode(), (self.ip_add, self.port))
+                                s.sendto(nmea.encode(), (self.ip_add, self.port))
                                 time.sleep(0.05)
                             except OSError as err:
                                 print(f'*** Error: {err.strerror} ***')
@@ -206,6 +200,7 @@ class NmeaSerialThread(NmeaSrvThread):
                     f'Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
                     f'{self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]}')
                 print('Sending NMEA data...')
+                system_log(f'Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
@@ -227,16 +222,15 @@ class NmeaSerialThread(NmeaSrvThread):
         except serial.serialutil.SerialException as error:
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            logging.error(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
+            system_log(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
             exit_script()
 
 class NmeaOutputThread(NmeaSrvThread):
     """
-    A class that represents a thread dedicated for console output for debugging.
+    A class that represents a thread dedicated for logging output for debugging.
     """
     def __init__(self, output_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print(output_type)
 
     def run(self):
         # Output data to console.
@@ -259,11 +253,13 @@ class NmeaOutputThread(NmeaSrvThread):
                         gpgga_regex_pattern = r'(\$GPGGA)'
                         mo = re.match(gpgga_regex_pattern, nmea)
                         if mo:
-                            print(nmea)
+                            data_log(nmea)
+                            #print(nmea)
                         time.sleep(0.05)
                     time.sleep(1.1 - (time.perf_counter() - timer_start))
         except Exception as error:
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            logging.error(f"{error_formatted}.")
+            system_log(f"{error_formatted}.")
             exit_script()
+

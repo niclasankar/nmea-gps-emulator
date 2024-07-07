@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import platform
+import logging
 
 import psutil
 import serial.tools.list_ports
@@ -318,5 +319,26 @@ def serial_config_input() -> dict:
         print(f'\n*** Error: \'{serial_set["baudrate"]}\' is wrong port\'s baudrate. ***')
     return serial_set
 
+def setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):
+    l = logging.getLogger(logger_name)
+    formatter = logging.Formatter(log_format)
+    fileHandler = logging.FileHandler(log_file, mode='w')
+    fileHandler.setFormatter(formatter)
+
+    l.setLevel(level)
+    l.addHandler(fileHandler)
+    return l
+
+def system_log(log_message):
+    system_logger.info(log_message)
+
+def data_log(log_message):
+    data_logger.info(log_message)
+
+def error_log(log_message):
+    error_logger.info(log_message)
 
 
+system_logger = setup_logger('system_logger', 'emulator_system.log')
+data_logger = setup_logger('data_logger', 'emulator_data.log')
+error_logger = setup_logger('error_logger', 'emulator_error.log') 
