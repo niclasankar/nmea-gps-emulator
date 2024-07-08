@@ -20,6 +20,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             s.bind((srv_ip_address, srv_port))
         except socket.error as err:
             print(f'\n*** Bind failed. Error: {err.strerror}. ***')
+            error_log(f'TCP Server, bind failed. Error: {err.strerror}.')
             print('Change IP/port settings or try again in next 2 minutes.')
             exit_script()
             # sys.exit()
@@ -32,7 +33,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             # Scripts waiting for client calls
             # The server is blocked (suspended) and is waiting for a client connection.
             conn, ip_add = s.accept()
-            # print(f'\n*** Connected with {ip_add[0]}:{ip_add[1]} ***')
+            print(f'\n*** Connected with {ip_add[0]}:{ip_add[1]} ***')
             system_log(f'Connected with {ip_add[0]}:{ip_add[1]}')
             thread_list = [thread.name for thread in threading.enumerate()]
             if len([thread_name for thread_name in thread_list if thread_name.startswith('nmea_srv')]) < max_threads:
@@ -233,33 +234,38 @@ class NmeaOutputThread(NmeaSrvThread):
         super().__init__(*args, **kwargs)
 
     def run(self):
-        # Output data to console.
+        # Output data to file.
+        print('Logging NMEA data...')
         try:
             while True:
                 timer_start = time.perf_counter()
                 with self._lock:
-                    # Nmea object speed and heading update
+                    # Nmea object speed update
                     if self.heading and self.heading != self._heading_cache:
                         self.nmea_object.heading_targeted = self.heading
                         self._heading_cache = self.heading
+                    # Nmea object update
                     if self.speed and self.speed != self._speed_cache:
                         self.nmea_object.speed_targeted = self.speed
                         self._speed_cache = self.speed
+                    # Nmea object altitude update
                     if self.altitude and self.altitude != self._altitude_cache:
                         self.nmea_object.altitude_targeted = self.altitude
                         self._altitude_cache = self.altitude
+                    # Create list of NMEA sentences
                     nmea_list = [f'{_}' for _ in next(self.nmea_object)]
+                    # Loop through list and log to file
                     for nmea in nmea_list:
+                        # Filter out only GPGGA
                         gpgga_regex_pattern = r'(\$GPGGA)'
                         mo = re.match(gpgga_regex_pattern, nmea)
                         if mo:
                             data_log(nmea)
-                            #print(nmea)
                         time.sleep(0.05)
                     time.sleep(1.1 - (time.perf_counter() - timer_start))
         except Exception as error:
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            system_log(f"{error_formatted}.")
+            error_log(f"{error_formatted}.")
             exit_script()
 

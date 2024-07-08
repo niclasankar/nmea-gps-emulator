@@ -24,7 +24,6 @@ class Menu:
             '2': self.nmea_tcp_server,
             '3': self.nmea_stream,
             '4': self.nmea_logging,
-            '5': self.values_logging,
             '0': self.quit,
         }
 
@@ -39,7 +38,7 @@ class Menu:
 -------------------------------------------------------------------------------------------------
 based on source code by luk-kop
                       ''')
-        print('### Choose emulator option: ###')
+        print('### Choose emulator mode: ###')
         print('### -------------------------------- ###')
         print('1 - NMEA Serial port output')
         print('2 - NMEA TCP Server')
@@ -139,17 +138,6 @@ based on source code by luk-kop
         self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
                                        daemon=True,
                                        output_type=0,
-                                       nmea_object=self.nmea_obj)
-        self.nmea_thread.start()
-
-    def values_logging(self):
-        """
-        Runs in debug mode which outputs values to log (not implemented)
-        """
-        output_type = 1
-        self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
-                                       daemon=True,
-                                       output_type=1,
                                        nmea_object=self.nmea_obj)
         self.nmea_thread.start()
 

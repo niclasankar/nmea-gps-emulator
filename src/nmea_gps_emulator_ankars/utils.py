@@ -269,13 +269,16 @@ def serial_config_input() -> dict:
 
     # List of available serial ports.
     ports_connected = serial.tools.list_ports.comports(include_links=False)
+
     # List of available serial port's names.
     ports_connected_names = [port.device for port in ports_connected]
     print('\n### Connected Serial Ports: ###')
     for port in sorted(ports_connected):
         print(f'   - {port}')
+    
     # Check OS platform.
     platform_os = platform.system()
+
     # Asks for serial port name and checks the name validity.
     while True:
         if platform_os.lower() == 'linux':
@@ -305,6 +308,8 @@ def serial_config_input() -> dict:
     # Serial port settings:
     baudrate_list = ['300', '600', '1200', '2400', '4800', '9600', '14400',
                      '19200', '38400', '57600', '115200', '128000']
+    
+    # Ask for baud rate, defaults to 9600 (NMEA standard)
     while True:
         print('\n### Enter serial baudrate [9600]: ###')
         try:
@@ -320,14 +325,23 @@ def serial_config_input() -> dict:
     return serial_set
 
 def setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):
-    l = logging.getLogger(logger_name)
+    """
+    The function creates a logging instance and returns it.
+    """
+    # Get logger instance
+    new_logger = logging.getLogger(logger_name)
+
+    # Create formatter, defaults to '%(message)s'
     formatter = logging.Formatter(log_format)
+
+    # Create file handler and add formatter
     fileHandler = logging.FileHandler(log_file, mode='w')
     fileHandler.setFormatter(formatter)
 
-    l.setLevel(level)
-    l.addHandler(fileHandler)
-    return l
+    # Set level add handler
+    new_logger.setLevel(level)
+    new_logger.addHandler(fileHandler)
+    return new_logger
 
 def system_log(log_message):
     system_logger.info(log_message)
