@@ -338,7 +338,6 @@ def data_log(log_message):
 def error_log(log_message):
     error_logger.info(log_message)
 
-
 system_logger = setup_logger('system_logger', 'emulator_system.log')
 data_logger = setup_logger('data_logger', 'emulator_data.log')
 error_logger = setup_logger('error_logger', 'emulator_error.log') 

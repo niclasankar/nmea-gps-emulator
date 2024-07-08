@@ -189,22 +189,6 @@ based on source code by luk-kop
 
 
 if __name__ == '__main__':
-    # System logging config
-    #system_log_format = '%(asctime)s: %(message)s'
-    #system_handler = logging.FileHandler('emulator_system.log')        
-    #system_handler.setFormatter(system_log_format)
-    #system_logger = logging.getLogger('system')
-    #system_logger.setLevel(logging.INFO)
-    #system_logger.addHandler(system_handler)
-    # logging.basicConfig(filename='emulator.log', format=system_log_format, level=logging.INFO, datefmt='%H:%M:%S')
-    # Data logging config
-    #data_log_format = '%(message)s'
-    #data_handler = logging.FileHandler('emulator_data.log')        
-    #data_handler.setFormatter(data_log_format)
-    #data_logger = logging.getLogger('data')
-    #data_logger.setLevel(logging.INFO)
-    #data_logger.addHandler(data_handler)
-    # logging.basicConfig(filename='data.log', format=system_log_format, level=logging.INFO, datefmt='%H:%M:%S')
     # Open menu
     Menu().run()
 
