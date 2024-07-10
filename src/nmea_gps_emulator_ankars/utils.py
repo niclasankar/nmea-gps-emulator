@@ -7,17 +7,111 @@ import logging
 
 import psutil
 import serial.tools.list_ports
+from nmea_gps import NmeaMsg
 
-def exit_script():
+def exit_script(errortx = 'unspecified'):
     """
     The function enables to terminate the script (main thread) from the inside of child thread.
     """
     current_script_pid = os.getpid()
     current_script = psutil.Process(current_script_pid)
-    print('*** Closing the script... ***\n')
+    # TODO: Remove script name
+    print(f'*** Closing the script ({errortx})... ***\n')
     time.sleep(1)
     current_script.terminate()
 
+def position_sep_input() -> dict:
+    """
+    The function asks for position and checks validity of entry data.
+    Function returns position dictionary.
+    """
+    position_dict = {
+        'latitude_value': '57.70011131502446',
+        'latitude_nmea_value': '5742.011131502446',
+        'latitude_direction': 'N',
+        'longitude_value': '11.988278521104876',
+        'longitude_nmea_value': '01159.8278521104876',
+        'longitude_direction': 'E',
+    }
+    try:
+        # Input of latitude
+        while True:
+            try:
+                print('\n### Enter unit position latitude (defaults to 57.70011131502446: ###')
+                latitude_data = input('>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            if latitude_data == '':
+                # Default position
+                latitude_data = 57.70011131502446
+                position_dict['latitude_value'] = latitude_data
+                break
+            latitude_regex_pattern = r'^(\+|-)?(?:90(?:(?:\.0{1,14})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,14})?))$'
+            mo = re.fullmatch(latitude_regex_pattern, str(latitude_data))
+            if mo:
+                position_dict['latitude_value'] = float(mo.group())
+                break
+        # Input of latitude hemisphere
+        while True:
+            try:
+                print('\n### Enter unit position latitude hemisphere (defaults to N: ###')
+                latitude_hemi_data = input('>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            if latitude_hemi_data == '':
+                # Default position
+                latitude_hemi_data = 'N'
+                position_dict['latitude_direction'] = latitude_hemi_data
+                break
+            latitude_hemi_regex_pattern = r'[N,S]'
+            mo = re.fullmatch(latitude_hemi_regex_pattern, latitude_hemi_data.upper())
+            if mo:
+                position_dict['latitude_direction'] = float(mo.group())
+                break
+        # Input of longitude
+        while True:
+            try:
+                print('\n### Enter unit position longitude (defaults to 11.988278521104876: ###')
+                longitude_data = input('>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            if longitude_data == '':
+                # Default position
+                longitude_data = 11.988278521104876
+                position_dict['longitude_value'] = longitude_data
+                break
+            longitude_regex_pattern = r'^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$'
+            mo = re.fullmatch(longitude_regex_pattern, str(longitude_data))
+            if mo:
+                position_dict['longitude_value'] = float(mo.group())
+        # Input of longitude hemisphere
+        while True:
+            try:
+                print('\n### Enter unit position longitude hemisphere (defaults to E: ###')
+                longitude_hemi_data = input('>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            if longitude_hemi_data == '':
+                # Default position
+                longitude_hemi_data = 'E'
+                position_dict['longitude_direction'] = longitude_hemi_data
+                break
+            latitude_hemi_regex_pattern = r'[E,W]'
+            mo = re.fullmatch(latitude_hemi_regex_pattern, longitude_hemi_data.upper())
+            if mo:
+                position_dict['longitude_direction'] = float(mo.group())
+                break
+        #Convert lat/lon to NMEA form and store
+        position_dict['latitude_nmea_value'],position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
+        print(str(position_dict))
+        return position_dict
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
 
 def position_input() -> dict:
     """
@@ -26,7 +120,7 @@ def position_input() -> dict:
     """
     while True:
         try:
-            print('\n### Enter unit position (format - 5641.063N 01249.828E): ###')
+            print('\n### Enter unit position (format - 57.70011131502446, 11.988278521104876) (format - 5641.063N 01249.828E): ###')
             try:
                 position_data = input('>>> ')
             except KeyboardInterrupt:
@@ -35,9 +129,9 @@ def position_input() -> dict:
             if position_data == '':
                 # Default position
                 position_dict = {
-                    'latitude_value': '5641.063',
+                    'latitude_value': '57.70011131502446',
                     'latitude_direction': 'N',
-                    'longitude_value': '01249.828',
+                    'longitude_value': '11.988278521104876',
                     'longitude_direction': 'E',
                 }
                 return position_dict

@@ -7,7 +7,7 @@ import uuid
 import logging
 
 from nmea_gps import NmeaMsg
-from utils import position_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
+from utils import position_input, position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
     change_input, serial_config_input, alt_input
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
@@ -67,7 +67,8 @@ based on source code by luk-kop
                     'position': {}
                 }
                 # Position, initial course, speed and altitude queries
-                nav_data_dict['position'] = position_input()
+                #nav_data_dict['position'] = position_input()
+                nav_data_dict['position'] = position_sep_input()
                 nav_data_dict['gps_heading'] = heading_input()
                 nav_data_dict['gps_speed'] = speed_input()
                 nav_data_dict['gps_altitude_amsl'] = alt_input()

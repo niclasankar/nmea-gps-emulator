@@ -13,35 +13,44 @@ class NmeaMsg:
         # Instance attributes
         self.utc_date_time = datetime.datetime.utcnow()
         self.position = position
-        self.speed = speed
+
         # The unit's speed provided by the user during the operation of the script
+        self.speed = speed
         self.speed_targeted = speed
 
-        self.heading = heading
         # The unit's heading provided by the user during the operation of the script
+        self.heading = heading
         self.heading_targeted = heading
 
-        self.altitude = altitude
         # The unit's altitude provided by the user during the operation of the script
+        self.altitude = altitude
         self.altitude_targeted = altitude
 
         # NMEA sentences initialization - by default with 15 sats
         self.gpgsv_group = GpgsvGroup()
+        # DOP and active satellites
         self.gpgsa = Gpgsa(gpgsv_group=self.gpgsv_group)
+        # Fix data message
         self.gpgga = Gpgga(sats_count=self.gpgsa.sats_count,
                          utc_date_time=self.utc_date_time,
                          position=position,
                          altitude=altitude,
                          antenna_altitude_above_msl=altitude+2.5)
+        # Position data: position fix, time of position fix, and status
         self.gpgll = Gpgll(utc_date_time=self.utc_date_time,
                            position=position)
+        # Recommended minimum specific GPS/Transit data
         self.gprmc = Gprmc(utc_date_time=self.utc_date_time,
                            position=position,
                            sog=speed,
                            cmg=heading)
+        # True heading
         self.gphdt = Gphdt(heading=heading)
+        # Track Made Good and Ground Speed
         self.gpvtg = Gpvtg(heading_true=heading, sog_knots=speed)
+        # Time and zone
         self.gpzda = Gpzda(utc_date_time=self.utc_date_time)
+        # All sentences
         self.nmea_sentences = [self.gpgga,
                                self.gpgsa,
                                *[gpgsv for gpgsv in self.gpgsv_group.gpgsv_instances],
@@ -50,6 +59,7 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
+        print('NmeaMsg.__init__ ' + str(self.position))
 
     def __next__(self):
         utc_date_time_prev = self.utc_date_time
@@ -83,6 +93,27 @@ class NmeaMsg:
         for nmea in self.nmea_sentences:
             nmea_msgs_str += f'{nmea}'
         return nmea_msgs_str
+    
+    @staticmethod
+    def to_nmea_position(lat, lon) -> tuple:
+        # Convert decimal position to NMEA format position for messages
+        lat_degrees = int(lat)
+        try:
+            lat_minutes = round(lat % int(lat) * 60, 3)
+        except ZeroDivisionError:
+            lat_minutes = round(lat * 60, 3)
+        if lat_minutes == 60:
+            lat_degrees += 1
+            lat_minutes = 0
+        lon_degrees = int(lon)
+        try:
+            lon_minutes = round(lon % int(lon) * 60, 3)
+        except ZeroDivisionError:
+            lon_minutes = round(lon * 60, 3)
+        if lon_minutes == 60:
+            lon_degrees += 1
+            lon_minutes = 0 
+        return f'{lat_degrees:02}{lat_minutes:06.3f}', f'{lon_degrees:03}{lon_minutes:06.3f}'
 
     def position_update(self, utc_date_time_prev: datetime):
         """
@@ -94,26 +125,19 @@ class NmeaMsg:
         speed_ms = self.speed * 0.514444
         # Distance in meters.
         distance = speed_ms * time_delta
+        
         # Assignment of coords.
         lat_a = self.position['latitude_value']
         lat_direction = self.position['latitude_direction']
         lon_a = self.position['longitude_value']
         lon_direction = self.position['longitude_direction']
-        # Convert current position (start position) format to compatible with 'Geod.fwd' func.
-        if lat_direction.lower() == 'n':
-            lat_start = float(lat_a[:2]) + (float(lat_a[2:]) / 60)
-        else:
-            lat_start = - float(lat_a[:2]) - (float(lat_a[2:]) / 60)
-        if lon_direction.lower() == 'e':
-            lon_start = float(lon_a[:3]) + (float(lon_a[3:]) / 60)
-        else:
-            lon_start = - float(lon_a[:3]) - (float(lon_a[3:]) / 60)
-        # Use WGS84 ellipsoid.
-        #print(lat_start)
-        #print(lon_start)
+        
+        # Use WGS84 ellipsoid
         g = Geod(ellps='WGS84')
+
         # Forward transformation - returns longitude, latitude, back azimuth of terminus points
-        lon_end, lat_end, back_azimuth = g.fwd(lon_start, lat_start, self.heading, distance)
+        lon_end, lat_end, back_azimuth = g.fwd(lon_a, lat_a, self.heading, distance)
+
         # Change direction when cross the equator or prime meridian (Greenwich)
         if lat_end >= 0:
             lat_direction = 'N'
@@ -124,26 +148,33 @@ class NmeaMsg:
         else:
             lon_direction = 'W'
         lon_end, lat_end = abs(lon_end), abs(lat_end)
+
+        # Convert new position to NMEA form and store
+        nmea_pos_lat, nmea_pos_lon = self.to_nmea_position(lat_end,lon_end)
+        self.position['latitude_nmea_value'] = nmea_pos_lat
+        self.position['longitude_nmea_value'] = nmea_pos_lon
+
         # New GPS position after calculation.
-        lat_degrees = int(lat_end)
-        try:
-            lat_minutes = round(lat_end % int(lat_end) * 60, 3)
-        except ZeroDivisionError:
-            lat_minutes = round(lat_end * 60, 3)
-        if lat_minutes == 60:
-            lat_degrees += 1
-            lat_minutes = 0
-        lon_degrees = int(lon_end)
-        try:
-            lon_minutes = round(lon_end % int(lon_end) * 60, 3)
-        except ZeroDivisionError:
-            lon_minutes = round(lon_end * 60, 3)
-        if lon_minutes == 60:
-            lon_degrees += 1
-            lon_minutes = 0
-        self.position['latitude_value'] = f'{lat_degrees:02}{lat_minutes:06.3f}'
+        # lat_degrees = int(lat_end)
+        # try:
+        #     lat_minutes = round(lat_end % int(lat_end) * 60, 3)
+        # except ZeroDivisionError:
+        #     lat_minutes = round(lat_end * 60, 3)
+        # if lat_minutes == 60:
+        #     lat_degrees += 1
+        #     lat_minutes = 0
+        # lon_degrees = int(lon_end)
+        # try:
+        #     lon_minutes = round(lon_end % int(lon_end) * 60, 3)
+        # except ZeroDivisionError:
+        #     lon_minutes = round(lon_end * 60, 3)
+        # if lon_minutes == 60:
+        #     lon_degrees += 1
+        #     lon_minutes = 0
+
+        self.position['latitude_value'] = lat_end       #f'{lat_degrees:02}{lat_minutes:06.3f}'
         self.position['latitude_direction'] = f'{lat_direction.upper()}'
-        self.position['longitude_value'] = f'{lon_degrees:03}{lon_minutes:06.3f}'
+        self.position['longitude_value'] = lon_end      #f'{lon_degrees:03}{lon_minutes:06.3f}'
         self.position['longitude_direction'] = f'{lon_direction.upper()}'
 
     def _heading_update(self):
@@ -217,7 +248,7 @@ class NmeaMsg:
         altitude_current = self.altitude
         altitude_diff = altitude_target - altitude_current
         # Altitude increment in each position update
-        altitude_increment = 1
+        altitude_increment = 0.5
         # Immediate change of course when the increment <= turn_angle
         if abs(altitude_diff) <= altitude_increment:
             altitude_current = altitude_target
@@ -274,8 +305,9 @@ class Gpgga:
         self._utc_time = value.strftime('%H%M%S')
 
     def __str__(self) -> str:
-        nmea_output = f'{self.sentence_id},{self.utc_time}.00,{self.position["latitude_value"]},' \
-                      f'{self.position["latitude_direction"]},{self.position["longitude_value"]},' \
+        nmea_lat, nmea_lon = NmeaMsg.to_nmea_position(56.9, 12.7)
+        nmea_output = f'{self.sentence_id},{self.utc_time}.00,{self.position["latitude_nmea_value"]},' \
+                      f'{self.position["latitude_direction"]},{self.position["longitude_nmea_value"]},' \
                       f'{self.position["longitude_direction"]},{self.fix_quality},' \
                       f'{self.sats_count:02d},{self.hdop},{self.altitude},M,' \
                       f'{self.antenna_altitude_above_msl},M,{self.dgps_last_update},' \
@@ -307,8 +339,9 @@ class Gpgll:
         self._utc_time = value.strftime('%H%M%S')
 
     def __str__(self):
-        nmea_output = f'{self.sentence_id},{self.position["latitude_value"]},' \
-                      f'{self.position["latitude_direction"]},{self.position["longitude_value"]},' \
+        nmea_lat, nmea_lon = NmeaMsg.to_nmea_position(56.9, 12.7)
+        nmea_output = f'{self.sentence_id},{self.position["latitude_nmea_value"]},' \
+                      f'{self.position["latitude_direction"]},{self.position["longitude_nmea_value"]},' \
                       f'{self.position["longitude_direction"]},{self.utc_time}.000,' \
                       f'{self.data_status},{self.faa_mode}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'
@@ -355,9 +388,10 @@ class Gprmc:
         self._utc_date = value.strftime('%d%m%y')
 
     def __str__(self):
+        nmea_lat, nmea_lon = NmeaMsg.to_nmea_position(56.9, 12.7)
         nmea_output = f'{self.sentence_id},{self.utc_time}.000,{self.data_status},' \
-                      f'{self.position["latitude_value"]},{self.position["latitude_direction"]},' \
-                      f'{self.position["longitude_value"]},{self.position["longitude_direction"]},' \
+                      f'{self.position["latitude_nmea_value"]},{self.position["latitude_direction"]},' \
+                      f'{self.position["longitude_nmea_value"]},{self.position["longitude_direction"]},' \
                       f'{self.sog:.3f},{self.cmg},{self.utc_date},' \
                       f'{self.magnetic_var_value},{self.magnetic_var_direct},{self.faa_mode}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'

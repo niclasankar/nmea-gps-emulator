@@ -22,7 +22,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             print(f'\n*** Bind failed. Error: {err.strerror}. ***')
             error_log(f'TCP Server, bind failed. Error: {err.strerror}.')
             print('Change IP/port settings or try again in next 2 minutes.')
-            exit_script()
+            exit_script('Socket bind error')
             # sys.exit()
         # Start listening on socket
         s.listen(10)
@@ -151,7 +151,7 @@ class NmeaStreamThread(NmeaSrvThread):
                         time.sleep(1 - (time.perf_counter() - timer_start))
             except (OSError, TimeoutError, ConnectionRefusedError, BrokenPipeError) as err:
                 print(f'\n*** Error: {err.strerror} ***\n')
-                exit_script()
+                exit_script('Run error in NmeaStreamThread')
         elif self.proto == 'udp':
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 print(f'\n*** Sending NMEA data - UDP stream to {self.ip_add}:{self.port}... ***\n')
@@ -176,7 +176,7 @@ class NmeaStreamThread(NmeaSrvThread):
                                 time.sleep(0.05)
                             except OSError as err:
                                 print(f'*** Error: {err.strerror} ***')
-                                exit_script()
+                                exit_script('OSError in NmeaStreamThread')
                         # Start next loop after 1 sec
                     time.sleep(1 - (time.perf_counter() - timer_start))
 
@@ -224,7 +224,7 @@ class NmeaSerialThread(NmeaSrvThread):
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
             system_log(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
-            exit_script()
+            exit_script('SerialException in NmeaSerialThread')
 
 class NmeaOutputThread(NmeaSrvThread):
     """
@@ -257,15 +257,21 @@ class NmeaOutputThread(NmeaSrvThread):
                     # Loop through list and log to file
                     for nmea in nmea_list:
                         # Filter out only GPGGA
-                        gpgga_regex_pattern = r'(\$GPGGA)'
-                        mo = re.match(gpgga_regex_pattern, nmea)
-                        if mo:
-                            data_log(nmea)
+                       # gpgga_regex_pattern = r'(\$GPGGA)'
+                        #mo = re.match(gpgga_regex_pattern, nmea)
+                        #if mo:
+                        data_log(nmea)
                         time.sleep(0.05)
                     time.sleep(1.1 - (time.perf_counter() - timer_start))
+        except ArithmeticError as error2:
+            error_formatted = re.sub(r'\[(.*?)\]', '', str(error2)).strip().replace('  ', ' ').capitalize()
+            print(str(error2))
+            error_log(f"{error_formatted}. ArithmeticError")
+            exit_script('ArithmeticError')
         except Exception as error:
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            error_log(f"{error_formatted}.")
-            exit_script()
+            # TODO: Remove thread name
+            error_log(f"{error_formatted}. NmeaOutputThread")
+            exit_script(f"{error_formatted}. NmeaOutputThread")
 
