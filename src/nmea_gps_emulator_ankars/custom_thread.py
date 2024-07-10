@@ -79,9 +79,13 @@ class NmeaSrvThread(threading.Thread):
         with self._lock:
             self.altitude = altitude
 
+    def get_altitude(self):
+        return self.nmea_object.altitude
+
     def run(self):
         while True:
             timer_start = time.perf_counter()
+            print(self.nmea_object.altitude)
             with self._lock:
                 # Nmea object speed and heading update
                 if self.heading and self.heading != self._heading_cache:

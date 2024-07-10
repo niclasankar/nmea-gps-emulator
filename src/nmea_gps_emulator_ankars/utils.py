@@ -37,7 +37,7 @@ def position_sep_input() -> dict:
         # Input of latitude
         while True:
             try:
-                print('\n### Enter unit position latitude (defaults to 57.70011131502446: ###')
+                print('\n### Enter unit position latitude (defaults to 57.70011131502446): ###')
                 latitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -55,7 +55,7 @@ def position_sep_input() -> dict:
         # Input of latitude hemisphere
         while True:
             try:
-                print('\n### Enter unit position latitude hemisphere (defaults to N: ###')
+                print('\n### Enter unit position latitude hemisphere (defaults to N): ###')
                 latitude_hemi_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -73,7 +73,7 @@ def position_sep_input() -> dict:
         # Input of longitude
         while True:
             try:
-                print('\n### Enter unit position longitude (defaults to 11.988278521104876: ###')
+                print('\n### Enter unit position longitude (defaults to 11.988278521104876): ###')
                 longitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -90,7 +90,7 @@ def position_sep_input() -> dict:
         # Input of longitude hemisphere
         while True:
             try:
-                print('\n### Enter unit position longitude hemisphere (defaults to E: ###')
+                print('\n### Enter unit position longitude hemisphere (defaults to E): ###')
                 longitude_hemi_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -107,7 +107,7 @@ def position_sep_input() -> dict:
                 break
         #Convert lat/lon to NMEA form and store
         position_dict['latitude_nmea_value'],position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
-        print(str(position_dict))
+        #print(str(position_dict))
         return position_dict
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
@@ -229,14 +229,14 @@ def heading_input() -> float:
     """
     while True:
         try:
-            print('\n### Enter unit course - range 000-359 [050]: ###')
+            print('\n### Enter unit course - range 000-359 degrees (defaults to 45): ###')
             try:
                 heading_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
             if heading_data == '':
-                return 50.0
+                return 45.0
             heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
             mo = re.fullmatch(heading_regex_pattern, heading_data)
             if mo:
@@ -252,7 +252,7 @@ def speed_input() -> float:
     """
     while True:
         try:
-            print('\n### Enter unit speed in knots - range 0-999 [0]: ###')
+            print('\n### Enter unit speed in knots - range 0-999 (defaults to 2 knots): ###')
             try:
                 speed_data = input('>>> ')
             except KeyboardInterrupt:
@@ -277,7 +277,7 @@ def alt_input() -> float:
     """
     while True:
         try:
-            print('\n### Enter unit altitude in meters above sea level - range -40-9000 [30]: ###')
+            print('\n### Enter unit altitude in meters above sea level - range -40-9000 (defaults to 42): ###')
             try:
                 alt_data = input('>>> ')
             except KeyboardInterrupt:
@@ -297,14 +297,14 @@ def alt_input() -> float:
             sys.exit()
 
 
-def change_input() -> tuple:
+def change_input(self, old_course, old_speed, old_altitude) -> tuple:
     """
     The function asks for the unit's heading, speed and altitude (online).
     """
     try:
         while True:
             try:
-                heading_data = input('New course >>> ')
+                heading_data = input(f'New course (Active target {old_course})>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -312,11 +312,11 @@ def change_input() -> tuple:
             mo = re.fullmatch(heading_regex_pattern, heading_data)
             if mo:
                 heading_new = float(mo.group())
-                #print('\n\nCourse updated: ', heading_new)
+                print('\n\nCourse updated: ', heading_new)
                 break
         while True:
             try:
-                speed_data = input('New speed >>> ')
+                speed_data = input(f'New speed (Active target {old_speed})>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -327,11 +327,11 @@ def change_input() -> tuple:
                 if match.startswith('0') and match != '0':
                     match = match.lstrip('0')
                 speed_new = float(match)
-                #print('\n\nSpeed updated: ', speed_new)
+                print('\n\nSpeed updated: ', speed_new)
                 break
         while True:
             try:
-                alt_data = input('New altitude >>> ')
+                alt_data = input('New altitude (Active target {old_altitude})>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -342,7 +342,7 @@ def change_input() -> tuple:
                 if match.startswith('0') and match != '0':
                     match = match.lstrip('0')
                 altitude_new = float(match)
-                #print('\n\nAltitude updated: ', altitude_new)
+                print('\n\nAltitude updated: ', altitude_new)
                 break
         return heading_new, speed_new, altitude_new
     except KeyboardInterrupt:

@@ -149,32 +149,15 @@ class NmeaMsg:
             lon_direction = 'W'
         lon_end, lat_end = abs(lon_end), abs(lat_end)
 
-        # Convert new position to NMEA form and store
+        # Convert the new position to NMEA form and store
         nmea_pos_lat, nmea_pos_lon = self.to_nmea_position(lat_end,lon_end)
         self.position['latitude_nmea_value'] = nmea_pos_lat
         self.position['longitude_nmea_value'] = nmea_pos_lon
 
-        # New GPS position after calculation.
-        # lat_degrees = int(lat_end)
-        # try:
-        #     lat_minutes = round(lat_end % int(lat_end) * 60, 3)
-        # except ZeroDivisionError:
-        #     lat_minutes = round(lat_end * 60, 3)
-        # if lat_minutes == 60:
-        #     lat_degrees += 1
-        #     lat_minutes = 0
-        # lon_degrees = int(lon_end)
-        # try:
-        #     lon_minutes = round(lon_end % int(lon_end) * 60, 3)
-        # except ZeroDivisionError:
-        #     lon_minutes = round(lon_end * 60, 3)
-        # if lon_minutes == 60:
-        #     lon_degrees += 1
-        #     lon_minutes = 0
-
-        self.position['latitude_value'] = lat_end       #f'{lat_degrees:02}{lat_minutes:06.3f}'
+        # Store the new position
+        self.position['latitude_value'] = lat_end 
         self.position['latitude_direction'] = f'{lat_direction.upper()}'
-        self.position['longitude_value'] = lon_end      #f'{lon_degrees:03}{lon_minutes:06.3f}'
+        self.position['longitude_value'] = lon_end
         self.position['longitude_direction'] = f'{lon_direction.upper()}'
 
     def _heading_update(self):
@@ -275,6 +258,30 @@ class NmeaMsg:
         if len(hex_str) == 2:
             return hex_str.upper()
         return f'0{hex_str}'.upper()
+    
+    def get_latitude(self) -> float:
+        return self.position['latitude_value']
+
+    def get_longitude(self) -> float:
+        return self.position['latitude_value']
+
+    def get_speed(self) -> float:
+        return self.speed
+
+    def get_heading(self) -> float:
+        return self.heading
+
+    def get_altitude(self) -> float:
+        return self.altitude
+    
+    def get_targetspeed(self) -> float:
+        return self.speed_targeted
+    
+    def get_targetheading(self) -> float:
+        return self.heading_targeted
+    
+    def get_targetaltitude(self) -> float:
+        return self.altitude_targeted
 
 
 class Gpgga:

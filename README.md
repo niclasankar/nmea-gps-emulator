@@ -13,7 +13,7 @@ The **GPS NMEA Emulator** script can be used in one of the following operating m
 - NMEA UDP Stream (sends UDP packets to the specified client),
 - NMEA TCP Server (the server waits for client connections, then sends TCP packets to the connected clients - max 10 connections)
 - NMEA Serial (transmit serial data on specified RS port).
-- NMEA messages viewed in console for debugging
+- NMEA messages logged to a file
 ***
 ## Features
 - The script allows the user to enter the following data:
@@ -89,17 +89,45 @@ You can start the script using the following command:
 After starting the script correctly, the following prompt should appear in the OS console:
 
 ```bash
+-------------------------------------------------------------------------------------------------
 ..####...#####....####...........######..##...##..##..##..##.......####...######...####...#####..
 .##......##..##..##..............##......###.###..##..##..##......##..##....##....##..##..##..##.
 .##.###..#####....####...........####....##.#.##..##..##..##......######....##....##..##..#####..
 .##..##..##..........##..........##......##...##..##..##..##......##..##....##....##..##..##..##.
 ..####...##.......####...........######..##...##...####...######..##..##....##.....####...##..##.
-.................................................................................................
-        
-### Choose emulator option: ###
-1 - NMEA Serial
+-------------------------------------------------------------------------------------------------
+based on source code by luk-kop
+                      
+### Choose emulator mode: ###
+### -------------------------------- ###
+1 - NMEA Serial port output
 2 - NMEA TCP Server
 3 - NMEA TCP or UDP Stream
-4 - Quit
+4 - NMEA output to log (only GPGGA)
+0 - Quit
 >>>
 ```
+
+After selecting the mode, user is prompted for input of latitude, longitude, speed, heading and altitude.
+'''bash
+### Enter unit position latitude (defaults to 57.70011131502446: ###
+>>> 59.27567459645369
+
+### Enter unit position latitude hemisphere (defaults to N: ###
+>>> N
+
+### Enter unit position longitude (defaults to 11.988278521104876: ###
+>>> 15.212547559402127
+
+### Enter unit position longitude hemisphere (defaults to E: ###
+>>> E
+
+### Enter unit course - range 000-359 [050]: ###
+>>> 45
+
+### Enter unit speed in knots - range 0-999 [0]: ###
+>>> 2
+
+### Enter unit altitude in meters above sea level - range -40-9000 [30]: ###
+>>> 42
+'''

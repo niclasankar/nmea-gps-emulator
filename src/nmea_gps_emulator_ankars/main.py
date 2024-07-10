@@ -67,6 +67,7 @@ based on source code by luk-kop
                     'position': {}
                 }
                 # Position, initial course, speed and altitude queries
+                # TODO: Remove old input function when all is fine
                 #nav_data_dict['position'] = position_input()
                 nav_data_dict['position'] = position_sep_input()
                 nav_data_dict['gps_heading'] = heading_input()
@@ -82,7 +83,9 @@ based on source code by luk-kop
                 break
         # Changing the unit's course and speed by the user in the main thread.
         first_run = True
+
         while True:
+            print("thread: " + str(self.nmea_thread.altitude))
             if not self.nmea_thread.is_alive():
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -96,17 +99,21 @@ based on source code by luk-kop
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
                 if prompt == '':
-                    new_heading, new_speed, new_altitude = change_input()
+                    old_heading = self.nmea_obj.get_heading()
+                    old_speed = self.nmea_obj.get_speed()
+                    old_altitude = self.nmea_obj.get_altitude()
+                    new_heading, new_speed, new_altitude = change_input(self, old_heading, old_speed, old_altitude)
+
                     # Get all 'nmea_srv*' telnet server threads
                     thread_list = [thread for thread in threading.enumerate() if thread.name.startswith('nmea_srv')]
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
-                            # a = time.time()
+                            a = time.time()
                             thr.set_heading(new_heading)
                             thr.set_speed(new_speed)
                             thr.set_altitude(new_altitude)
-                            # print(time.time() - a)
+                            print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
                         print("Updated data")
