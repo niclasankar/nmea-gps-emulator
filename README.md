@@ -109,25 +109,26 @@ based on source code by luk-kop
 ```
 
 After selecting the mode, user is prompted for input of latitude, longitude, speed, heading and altitude.
+
 '''bash
-### Enter unit position latitude (defaults to 57.70011131502446: ###
+Enter unit position latitude (defaults to 57.70011131502446:) ###
 >>> 59.27567459645369
 
-### Enter unit position latitude hemisphere (defaults to N: ###
+Enter unit position latitude hemisphere (defaults to N): ###
 >>> N
 
-### Enter unit position longitude (defaults to 11.988278521104876: ###
+Enter unit position longitude (defaults to 11.988278521104876): ###
 >>> 15.212547559402127
 
-### Enter unit position longitude hemisphere (defaults to E: ###
+Enter unit position longitude hemisphere (defaults to E): ###
 >>> E
 
-### Enter unit course - range 000-359 [050]: ###
+Enter unit course - range 000-359 (defaults to 45): ###
 >>> 45
 
-### Enter unit speed in knots - range 0-999 [0]: ###
+Enter unit speed in knots - range 0-999 (defaults to 2): ###
 >>> 2
 
-### Enter unit altitude in meters above sea level - range -40-9000 [30]: ###
+Enter unit altitude in meters above sea level - range -40-9000 (defaults to 32): ###
 >>> 42
 '''
