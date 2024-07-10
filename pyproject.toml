@@ -1,7 +1,7 @@
 [project]
-name = "nmea-gps-emulator-ankars"
-version = "0.1.1"
-description = "GNSS Emulator for serial or network output"
+name = "nmea-gps-emulator"
+version = "0.2.0"
+description = "GNSS Emulator for serial, file or network output"
 author = "Niclas Ankar <niclasankar@outlook.com>"
 dependencies = [
     "psutil>=5.8.0",
@@ -27,8 +27,7 @@ dev-dependencies = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/nmea_gps_emulator_ankars"]
+packages = ["src/nmea_gps_emulator"]
 
 [scripts]
-start-emu = "__init__:hello"
 start-main = "main:run"
