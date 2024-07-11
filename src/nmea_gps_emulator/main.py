@@ -114,14 +114,13 @@ based on source code by luk-kop
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
-                            a = time.time()
+                            #a = time.time()
                             thr.set_heading(new_heading)
                             thr.set_speed(new_speed)
                             thr.set_altitude(new_altitude)
-                            print(time.time() - a)
+                            #print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
-                        print("Updated data")
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
