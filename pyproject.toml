@@ -8,6 +8,7 @@ dependencies = [
     "pyproj>=3.6.0",
     "pyserial>=3.5",
     "certifi==2024.6.2",
+    "pygeomag==1.0.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.12"
