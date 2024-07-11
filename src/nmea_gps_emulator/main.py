@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
+# https://swairlearn.bluecover.pt/nmea_analyser
+# https://pygeomag.readthedocs.io/en/latest/api.html
+# https://pyproj4.github.io/pyproj/stable/api/geod.html
+
 import time
 import sys
 import threading
 import uuid
-import logging
+#import logging
 
 from nmea_gps import NmeaMsg
 from utils import position_input, position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
@@ -28,6 +32,7 @@ class Menu:
         }
 
     def display_menu(self):
+        # Show menu with choises
         print(r'''
 -------------------------------------------------------------------------------------------------
 ..####...#####....####...........######..##...##..##..##..##.......####...######...####...#####..
@@ -51,6 +56,8 @@ based on source code by luk-kop
         Display the menu and respond to choices.
         """
         self.display_menu()
+
+        # Get choise from user
         while True:
             try:
                 choice = input('>>> ')
@@ -67,8 +74,6 @@ based on source code by luk-kop
                     'position': {}
                 }
                 # Position, initial course, speed and altitude queries
-                # TODO: Remove old input function when all is fine
-                #nav_data_dict['position'] = position_input()
                 nav_data_dict['position'] = position_sep_input()
                 nav_data_dict['gps_heading'] = heading_input()
                 nav_data_dict['gps_speed'] = speed_input()
@@ -81,11 +86,10 @@ based on source code by luk-kop
                                         heading=nav_data_dict['gps_heading'])
                 action()
                 break
+        
         # Changing the unit's course and speed by the user in the main thread.
         first_run = True
-
         while True:
-            print("thread: " + str(self.nmea_thread.altitude))
             if not self.nmea_thread.is_alive():
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -94,11 +98,12 @@ based on source code by luk-kop
                     time.sleep(2)
                     first_run = False
                 try:
-                    prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit ...\n')
+                    prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
                 if prompt == '':
+                    # Get active values
                     old_heading = self.nmea_obj.get_heading()
                     old_speed = self.nmea_obj.get_speed()
                     old_altitude = self.nmea_obj.get_altitude()
