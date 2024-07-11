@@ -1,4 +1,4 @@
-src/nmea_gps_emulator_ankars/__pycache__/
+src/nmea_gps_emulator/__pycache__/
 venv/
 .vscode/
 .DS_store
