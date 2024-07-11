@@ -113,51 +113,6 @@ def position_sep_input() -> dict:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
 
-def position_input() -> dict:
-    """
-    The function asks for position and checks validity of entry data.
-    Function returns position.
-    """
-    while True:
-        try:
-            print('\n### Enter unit position (format - 57.70011131502446, 11.988278521104876) (format - 5641.063N 01249.828E): ###')
-            try:
-                position_data = input('>>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            if position_data == '':
-                # Default position
-                position_dict = {
-                    'latitude_value': '57.70011131502446',
-                    'latitude_direction': 'N',
-                    'longitude_value': '11.988278521104876',
-                    'longitude_direction': 'E',
-                }
-                return position_dict
-            position_regex_pattern = re.compile(r'''^(
-                ([0-8]\d[0-5]\d|9000)                               # Latitude
-                (N|S)
-                \s?
-                (([0-1][0-7]\d[0-5]\d)|(0[0-9]\d[0-5]\d)|18000)     # Longitude
-                (E|W)
-                )$''', re.VERBOSE)
-            mo = position_regex_pattern.fullmatch(position_data)
-            if mo:
-                # Returns position data
-                position_dict = {
-                    'latitude_value': f'{float(mo.group(2)):08.3f}',
-                    'latitude_direction': mo.group(3),
-                    'longitude_value': f'{float(mo.group(4)):09.3f}',
-                    'longitude_direction': mo.group(7),
-                }
-                return position_dict
-            print('\nError: Wrong entry! Try again.')
-        except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
-            sys.exit()
-
-
 def ip_port_input(option: str) -> tuple:
     """
     The function asks for IP address and port number for connection.
@@ -186,7 +141,7 @@ def ip_port_input(option: str) -> tuple:
             # Regex matchs only unicast IP addr from range 0.0.0.0 - 223.255.255.255
             # and port numbers from range 1 - 65535.
             ip_port_regex_pattern = re.compile(r'''^(
-                ((22[0-3]\.|2[0-1][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.)  # 1st octet
+                ((22[0-3]\.|2[0-1][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.)    # 1st octet
                 (25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.){2}  # 2nd and 3th octet
                 (25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2}))            # 4th octet
                 :
@@ -200,7 +155,6 @@ def ip_port_input(option: str) -> tuple:
         except KeyboardInterrupt:
             print('\n*** Closing the script... ***\n')
             sys.exit()
-
 
 def trans_proto_input() -> str:
     """
@@ -216,7 +170,11 @@ def trans_proto_input() -> str:
                 sys.exit()
             if stream_proto == '' or stream_proto == 'tcp':
                 return 'tcp'
+            elif stream_proto == 't':
+                return 'tcp'
             elif stream_proto == 'udp':
+                return 'udp'
+            elif stream_proto == 'u':
                 return 'udp'
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
