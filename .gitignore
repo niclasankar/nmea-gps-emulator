@@ -1,6 +1,6 @@
 src/nmea_gps_emulator_ankars/__pycache__/
+venv/
+.vscode/
 .DS_store
 *.log
-emulator_data.log
-emulator_error.log
-emulator_system.log
+pyvenv.cfg
