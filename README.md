@@ -7,7 +7,7 @@ The **GPS NMEA Emulator** is a simple script that emulates a GPS receiver (simul
 This script can be useful for testing applications or systems that require some unit's GPS position data.
 
 The script is a highly modified script based on the script originally created by GitHub user [luk-kop](https://github.com/luk-kop/nmea-gps-emulator/) and published on GitHub.
-The code has been documented and modified to allow input of altitude, logging to file and other.
+The code has been documented and modified to use decimal coordinates, to allow input of altitude, logging to file and other changes.
 
 The **GPS NMEA Emulator** script can be used in one of the following operating modes:
 - NMEA TCP Stream (sends TCP packets to the specified client),
@@ -73,14 +73,15 @@ On Linux systems you will probably need to change the permissions for the device
 sudo chmod a+rw /dev/ttyS0
 ```
 
-### Installation with venv
+### Installation with virtual environment
 The script can be build and run locally with virtualenv tool. Run following commands in order to create virtual environment and install the required packages.
 ```bash
-$ virtualenv venv
+$ python -m venv /path/to/new/virtual/environment
 $ source venv/bin/activate
 (venv) $ pip install pyproj
 (venv) $ pip install pyserial
 (venv) $ pip install psutil
+(venv) $ pip install pygeomag
 ```
 ### Running the script
 You can start the script using the following command:
