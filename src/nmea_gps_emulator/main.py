@@ -8,10 +8,9 @@ import time
 import sys
 import threading
 import uuid
-#import logging
 
 from nmea_gps import NmeaMsg
-from utils import position_input, position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
+from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
     change_input, serial_config_input, alt_input
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
