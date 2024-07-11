@@ -180,7 +180,6 @@ def trans_proto_input() -> str:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
-
 def heading_input() -> float:
     """
     The function asks for the unit's course.
@@ -202,7 +201,6 @@ def heading_input() -> float:
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
-
 
 def speed_input() -> float:
     """
@@ -253,7 +251,6 @@ def alt_input() -> float:
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
-
 
 def change_input(self, old_course, old_speed, old_altitude) -> tuple:
     """
@@ -306,7 +303,6 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
-
 
 def serial_config_input() -> dict:
     """
@@ -401,9 +397,5 @@ def system_log(log_message):
 def data_log(log_message):
     data_logger.info(log_message)
 
-def error_log(log_message):
-    error_logger.info(log_message)
-
 system_logger = setup_logger('system_logger', 'emulator_system.log')
 data_logger = setup_logger('data_logger', 'emulator_data.log')
-error_logger = setup_logger('error_logger', 'emulator_error.log') 
