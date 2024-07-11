@@ -59,7 +59,6 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
-        print('NmeaMsg.__init__ ' + str(self.position))
 
     def __next__(self):
         utc_date_time_prev = self.utc_date_time
