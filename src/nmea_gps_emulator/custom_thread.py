@@ -256,6 +256,7 @@ class NmeaOutputThread(NmeaSrvThread):
                     if self.altitude and self.altitude != self._altitude_cache:
                         self.nmea_object.altitude_targeted = self.altitude
                         self._altitude_cache = self.altitude
+                    # print(f'self.heading = {self.heading} ({self._heading_cache}), self.speed = {self.speed} ({self._speed_cache}), self.altitude = {self.altitude} ({self._altitude_cache})')
                     # Create list of NMEA sentences
                     nmea_list = [f'{_}' for _ in next(self.nmea_object)]
                     # Loop through list and log to file
@@ -263,6 +264,11 @@ class NmeaOutputThread(NmeaSrvThread):
                         # Filter out only GPGGA
                         gpgga_regex_pattern = r'(\$GPGGA)'
                         mo = re.match(gpgga_regex_pattern, nmea)
+                        if mo:
+                            data_log(nmea)
+                        # Filter out only GPZDA
+                        gpzda_regex_pattern = r'(\$GPZDA)'
+                        mo = re.match(gpzda_regex_pattern, nmea)
                         if mo:
                             data_log(nmea)
                         time.sleep(0.05)
