@@ -11,12 +11,12 @@ from nmea_gps import NmeaMsg
 
 def exit_script(errortx = 'unspecified'):
     """
-    The function enables to terminate the script (main thread) from the inside of child thread.
+    The function terminates the script (main thread) from inside of child thread
     """
     current_script_pid = os.getpid()
     current_script = psutil.Process(current_script_pid)
     # TODO: Remove script name
-    print(f'*** Closing the script ({errortx})... ***\n')
+    print(f'*** Closing the script ({errortx}, {current_script_pid})... ***\n')
     time.sleep(1)
     current_script.terminate()
 
