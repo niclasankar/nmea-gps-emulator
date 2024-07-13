@@ -3,6 +3,7 @@
 # https://swairlearn.bluecover.pt/nmea_analyser
 # https://pygeomag.readthedocs.io/en/latest/api.html
 # https://pyproj4.github.io/pyproj/stable/api/geod.html
+# https://receiverhelp.trimble.com/alloy-gnss/en-us/NMEA-0183messages_MessageOverview.html
 
 import time
 import sys
