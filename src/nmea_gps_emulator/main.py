@@ -11,7 +11,7 @@ import uuid
 
 from nmea_gps import NmeaMsg
 from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
-    change_input, serial_config_input, alt_input
+    change_input, serial_config_input, alt_input, filter_input
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
@@ -103,9 +103,9 @@ based on source code by luk-kop
                     sys.exit()
                 if prompt == '':
                     # Get active values
-                    old_heading = self.nmea_obj.get_heading()
-                    old_speed = self.nmea_obj.get_speed()
-                    old_altitude = self.nmea_obj.get_altitude()
+                    old_heading = self.nmea_obj.get_heading
+                    old_speed = self.nmea_obj.get_speed
+                    old_altitude = self.nmea_obj.get_altitude
                     new_heading, new_speed, new_altitude = change_input(self, old_heading, old_speed, old_altitude)
 
                     # Get all 'nmea_srv*' telnet server threads
@@ -144,10 +144,10 @@ based on source code by luk-kop
         """
         Runs in debug mode which outputs NMEA messages to log
         """
-        output_type = 0
+        filter_mess = filter_input()
         self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
                                        daemon=True,
-                                       output_type=0,
+                                       filter_mess=filter_mess,
                                        nmea_object=self.nmea_obj)
         self.nmea_thread.start()
 

@@ -234,12 +234,13 @@ class NmeaOutputThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for logging output for debugging.
     """
-    def __init__(self, output_type, *args, **kwargs):
+    def __init__(self, filter_mess, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.filter_mess = filter_mess
 
     def run(self):
         # Output data to file.
-        print('Logging NMEA data to file...')
+        print('Logging NMEA data to file...\n')
         try:
             while True:
                 timer_start = time.perf_counter()
@@ -261,17 +262,21 @@ class NmeaOutputThread(NmeaSrvThread):
                     nmea_list = [f'{_}' for _ in next(self.nmea_object)]
                     # Loop through list and log to file
                     for nmea in nmea_list:
-                        # Filter out only GPGGA
-                        gpgga_regex_pattern = r'(\$GPGGA)'
-                        mo = re.match(gpgga_regex_pattern, nmea)
-                        if mo:
+                        # Check filter
+                        if self.filter_mess != None:
+                            mo = re.match(rf"(\{self.filter_mess})", nmea)
+                            if mo:
+                                data_log(nmea)
+                        else:
                             data_log(nmea)
-                        # Filter out only GPZDA
-                        gpzda_regex_pattern = r'(\$GPZDA)'
-                        mo = re.match(gpzda_regex_pattern, nmea)
-                        if mo:
-                            data_log(nmea)
-                        time.sleep(0.05)
+
+                        # # Filter out only GPZDA
+                        # gpzda_regex_pattern = r'(\$GPZDA)'
+                        # mo = re.match(gpzda_regex_pattern, nmea)
+                        # if mo:
+                        #     data_log(nmea)
+                        #data_log(nmea)
+                    time.sleep(0.05)
                     time.sleep(1.1 - (time.perf_counter() - timer_start))
         except Exception as error:
             # Remove error number from output [...]

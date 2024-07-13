@@ -1,9 +1,11 @@
 import random
 from math import ceil
 import datetime
+from datetime import timezone 
 from typing import Union
 
 from pyproj import Geod
+from pygeomag import GeoMag
 
 class NmeaMsg:
     """
@@ -12,6 +14,9 @@ class NmeaMsg:
     def __init__(self, position: dict, altitude: float, speed: float, heading: float):
         # Instance attributes
         self.utc_date_time = datetime.datetime.utcnow()
+        print(self.utc_date_time)
+        self.utc_date_time = datetime.datetime.now(timezone.utc)
+        print(self.utc_date_time)
         self.position = position
 
         # The unit's speed provided by the user during the operation of the script
@@ -25,6 +30,11 @@ class NmeaMsg:
         # The unit's altitude provided by the user during the operation of the script
         self.altitude = altitude
         self.altitude_targeted = altitude
+
+        # The magnetic variation is set to dmmy values
+        self.magvar = 0
+        self.magvar_direct = 'E'
+        self._magvar_update()
 
         # NMEA sentences initialization - by default with 15 sats
         self.gpgsv_group = GpgsvGroup()
@@ -43,7 +53,9 @@ class NmeaMsg:
         self.gprmc = Gprmc(utc_date_time=self.utc_date_time,
                            position=position,
                            sog=speed,
-                           cmg=heading)
+                           cmg=heading,
+                           magnetic_var_value=self.magvar,
+                           magnetic_var_direct=self.magvar_direct)
         # True heading
         self.gphdt = Gphdt(heading=heading)
         # Track Made Good and Ground Speed
@@ -65,6 +77,7 @@ class NmeaMsg:
         self.utc_date_time = datetime.datetime.utcnow()
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
+        self._magvar_update()
         if self.heading != self.heading_targeted:
             self._heading_update()
         if self.speed != self.speed_targeted:
@@ -78,6 +91,8 @@ class NmeaMsg:
         self.gprmc.utc_time = self.utc_date_time
         self.gprmc.sog = self.speed
         self.gprmc.cmg = self.heading
+        self.gprmc.magnetic_var_value = self.magvar
+        self.gprmc.magnetic_var_direct = self.magvar_direct
         self.gphdt.heading = self.heading
         self.gpvtg.heading_true = self.heading
         self.gpvtg.sog_knots = self.speed
@@ -240,6 +255,27 @@ class NmeaMsg:
             altitude_current -= altitude_increment
         self.altitude = round(altitude_current, 3)
 
+    def _magvar_update(self):
+        """
+        Updates the magnetic variation from WMM in pygeomag
+        """
+        datedec = round(int(self.utc_date_time.year) + int(self.utc_date_time.month)/12 + int(self.utc_date_time.day)/365.25, 2)
+
+        lat = self.position['latitude_value']
+        lon = self.position['longitude_value']
+        alt = self.altitude
+
+        gm = GeoMag()
+        result = gm.calculate(glat=lat, glon=lon, alt=alt, time=datedec)
+        self.magvar = result.d
+        #print(result.d)
+        #print(f'{result.d:06.2f}')
+
+        if result.d > 0:
+            self.magvar_direct = 'E'
+        else:
+            self.magvar_direct = 'W'
+
     @staticmethod
     def check_sum(data: str):
         """
@@ -258,27 +294,35 @@ class NmeaMsg:
             return hex_str.upper()
         return f'0{hex_str}'.upper()
     
+    @property
     def get_latitude(self) -> float:
         return self.position['latitude_value']
 
+    @property
     def get_longitude(self) -> float:
         return self.position['latitude_value']
 
+    @property
     def get_speed(self) -> float:
         return self.speed
 
+    @property
     def get_heading(self) -> float:
         return self.heading
 
+    @property
     def get_altitude(self) -> float:
         return self.altitude
     
+    @property
     def get_targetspeed(self) -> float:
         return self.speed_targeted
     
+    @property
     def get_targetheading(self) -> float:
         return self.heading_targeted
     
+    @property
     def get_targetaltitude(self) -> float:
         return self.altitude_targeted
 
@@ -287,6 +331,34 @@ class Gpgga:
     """
     Global Positioning System Fix Data
     Example: $GPGGA,140041.00,5436.70976,N,01839.98065,E,1,09,0.87,21.7,M,32.5,M,,*60\r\n
+
+    0 	Message ID $GPGGA
+    1 	UTC of position fix
+    2 	Latitude
+    3 	Direction of latitude:
+        N: North
+        S: South
+    4 	Longitude
+    5 	Direction of longitude:
+        E: East
+        W: West
+    6 	GPS Quality indicator:
+        0: Fix not valid
+        1: GPS fix
+        2: Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode
+        3: Not applicable
+        4: RTK Fixed, xFill
+        5: RTK Float, OmniSTAR XP/HP, Location RTK, RTX
+        6: INS Dead reckoning
+    7 	Number of SVs in use, range from 00 through to 24+
+    8 	HDOP
+    9 	Orthometric height (MSL reference)
+    10 	M: unit of measure for orthometric height is meters
+    11 	Geoid separation
+    12 	M: geoid separation measured in meters
+    13 	Age of differential GPS data record, Type 1 or Type 9. Null field when DGPS is not used.
+    14 	Reference station ID, range 0000 to 4095. A null field when any reference station ID is selected and no corrections are received.
+    15 	The checksum data, always begins with *
     """
     sentence_id: str = 'GPGGA'
 
@@ -325,6 +397,26 @@ class Gpgll:
     """
     Position data: position fix, time of position fix, and status
     Example: $GPGLL,5432.216118,N,01832.663994,E,095942.000,A,A*58
+
+    0 	Message ID $GPGLL
+    1 	Latitude in dd mm,mmmm format (0-7 decimal places)
+    2 	Direction of latitude N: North S: South
+    3 	Longitude in ddd mm,mmmm format (0-7 decimal places)
+    4 	Direction of longitude E: East W: West
+    5 	UTC of position in hhmmss.ss format
+    6 	Status indicator:
+        A: Data valid
+        V: Data not valid
+        This value is set to V (Data not valid) for all Mode Indicator values except A (Autonomous) and D (Differential)
+    7 	The checksum data, always begins with *
+
+    Mode indicator:
+        A: Autonomous mode
+        D: Differential mode
+        E: Estimated (dead reckoning) mode
+        M: Manual input mode
+        S: Simulator mode
+        N: Data not valid
     """
     sentence_id: str = 'GPGLL'
 
@@ -357,6 +449,17 @@ class Gprmc:
     """
     Recommended minimum specific GPS/Transit data
     Example: $GPRMC,095940.000,A,5432.216088,N,01832.664132,E,0.019,0.00,130720,,,A*59
+
+    0 	Message ID $GPRMC
+    1 	UTC of position fix
+    2 	Status A=active or V=void
+    3 	Latitude
+    4 	Longitude
+    5 	Speed over the ground in knots
+    6 	Track angle in degrees (True)
+    7 	Date
+    8 	Magnetic variation, in degrees
+    9 	The checksum data, always begins with *
     """
     sentence_id = 'GPRMC'
 
@@ -369,6 +472,9 @@ class Gprmc:
         self.position = position
         # Speed Over Ground
         self.sog = sog
+        # Magnetic variance
+        self.magnetic_var_value = magnetic_var_value
+        self.magnetic_var_direct = magnetic_var_direct
         # Course Made Good
         self.cmg = cmg
         self.magnetic_var_value = magnetic_var_value
@@ -394,12 +500,11 @@ class Gprmc:
         self._utc_date = value.strftime('%d%m%y')
 
     def __str__(self):
-        nmea_lat, nmea_lon = NmeaMsg.to_nmea_position(56.9, 12.7)
         nmea_output = f'{self.sentence_id},{self.utc_time}.000,{self.data_status},' \
                       f'{self.position["latitude_nmea_value"]},{self.position["latitude_direction"]},' \
                       f'{self.position["longitude_nmea_value"]},{self.position["longitude_direction"]},' \
                       f'{self.sog:.3f},{self.cmg},{self.utc_date},' \
-                      f'{self.magnetic_var_value},{self.magnetic_var_direct},{self.faa_mode}'
+                      f'{self.magnetic_var_value:06.2f},{self.magnetic_var_direct},{self.faa_mode}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'
 
 

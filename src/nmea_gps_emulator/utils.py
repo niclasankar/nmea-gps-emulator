@@ -20,6 +20,49 @@ def exit_script(errortx = 'unspecified'):
     time.sleep(1)
     current_script.terminate()
 
+def filter_input():
+    """
+    The function asks for type of message to log
+    """
+    filter_mess = {
+        '1': '$GPGGA',
+        '2': '$GPGLL',
+        '3': '$GPRMC',
+        '4': '$GPGSA',
+        '5': '$GPGSV',
+        '6': '$GPHDT',
+        '7': '$GPVTG',
+        '8': '$GPZDA',
+        '0': None
+    }
+
+    print(r'''
+Choose filter:
+    1 - GPGGA,
+    2 - GPGLL,
+    3 - GPRMC,
+    4 - GPGSA,
+    5 - GPGSV,
+    6 - GPHDT,
+    7 - GPVTG,
+    8 - GPZDA,
+    0 - No filter
+    ''')
+
+    try:
+        filter = input('>>> ')
+        if filter == '':
+            # No filter
+            filter = 0
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
+    filter_type = filter_mess.get(filter)
+    print(filter_type)
+    return filter_type
+
+
+
 def position_sep_input() -> dict:
     """
     The function asks for position and checks validity of entry data.
