@@ -14,7 +14,7 @@ The **GPS NMEA Emulator** script can be used in one of the following operating m
 - NMEA UDP Stream (sends UDP packets to the specified client),
 - NMEA TCP Server (the server waits for client connections, then sends TCP packets to the connected clients - max 10 connections)
 - NMEA Serial (transmit serial data on specified RS port).
-- NMEA messages logged to a file
+- NMEA messages filtered by type logged to a file
 ***
 ## Features
 - The script allows the user to enter the following data:
@@ -133,4 +133,11 @@ After selecting the mode, user is prompted for input of latitude, longitude, spe
 
 ### Enter unit altitude in meters above sea level - range -40-9000 (defaults to 42): ###
 >>> 42
+```
+
+### Filtering messages when logging
+When logging mode i chosen can the NMEA messages be filtered by type to allow testing and debugging. The input below will be shown after coordinate input.
+
+```bash
+
 ```
