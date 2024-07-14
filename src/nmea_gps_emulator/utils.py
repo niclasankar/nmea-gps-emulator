@@ -58,10 +58,12 @@ Choose filter:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
     filter_type = filter_mess.get(filter)
-    print(filter_type)
+    print('Filtering by message type ' + filter_type + '.\n')
     return filter_type
 
-
+def poi_input():
+    # TODO: Implement poi input
+    print('POI')
 
 def position_sep_input() -> dict:
     """
