@@ -4,6 +4,7 @@ import os
 import time
 import platform
 import logging
+import json
 
 import psutil
 import serial.tools.list_ports
@@ -64,6 +65,16 @@ Choose filter:
 def poi_input():
     # TODO: Implement poi input
     print('POI')
+    with open('poi.json', 'r') as file:
+        data = json.load(file)
+        
+    # Check the type of the parsed data
+    print(type(data))  # Output: <class 'list'>
+    
+    # Loop through each object in the list
+    for poi in data:
+        print(f"Name: {poi['name']}")
+        print(f"Age: {poi['lon']}")
 
 def position_sep_input() -> dict:
     """
