@@ -1,4 +1,4 @@
-{
+[
 {
     "name": "Gothenburg, Scandinavium Arena",
     "lon": 30,
@@ -9,7 +9,7 @@
     "heading": 250.0
 },
 {
-    "name": "Gothenburg, Scandinavium Arena",
+    "name": "Gothenburg, Scandinavium Arena2",
     "lon": 30,
     "lon_d": "N",
     "lat": 12,
@@ -17,4 +17,4 @@
     "alt": 45,
     "heading": 250.0
 }
-}
+]
