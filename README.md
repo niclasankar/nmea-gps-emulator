@@ -139,5 +139,15 @@ After selecting the mode, user is prompted for input of latitude, longitude, spe
 When logging mode i chosen can the NMEA messages be filtered by type to allow testing and debugging. The input below will be shown after coordinate input.
 
 ```bash
-
+Choose filter:
+    1 - GPGGA,
+    2 - GPGLL,
+    3 - GPRMC,
+    4 - GPGSA,
+    5 - GPGSV,
+    6 - GPHDT,
+    7 - GPVTG,
+    8 - GPZDA,
+    0 - No filter
+>>> 1
 ```
