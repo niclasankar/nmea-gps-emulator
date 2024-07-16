@@ -67,28 +67,35 @@ def poi_input():
     The function reads the poi file and asks for user choice
     """
     # TODO: Implement poi input
-    print('POI')
-    with open('poi.json', 'r') as file:
-        data_list = json.load(file)
+    try:
+        # Listin of and input of selected POI
+        while True:
+            print('POI:s')
+            with open('poi.json', 'r') as file:
+                data_list = json.load(file)
         
-    # Check the type of the parsed data
-    print(type(data))  # Output: <class 'list'>
+            # Check the type of the parsed data
+            print(type(data))  # Output: <class 'list'>
     
-    # Add a number to each object in the list
-    for index, item in enumerate(data_list, start=1):
-        item['uid'] = index
+            # Add a number to each object in the list
+            for index, item in enumerate(data_list, start=1):
+                item['uid'] = index
     
-    # Loop through each object in the list
-    for poi in data_list:
-        print(f"{uid} - {poi['name']}")
+            # Loop through each object in the list
+            for poi in data_list:
+                print(f"{uid} - {poi['name']}")
         
-    selected_uid = input()
+            selected_uid = input('>>> ')
     
-    for item in data_list:
-        if item.get('uid') == selected_uid:
-            selected_item = item
+            for item in data_list:
+                if item.get('uid') == selected_uid:
+                    selected_item = item
     
-    return selected_item['name']
+            return selected_item['name']
+        except KeyboardInterrupt:
+            print('\n\n*** Closing the script... ***\n')
+            sys.exit()
+
 
 def position_sep_input() -> dict:
     """
