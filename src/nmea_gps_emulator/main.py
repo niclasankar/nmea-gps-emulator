@@ -49,7 +49,7 @@ based on source code by luk-kop
         print('1 - NMEA Serial port output')
         print('2 - NMEA TCP Server')
         print('3 - NMEA TCP or UDP Stream')
-        print('4 - NMEA output to log (only GPGGA)')
+        print('4 - NMEA output to log')
         print('0 - Quit')
 
     def run(self):
