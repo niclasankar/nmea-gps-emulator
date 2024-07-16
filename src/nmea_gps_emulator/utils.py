@@ -96,8 +96,8 @@ def poi_input():
                 return selected_item['name']
     		else:
                 print('No POI file exists! Create poi.json with data according to docs.')
-                
-            return None
+                return None
+
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
