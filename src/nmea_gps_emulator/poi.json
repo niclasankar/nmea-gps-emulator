@@ -1,20 +1,29 @@
 [
-{
-    "name": "Gothenburg, Scandinavium Arena",
-    "lon": 30,
-    "lon_d": "N",
-    "lat": 12,
-    "lat_d": "E",
-    "alt": 45,
-    "heading": 250.0
-},
-{
-    "name": "Gothenburg, Scandinavium Arena2",
-    "lon": 30,
-    "lon_d": "N",
-    "lat": 12,
-    "lat_d": "E",
-    "alt": 45,
-    "heading": 250.0
-}
+    {
+        "name": "Gothenburg, Scandinavium Arena",
+        "lat": 57.70010540643474,
+        "lat_d": "N",
+        "lon": 11.988275923454133,
+        "lon_d": "E",
+        "alt": 4,
+        "heading": 260.0
+    },
+    {
+        "name": "Helsingborg, Knutpunkten",
+        "lat": 56.042846426281685,
+        "lat_d": "N",
+        "lon": 12.696462909108408,
+        "lon_d": "E",
+        "alt": 3,
+        "heading": 300.0
+    },
+    {
+        "name": "London, Prime Meridian",
+        "lat": 51.477885003700905,
+        "lat_d": "N",
+        "lon": 0.00,
+        "lon_d": "E",
+        "alt": 47,
+        "heading": 300.0
+    }
 ]
