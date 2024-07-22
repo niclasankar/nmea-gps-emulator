@@ -92,7 +92,7 @@ def poi_input():
                     data_list = json.load(file)
         
                 # Check the type of the parsed data
-                print(type(data_list))  # Output: <class 'list'>
+                #print(type(data_list))  # Output: <class 'list'>
     
                 # Add a number to each object in the list
                 for index, item in enumerate(data_list, start=1):
@@ -375,7 +375,7 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
             mo = re.fullmatch(heading_regex_pattern, heading_data)
             if mo:
                 heading_new = float(mo.group())
-                print('\n\nCourse updated: ', heading_new)
+                print(f'\nCourse updated: {heading_new}\n')
                 break
         while True:
             try:
@@ -390,11 +390,11 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
                 if match.startswith('0') and match != '0':
                     match = match.lstrip('0')
                 speed_new = float(match)
-                print('\n\nSpeed updated: ', speed_new)
+                print(f'\nSpeed updated: {speed_new}\n')
                 break
         while True:
             try:
-                alt_data = input('New altitude (Active target {old_altitude})>>> ')
+                alt_data = input(f'New altitude (Active target {old_altitude})>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -405,7 +405,7 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
                 if match.startswith('0') and match != '0':
                     match = match.lstrip('0')
                 altitude_new = float(match)
-                print('\n\nAltitude updated: ', altitude_new)
+                print(f'\nAltitude updated: {altitude_new}\n')
                 break
         return heading_new, speed_new, altitude_new
     except KeyboardInterrupt:
