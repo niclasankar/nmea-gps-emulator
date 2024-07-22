@@ -6,7 +6,7 @@
         "lon": 11.988275923454133,
         "lon_d": "E",
         "alt": 4,
-        "heading": 260.0
+        "head": 260.0
     },
     {
         "name": "Helsingborg, Knutpunkten",
@@ -15,7 +15,7 @@
         "lon": 12.696462909108408,
         "lon_d": "E",
         "alt": 3,
-        "heading": 300.0
+        "head": 300.0
     },
     {
         "name": "London, Prime Meridian",
@@ -24,6 +24,6 @@
         "lon": 0.00,
         "lon_d": "E",
         "alt": 47,
-        "heading": 300.0
+        "head": 300.0
     }
 ]
