@@ -1,3 +1,6 @@
+"""
+Module for utils in nmea_gps_emulator
+"""
 import re
 import sys
 import os
@@ -10,14 +13,17 @@ import psutil
 import serial.tools.list_ports
 from nmea_gps import NmeaMsg
 
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 def exit_script(errortx = 'unspecified'):
     """
-    The function terminates the script (main thread) from inside of child thread
+    The function terminates the script (main thread) from inside of
+    child thread
     """
     current_script_pid = os.getpid()
     current_script = psutil.Process(current_script_pid)
-    # TODO: Remove script name
-    print(f'*** Closing the script ({errortx}, {current_script_pid})... ***\n')
+    print(f'*** Closing the script ({errortx})... ***\n')
     time.sleep(1)
     current_script.terminate()
 
@@ -66,42 +72,62 @@ def poi_input():
     """
     The function reads the poi file and asks for user choice
     """
+    position_dict = {
+        'latitude_value': '57.70011131502446',
+        'latitude_nmea_value': '5742.011131502446',
+        'latitude_direction': 'N',
+        'longitude_value': '11.988278521104876',
+        'longitude_nmea_value': '01159.8278521104876',
+        'longitude_direction': 'E',
+    }
     # TODO: Implement poi input
     try:
         # Listin of and input of selected POI
         while True:
             print('POI:s')
             poi_filename = 'poi.json'
-            if os.path.exists(poi_filename):
-            	with open('poi.json', 'r') as file:
-                	data_list = json.load(file)
+            poi_filename_path = os.path.join(__location__, poi_filename)
+            if os.path.exists(poi_filename_path):
+                with open(poi_filename_path, 'r') as file:
+                    data_list = json.load(file)
         
-            	# Check the type of the parsed data
-            	print(type(data))  # Output: <class 'list'>
+                # Check the type of the parsed data
+                print(type(data_list))  # Output: <class 'list'>
     
-            	# Add a number to each object in the list
-            	for index, item in enumerate(data_list, start=1):
-                	item['uid'] = index
-    
-            	# Loop through each object in the list
-            	for poi in data_list:
-                	print(f"{uid} - {poi['name']}")
-        
-            	selected_uid = input('>>> ')
-    
-            	for item in data_list:
-                	if item.get('uid') == selected_uid:
-                    	selected_item = item
-                        
-                return selected_item['name']
-    		else:
+                # Add a number to each object in the list
+                for index, item in enumerate(data_list, start=1):
+                    item['uid'] = index
+
+                # Loop through each object in the list
+                for poi in data_list:
+                    print(f"{poi['uid']} - {poi['name']}, ({poi['lon']}, {poi['lat']})")
+
+                selected_uid = int(input('>>> '))
+                selected_item = None
+                for item in data_list:
+                    if item.get('uid') == selected_uid:
+                        selected_item = item
+
+                if selected_item != None:
+                    position_dict['latitude_value'] = selected_item['lat']
+                    position_dict['latitude_nmea_value'] = NmeaMsg.to_nmea(selected_item['lat'])
+                    position_dict['latitude_direction'] = selected_item['lat_d']
+                    position_dict['longitude_value'] = selected_item['lon']
+                    position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea(selected_item['lon'])
+                    position_dict['longitude_direction'] = selected_item['lon_d']
+
+                    return position_dict, selected_item['alt'], selected_item['head']
+                else:
+                    return None
+            else:
                 print('No POI file exists! Create poi.json with data according to docs.')
+                print('Continuing with manual input.')
+                time.sleep(2)
                 return None
 
-        except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
-            sys.exit()
-
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
 
 def position_sep_input() -> dict:
     """
