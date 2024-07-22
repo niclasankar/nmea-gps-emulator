@@ -13,7 +13,7 @@ import uuid
 
 from nmea_gps import NmeaMsg
 from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
-    change_input, serial_config_input, alt_input, filter_input
+    change_input, serial_config_input, alt_input, filter_input, poi_input
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
@@ -35,13 +35,13 @@ class Menu:
     def display_menu(self):
         # Show menu with choises
         print(r'''
--------------------------------------------------------------------------------------------------
-..####...#####....####...........######..##...##..##..##..##.......####...######...####...#####..
-.##......##..##..##..............##......###.###..##..##..##......##..##....##....##..##..##..##.
-.##.###..#####....####...........####....##.#.##..##..##..##......######....##....##..##..#####..
-.##..##..##..........##..........##......##...##..##..##..##......##..##....##....##..##..##..##.
-..####...##.......####...........######..##...##...####...######..##..##....##.....####...##..##.
--------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+..####..#####...####...######.##...##.##..##.##......####..######..####..#####.
+.##.....##..##.##......##.....###.###.##..##.##.....##..##...##...##..##.##..##
+.##.###.#####...####...####...##.#.##.##..##.##.....######...##...##..##.#####.
+.##..##.##.........##..##.....##...##.##..##.##.....##..##...##...##..##.##..##
+..####..##......####...######.##...##..####..######.##..##...##....####..##..##
+-------------------------------------------------------------------------------
 based on source code by luk-kop
                       ''')
         print('### Choose emulator mode: ###')
@@ -74,11 +74,22 @@ based on source code by luk-kop
                     'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
-                # Position, initial course, speed and altitude queries
-                nav_data_dict['position'] = position_sep_input()
-                nav_data_dict['gps_heading'] = heading_input()
-                nav_data_dict['gps_speed'] = speed_input()
-                nav_data_dict['gps_altitude_amsl'] = alt_input()
+                print('Do you wan´t to use a predefined starting point \
+                       from poi.json? (Y/N)')
+                poi_active = input('>>> ')
+                if poi_active.upper() == 'Y':
+                    # Position, initial course, speed and altitude from file
+                    poi_data, alt, heading = poi_input()
+                    nav_data_dict['position'] = poi_data
+                    nav_data_dict['gps_heading'] = heading
+                    nav_data_dict['gps_speed'] = 0
+                    nav_data_dict['gps_altitude_amsl'] = alt
+                else:
+                    # Position, initial course, speed and altitude queries
+                    nav_data_dict['position'] = position_sep_input()
+                    nav_data_dict['gps_heading'] = heading_input()
+                    nav_data_dict['gps_speed'] = speed_input()
+                    nav_data_dict['gps_altitude_amsl'] = alt_input()
 
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position=nav_data_dict['position'],
