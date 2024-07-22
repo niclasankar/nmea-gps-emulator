@@ -71,8 +71,7 @@ based on source code by luk-kop
                     'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
-                print('Do you wan´t to use a predefined starting point \
-                       from poi.json? (Y/N)')
+                print('Do you want to use a predefined starting point? (Y/N)')
                 poi_active = input('>>> ')
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
