@@ -129,6 +129,19 @@ class NmeaMsg:
             lon_minutes = 0 
         return f'{lat_degrees:02}{lat_minutes:06.3f}', f'{lon_degrees:03}{lon_minutes:06.3f}'
 
+    @staticmethod
+    def to_nmea(dec) -> str:
+        # Convert decimal latitude to NMEA format position for messages
+        nmea_degrees = int(dec)
+        try:
+            nmea_minutes = round(dec % int(dec) * 60, 3)
+        except ZeroDivisionError:
+            nmea_minutes = round(dec * 60, 3)
+        if nmea_minutes == 60:
+            nmea_degrees += 1
+            nmea_minutes = 0
+        return f'{nmea_degrees:02}{nmea_minutes:06.3f}'
+
     def position_update(self, utc_date_time_prev: datetime):
         """
         Update position when unit in move.
