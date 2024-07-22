@@ -25,5 +25,14 @@
         "lon_d": "E",
         "alt": 47,
         "head": 300.0
+    },
+    {
+        "name": "San Fransisco, Golden Gate Bridge",
+        "lat": 37.81856987922529,
+        "lat_d": "N",
+        "lon": 122.47846487256828,
+        "lon_d": "W",
+        "alt": 100,
+        "head": 340.0
     }
 ]
