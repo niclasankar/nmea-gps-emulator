@@ -100,7 +100,7 @@ def poi_input():
 
                 # Loop through each object in the list
                 for poi in data_list:
-                    print(f"{poi['uid']} - {poi['name']}, ({poi['lon']}, {poi['lat']})")
+                    print(f"{poi['uid']} - {poi['name']}, ({poi['lon']:3.3f}{poi['lon_d']}, {poi['lat']:2f}{poi['lat_d']})")
 
                 selected_uid = int(input('>>> '))
                 selected_item = None
@@ -124,7 +124,6 @@ def poi_input():
                 print('Continuing with manual input.')
                 time.sleep(2)
                 return None
-
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
