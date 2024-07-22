@@ -110,7 +110,20 @@ based on source code by luk-kop
 >>>
 ```
 
-After selecting the mode, user is prompted for input of latitude, longitude, speed, heading and altitude.
+After selecting the mode, user is prompted for use of predefined points of interests (POI) stored in a JSON file.
+```bash
+Do you wan´t to use a predefined starting point from poi.json? (Y/N)
+>>> Y
+POI:s
+1 - Gothenburg, Scandinavium Arena
+2 - Helsingborg, Knutpunkten
+3 - London, Prime Meridian
+>>> 2
+´´´
+If the user chooses to use a POI (Y) the user is prompted with a list of stored POIS:s.
+
+If the user chooses to manually input (N) the position data the user is prompted
+for input of latitude, longitude, speed, heading and altitude.
 
 ```bash
 ### Enter unit position latitude (defaults to 57.70011131502446): ###
