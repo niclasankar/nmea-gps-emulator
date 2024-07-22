@@ -109,13 +109,14 @@ After starting the script correctly, the following prompt should appear in the O
 
 After selecting the mode, user is prompted for use of predefined points of interests (POI) stored in a JSON file.
 ```bash
-Do you wan´t to use a predefined starting point from poi.json? (Y/N)
+Do you want to use a predefined starting point? (Y/N)
 >>> Y
 POI:s
-1 - Gothenburg, Scandinavium Arena
-2 - Helsingborg, Knutpunkten
-3 - London, Prime Meridian
->>> 2
+1 - Gothenburg, Scandinavium Arena, (11.988E, 57.700105N)
+2 - Helsingborg, Knutpunkten, (12.696E, 56.042846N)
+3 - London, Prime Meridian, (0.000E, 51.477885N)
+4 - San Fransisco, Golden Gate Bridge, (122.478W, 37.818570N)
+>>> 4
 ´´´
 If the user chooses to use a POI (Y) the user is prompted with a list of stored POIS:s.
 
