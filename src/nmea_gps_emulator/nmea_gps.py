@@ -13,10 +13,11 @@ class NmeaMsg:
     """
     def __init__(self, position: dict, altitude: float, speed: float, heading: float):
         # Instance attributes
-        self.utc_date_time = datetime.datetime.utcnow()
-        print(self.utc_date_time)
+        # TODO: Remove old time setting
+        #self.utc_date_time = datetime.datetime.utcnow()
+        #print(self.utc_date_time)
         self.utc_date_time = datetime.datetime.now(timezone.utc)
-        print(self.utc_date_time)
+        #print(self.utc_date_time)
         self.position = position
 
         # The unit's speed provided by the user during the operation of the script
@@ -74,7 +75,8 @@ class NmeaMsg:
 
     def __next__(self):
         utc_date_time_prev = self.utc_date_time
-        self.utc_date_time = datetime.datetime.utcnow()
+        #self.utc_date_time = datetime.datetime.utcnow()
+        self.utc_date_time = datetime.datetime.now(timezone.utc)
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
         self._magvar_update()
