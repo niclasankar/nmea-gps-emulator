@@ -10,6 +10,7 @@ import time
 import sys
 import threading
 import uuid
+import argparse
 
 from nmea_gps import NmeaMsg
 from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
@@ -17,7 +18,7 @@ from utils import position_sep_input, ip_port_input, trans_proto_input, heading_
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
-class Menu:
+class Application:
     """
     Display a menu and respond to choices when run.
     """
@@ -51,7 +52,7 @@ based on source code by luk-kop
 
     def run(self):
         """
-        Display the menu and respond to choices.
+        Run the application and display the menu and respond to choices.
         """
         self.display_menu()
 
@@ -99,7 +100,83 @@ based on source code by luk-kop
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
+                print('\n\n*** Closing the script... Thread not started ***\n')
+                sys.exit()
+            try:
+                if first_run:
+                    time.sleep(2)
+                    first_run = False
+                try:
+                    prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
+                except KeyboardInterrupt:
+                    print('\n\n*** Closing the script... ***\n')
+                    sys.exit()
+                if prompt == '':
+                    # Get active values
+                    old_heading = self.nmea_obj.get_heading
+                    old_speed = self.nmea_obj.get_speed
+                    old_altitude = self.nmea_obj.get_altitude
+                    new_heading, new_speed, new_altitude = change_input(self, old_heading, old_speed, old_altitude)
+
+                    # Get all 'nmea_srv*' telnet server threads
+                    thread_list = [thread for thread in threading.enumerate() if thread.name.startswith('nmea_srv')]
+                    if thread_list:
+                        for thr in thread_list:
+                            # Update speed, heading and altitude
+                            #a = time.time()
+                            thr.set_heading(new_heading)
+                            thr.set_speed(new_speed)
+                            thr.set_altitude(new_altitude)
+                            #print(time.time() - a)
+                    else:
+                        # Set targeted head, speed and altitude without connected clients
+                        self.nmea_obj.heading_targeted = new_heading
+                        self.nmea_obj.speed_targeted = new_speed
+                        self.nmea_obj.altitude_targeted = new_altitude
+            except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+
+    def run_args(self, output, lat=57.70, lat_d='N', lon=11.98, lon_d='E', speed=2, alt=42, head=260):
+        """
+        Run the application with provided args.
+        """
+        while True:
+            action = self.choices.get(str(output))
+            print(type(action))
+            if action:
+                position_dict = {
+                    'latitude_value': '57.70011131502446',
+                    'latitude_nmea_value': '5742.011131502446',
+                    'latitude_direction': 'N',
+                    'longitude_value': '11.988278521104876',
+                    'longitude_nmea_value': '01159.8278521104876',
+                    'longitude_direction': 'E',
+                }
+
+                # Get args to dictionary
+                position_dict['latitude_value'] = lat
+                position_dict['latitude_nmea_value'] = NmeaMsg.to_nmea(lat)
+                position_dict['latitude_direction'] = lat_d
+                position_dict['longitude_value'] = lon
+                position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea(lon)
+                position_dict['longitude_direction'] = lon_d
+
+                # Initialize NmeaMsg object
+                self.nmea_obj = NmeaMsg(position=position_dict,
+                                        altitude=alt,
+                                        speed=speed,
+                                        heading=head)
+                # Print start message
+                print(f'\nStarting emulation at {position_dict['latitude_value']},{position_dict['longitude_value']}')
+                action()
+                break
+        
+        # Changing the unit's course and speed by the user in the main thread.
+        first_run = True
+        while True:
+            if not self.nmea_thread.is_alive():
+                print('\n\n*** Closing the script... Thread not started ***\n')
                 sys.exit()
             try:
                 if first_run:
@@ -196,7 +273,33 @@ based on source code by luk-kop
 
 
 if __name__ == '__main__':
-    # Open menu
-    Menu().run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--Output", help = "Type of output:\
+                        1 - NMEA Serial port output,\
+                        2 - NMEA TCP Server,\
+                        3 - NMEA TCP or UDP Stream,\
+                        4 - NMEA output to log")
+    parser.add_argument("-ip", "--IPAddress", help = "IP adress for TCP or UDP output")
+    parser.add_argument("-port", "--Port", help = "Port for TCP or UDP output")
+    parser.add_argument("-serial", "--Serial", help = "Seriaö port for output")
+    parser.add_argument("-lo", "--Longitude", help = "Longitude position")
+    parser.add_argument("-lo_d", "--LongitudeDir", help = "Longitude hemi (E,W)")
+    parser.add_argument("-la", "--Latitude", help = "Latitude position")
+    parser.add_argument("-la_d", "--LatitudeDir", help = "Latitude hemi (N,S)")
+    parser.add_argument("-sp", "--Speed", help = "Speed (in knots)")
+    parser.add_argument("-a", "--Altitude", help = "Altitude mean sea level (meters)")
+    parser.add_argument("-hd", "--Heading", help = "Heading (degrees)")
+    args = parser.parse_args()
+
+    if args.Output:
+        # Start Application with args
+        Application().run_args(output=4,
+                               lat=57.70011131502446,
+                               lat_d="N", 
+                               lon=11.988278521104876, 
+                               lon_d="E")
+    else:
+        # Start Application
+        Application().run()
 
 
