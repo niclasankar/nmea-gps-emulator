@@ -89,7 +89,7 @@ You can start the script using the following command:
 ```bash
 (venv) $ python main.py
 ```
-After starting the script correctly, the following prompt should appear in the OS console:
+After starting the script correctly, the following prompt should appear in the console:
 
 ```bash
 ┳┓┳┳┓┏┓┏┓  ┏┓     ┓             
@@ -162,6 +162,30 @@ Choose filter:
     8 - GPZDA,
     0 - No filter
 >>> 1
+```
+### Creating the poi.json file
+The poi.json file should be located alongside the script and should have the following structure.
+```bash
+[
+    {
+        "name": "Gothenburg, Scandinavium Arena",
+        "lat": 57.70010540643474,
+        "lat_d": "N",
+        "lon": 11.988275923454133,
+        "lon_d": "E",
+        "alt": 4,
+        "head": 260.0
+    },
+    {
+        "name": "Helsingborg, Knutpunkten",
+        "lat": 56.042846426281685,
+        "lat_d": "N",
+        "lon": 12.696462909108408,
+        "lon_d": "E",
+        "alt": 3,
+        "head": 300.0
+    }
+]
 ```
 
 ### Starting the script with a config file
