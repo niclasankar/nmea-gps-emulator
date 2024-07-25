@@ -58,7 +58,7 @@ def exit_script(errortx = 'unspecified'):
 
 def filter_input():
     """
-    The function asks for type of message to log
+    The function asks for type of messages to log
     """
     print('Choose filter:')
     for x, y in filters_dict.items():
@@ -74,7 +74,7 @@ def filter_input():
         sys.exit()
     filter_type = filters_dict.get(filter)
     if int(filter) != 0:
-        print('Filtering by message type ' + filter_type + '.\n')
+        print('Filtering messages by type ' + filter_type + '.\n')
     return filter_type
 
 def poi_input():
