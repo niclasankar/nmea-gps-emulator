@@ -109,6 +109,8 @@ After starting the script correctly, the following prompt should appear in the c
 ```
 
 After selecting the mode, user is prompted for use of predefined points of interests (POI) stored in a JSON file.
+If the user chooses to use a POI (Y) the user is prompted with a list of stored POIS:s.
+
 ```bash
 Do you want to use a predefined starting point? (Y/N)
 >>> Y
@@ -118,8 +120,7 @@ POI:s
 3 - London, Prime Meridian, (0.000E, 51.477885N)
 4 - San Fransisco, Golden Gate Bridge, (122.478W, 37.818570N)
 >>> 4
-´´´
-If the user chooses to use a POI (Y) the user is prompted with a list of stored POIS:s.
+```
 
 If the user chooses to manually input (N) the position data the user is prompted
 for input of latitude, longitude, speed, heading and altitude.
@@ -148,7 +149,7 @@ for input of latitude, longitude, speed, heading and altitude.
 ```
 
 ### Filtering messages when logging
-When logging mode i chosen can the NMEA messages be filtered by type to allow testing and debugging. The input below will be shown after coordinate input.
+When in logging mode (4) can the NMEA messages be filtered by type to allow testing and debugging. The input below will be shown after coordinate input.
 
 ```bash
 Choose filter:
@@ -209,4 +210,4 @@ Below is a example of a config file
     "head": 260.0,
     "speed": 2
 }
-´´´
+```
