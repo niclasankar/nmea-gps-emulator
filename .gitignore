@@ -1,4 +1,6 @@
 src/nmea_gps_emulator/__pycache__/
+bin/
+lib/
 venv/
 .vscode/
 .DS_store
