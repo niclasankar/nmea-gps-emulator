@@ -8,6 +8,7 @@ import time
 import platform
 import logging
 import json
+import socket
 
 import psutil
 import serial.tools.list_ports
@@ -15,6 +16,34 @@ from nmea_gps import NmeaMsg
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+default_position_dict = {
+    'latitude_value': '57.70011131502446',
+    'latitude_nmea_value': '5742.011131502446',
+    'latitude_direction': 'N',
+    'longitude_value': '11.988278521104876',
+    'longitude_nmea_value': '01159.8278521104876',
+    'longitude_direction': 'E',
+}
+default_speed = 2
+default_alt = 42
+default_head = 260
+
+filters_dict = {
+    '1': '$GPGGA',
+    '2': '$GPGLL',
+    '3': '$GPRMC',
+    '4': '$GPGSA',
+    '5': '$GPGSV',
+    '6': '$GPHDT',
+    '7': '$GPVTG',
+    '8': '$GPZDA',
+    '0': None
+}
+default_ip = '127.0.0.1'
+default_port = 10110
+default_telnet_port = 10110
+
 
 def exit_script(errortx = 'unspecified'):
     """
@@ -31,30 +60,9 @@ def filter_input():
     """
     The function asks for type of message to log
     """
-    filter_mess = {
-        '1': '$GPGGA',
-        '2': '$GPGLL',
-        '3': '$GPRMC',
-        '4': '$GPGSA',
-        '5': '$GPGSV',
-        '6': '$GPHDT',
-        '7': '$GPVTG',
-        '8': '$GPZDA',
-        '0': None
-    }
-
-    print(r'''
-Choose filter:
-    1 - GPGGA,
-    2 - GPGLL,
-    3 - GPRMC,
-    4 - GPGSA,
-    5 - GPGSV,
-    6 - GPHDT,
-    7 - GPVTG,
-    8 - GPZDA,
-    0 - No filter
-    ''')
+    print('Choose filter:')
+    for x, y in filters_dict.items():
+        print(f'  {x} - {y}') 
 
     try:
         filter = input('>>> ')
@@ -64,25 +72,19 @@ Choose filter:
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
-    filter_type = filter_mess.get(filter)
-    print('Filtering by message type ' + filter_type + '.\n')
+    filter_type = filters_dict.get(filter)
+    if int(filter) != 0:
+        print('Filtering by message type ' + filter_type + '.\n')
     return filter_type
 
 def poi_input():
     """
     The function reads the poi file and asks for user choice
     """
-    position_dict = {
-        'latitude_value': '57.70011131502446',
-        'latitude_nmea_value': '5742.011131502446',
-        'latitude_direction': 'N',
-        'longitude_value': '11.988278521104876',
-        'longitude_nmea_value': '01159.8278521104876',
-        'longitude_direction': 'E',
-    }
-    # TODO: Implement poi input
+    position_dict = default_position_dict
+
     try:
-        # Listin of and input of selected POI
+        # Listing of and input of selected POI
         while True:
             print('POI:s')
             poi_filename = 'poi.json'
@@ -90,10 +92,7 @@ def poi_input():
             if os.path.exists(poi_filename_path):
                 with open(poi_filename_path, 'r') as file:
                     data_list = json.load(file)
-        
-                # Check the type of the parsed data
-                #print(type(data_list))  # Output: <class 'list'>
-    
+
                 # Add a number to each object in the list
                 for index, item in enumerate(data_list, start=1):
                     item['uid'] = index
@@ -133,26 +132,27 @@ def position_sep_input() -> dict:
     The function asks for position and checks validity of entry data.
     Function returns position dictionary.
     """
-    position_dict = {
-        'latitude_value': '57.70011131502446',
-        'latitude_nmea_value': '5742.011131502446',
-        'latitude_direction': 'N',
-        'longitude_value': '11.988278521104876',
-        'longitude_nmea_value': '01159.8278521104876',
-        'longitude_direction': 'E',
-    }
+    # position_dict = {
+    #     'latitude_value': '57.70011131502446',
+    #     'latitude_nmea_value': '5742.011131502446',
+    #     'latitude_direction': 'N',
+    #     'longitude_value': '11.988278521104876',
+    #     'longitude_nmea_value': '01159.8278521104876',
+    #     'longitude_direction': 'E',
+    # }
+    position_dict = default_position_dict
     try:
         # Input of latitude
         while True:
             try:
-                print('\n### Enter unit position latitude (defaults to 57.70011131502446): ###')
+                print(f'\n### Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}): ###')
                 latitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
             if latitude_data == '':
                 # Default position
-                latitude_data = 57.70011131502446
+                latitude_data = default_position_dict["latitude_value"]
                 position_dict['latitude_value'] = latitude_data
                 break
             latitude_regex_pattern = r'^(\+|-)?(?:90(?:(?:\.0{1,14})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,14})?))$'
@@ -163,7 +163,7 @@ def position_sep_input() -> dict:
         # Input of latitude hemisphere
         while True:
             try:
-                print('\n### Enter unit position latitude hemisphere (defaults to N): ###')
+                print(f'\n### Enter unit position latitude hemisphere (defaults to {default_position_dict["latitude_direction"]}): ###')
                 latitude_hemi_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -181,14 +181,14 @@ def position_sep_input() -> dict:
         # Input of longitude
         while True:
             try:
-                print('\n### Enter unit position longitude (defaults to 11.988278521104876): ###')
+                print(f'\n### Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}): ###')
                 longitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
             if longitude_data == '':
                 # Default position
-                longitude_data = 11.988278521104876
+                longitude_data = default_position_dict["longitude_value"]
                 position_dict['longitude_value'] = longitude_data
                 break
             longitude_regex_pattern = r'^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$'
@@ -198,7 +198,7 @@ def position_sep_input() -> dict:
         # Input of longitude hemisphere
         while True:
             try:
-                print('\n### Enter unit position longitude hemisphere (defaults to E): ###')
+                print(f'\n### Enter unit position longitude hemisphere (defaults to {default_position_dict["longitude_direction"]}): ###')
                 longitude_hemi_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -213,7 +213,7 @@ def position_sep_input() -> dict:
             if mo:
                 position_dict['longitude_direction'] = float(mo.group())
                 break
-        #Convert lat/lon to NMEA form and store
+        #Convert lat/lon to NMEA form and store in dictionary
         position_dict['latitude_nmea_value'],position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
         #print(str(position_dict))
         return position_dict
@@ -228,7 +228,7 @@ def ip_port_input(option: str) -> tuple:
     while True:
         try:
             if option == 'telnet':
-                print('\n### Enter Local IP address and port number [0.0.0.0:10110]: ###')
+                print(f'\n### Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}): ###')
                 try:
                     ip_port_socket = input('>>> ')
                 except KeyboardInterrupt:
@@ -236,16 +236,16 @@ def ip_port_input(option: str) -> tuple:
                     sys.exit()
                 if ip_port_socket == '':
                     # All available interfaces and default NMEA port.
-                    return ('0.0.0.0', 10110)
+                    return (get_ip(), default_port)
             elif option == 'stream':
-                print('\n### Enter Remote IP address and port number [127.0.0.1:10110]: ###')
+                print(f'\n### Enter Remote IP address and port number (defaults to {default_ip}:{default_port}): ###')
                 try:
                     ip_port_socket = input('>>> ')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
                 if ip_port_socket == '':
-                    return ('127.0.0.1', 10110)
+                    return (default_ip, default_port)
             # Regex matchs only unicast IP addr from range 0.0.0.0 - 223.255.255.255
             # and port numbers from range 1 - 65535.
             ip_port_regex_pattern = re.compile(r'''^(
@@ -270,7 +270,7 @@ def trans_proto_input() -> str:
     """
     while True:
         try:
-            print('\n### Enter transport protocol - TCP or UDP [TCP]: ###')
+            print('\n### Enter transport protocol - TCP or UDP (defaults to TCP): ###')
             try:
                 stream_proto = input('>>> ').strip().lower()
             except KeyboardInterrupt:
@@ -288,13 +288,26 @@ def trans_proto_input() -> str:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # Doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        ip_local = s.getsockname()[0]
+    except Exception:
+        ip_local = '127.0.0.1'
+    finally:
+        s.close()
+    return ip_local
+
 def heading_input() -> float:
     """
     The function asks for the unit's course.
     """
     while True:
         try:
-            print('\n### Enter unit course - range 000-359 degrees (defaults to 45): ###')
+            print(f'\n### Enter unit course - range 000-359 degrees (defaults to {default_head}): ###')
             try:
                 heading_data = input('>>> ')
             except KeyboardInterrupt:
@@ -316,14 +329,14 @@ def speed_input() -> float:
     """
     while True:
         try:
-            print('\n### Enter unit speed in knots - range 0-999 (defaults to 2 knots): ###')
+            print(f'\n### Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots): ###')
             try:
                 speed_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
             if speed_data == '':
-                return 0
+                return default_speed
             speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
             mo = re.fullmatch(speed_regex_pattern, speed_data)
             if mo:
@@ -341,14 +354,14 @@ def alt_input() -> float:
     """
     while True:
         try:
-            print('\n### Enter unit altitude in meters above sea level - range -40-9000 (defaults to 42): ###')
+            print(f'\n### Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}): ###')
             try:
                 alt_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
             if alt_data == '':
-                return 30
+                return default_alt
             alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
             mo = re.fullmatch(alt_regex_pattern, alt_data)
             if mo:
@@ -486,14 +499,11 @@ def setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.
     """
     # Get logger instance
     new_logger = logging.getLogger(logger_name)
-
     # Create formatter, defaults to '%(message)s'
     formatter = logging.Formatter(log_format)
-
     # Create file handler and add formatter
     fileHandler = logging.FileHandler(log_file, mode='w')
     fileHandler.setFormatter(formatter)
-
     # Set level add handler
     new_logger.setLevel(level)
     new_logger.addHandler(fileHandler)
