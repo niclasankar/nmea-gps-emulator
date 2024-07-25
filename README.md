@@ -162,3 +162,26 @@ Choose filter:
     0 - No filter
 >>> 1
 ```
+
+### Starting the script with a config file
+The script can be run by supplying a JSON config file with the starting point and type of output. The config file is given via the argument -c in the call
+The script runs and asks for serial port, ip address and data that is unique for each run.
+
+```bash
+(venv) $ python main.py -c conf.json
+```
+
+Below is a example of a config file
+```bash
+{
+    "name": "Gothenburg, Scandinavium Arena, with Stream output",
+    "output": 3,
+    "lat": 57.70010540643474,
+    "lat_d": "N",
+    "lon": 11.988275923454133,
+    "lon_d": "E",
+    "alt": 4,
+    "head": 260.0,
+    "speed": 2
+}
+´´´
