@@ -11,12 +11,18 @@ import sys
 import threading
 import uuid
 import argparse
+import os
+import json
 
 from nmea_gps import NmeaMsg
 from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
     change_input, serial_config_input, alt_input, filter_input, poi_input
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
+
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 
 class Application:
     """
@@ -137,10 +143,31 @@ based on source code by luk-kop
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
 
-    def run_args(self, output, lat=57.70, lat_d='N', lon=11.98, lon_d='E', speed=2, alt=42, head=260):
+    def run_args(self, config):
         """
         Run the application with provided args.
         """
+        try:
+        # Listing of and input of selected POI
+            print('config:')
+            config_filename = config
+            config_filename_path = os.path.join(__location__, config_filename)
+            if os.path.exists(config_filename_path):
+                with open(config_filename_path, 'r') as file:
+                    config_list = json.load(file)
+                    output = config_list['output']
+                    lat = config_list['lat']
+                    lat_d = config_list['lat_d']
+                    lon = config_list['lon']
+                    lon_d = config_list['lon_d']
+                    alt = config_list['alt']
+                    speed = config_list['speed']
+                    head = config_list['head']
+            #print(config_list)
+        except FileNotFoundError:
+            print('Config file not found')
+            sys.exit()
+
         while True:
             action = self.choices.get(str(output))
             print(type(action))
@@ -274,30 +301,12 @@ based on source code by luk-kop
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--Output", help = "Type of output:\
-                        1 - NMEA Serial port output,\
-                        2 - NMEA TCP Server,\
-                        3 - NMEA TCP or UDP Stream,\
-                        4 - NMEA output to log")
-    parser.add_argument("-ip", "--IPAddress", help = "IP adress for TCP or UDP output")
-    parser.add_argument("-port", "--Port", help = "Port for TCP or UDP output")
-    parser.add_argument("-serial", "--Serial", help = "Seriaö port for output")
-    parser.add_argument("-lo", "--Longitude", help = "Longitude position")
-    parser.add_argument("-lo_d", "--LongitudeDir", help = "Longitude hemi (E,W)")
-    parser.add_argument("-la", "--Latitude", help = "Latitude position")
-    parser.add_argument("-la_d", "--LatitudeDir", help = "Latitude hemi (N,S)")
-    parser.add_argument("-sp", "--Speed", help = "Speed (in knots)")
-    parser.add_argument("-a", "--Altitude", help = "Altitude mean sea level (meters)")
-    parser.add_argument("-hd", "--Heading", help = "Heading (degrees)")
+    parser.add_argument("-c", "--config", help = "Name of config file.")
     args = parser.parse_args()
 
-    if args.Output:
-        # Start Application with args
-        Application().run_args(output=4,
-                               lat=57.70011131502446,
-                               lat_d="N", 
-                               lon=11.988278521104876, 
-                               lon_d="E")
+    if args.config:
+        # Start Application with data from config file
+        Application().run_args(config=args.config)
     else:
         # Start Application
         Application().run()
