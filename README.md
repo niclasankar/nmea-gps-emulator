@@ -64,8 +64,9 @@ Python third party packages:
 * [pyproj](https://pypi.org/project/pyproj/)
 * [pyserial](https://pypi.org/project/pyserial/)
 * [psutil](https://pypi.org/project/psutil/)
+* [pygeomag](https://pypi.org/project/pygeomag/)
 
-In order to use **NMEA Serial** mode correctly, it is necessary to use dedicated serial **null modem** cable.
+In order to use **NMEA Serial** mode correctly, it is necessary to use dedicated serial **null modem** cable or a virtual pipe.
 
 On Linux systems you will probably need to change the permissions for the device matching your serial port before running the script.
 ```bash
