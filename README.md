@@ -108,6 +108,7 @@ After starting the script correctly, the following prompt should appear in the c
 >>>
 ```
 
+### Input of starting point
 After selecting the mode, user is prompted for use of predefined points of interests (POI) stored in a JSON file.
 If the user chooses to use a POI (Y) the user is prompted with a list of stored POIS:s.
 
