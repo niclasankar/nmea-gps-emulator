@@ -209,8 +209,8 @@ Below is a example of a config file
     "lat_d": "N",
     "lon": 11.988275923454133,
     "lon_d": "E",
-    "alt": 4,
-    "head": 260.0,
+    "alt": 38,
+    "head": 230.0,
     "speed": 2
 }
 ```

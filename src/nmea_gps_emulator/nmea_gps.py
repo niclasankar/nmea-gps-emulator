@@ -6,6 +6,7 @@ from typing import Union
 
 from pyproj import Geod
 from pygeomag import GeoMag
+from pygeomag import decimal_year_from_date
 
 class NmeaMsg:
     """
@@ -274,7 +275,7 @@ class NmeaMsg:
         """
         Updates the magnetic variation from WMM in pygeomag
         """
-        datedec = round(int(self.utc_date_time.year) + int(self.utc_date_time.month)/12 + int(self.utc_date_time.day)/365.25, 2)
+        datedec = decimal_year_from_date(self.utc_date_time)
 
         lat = self.position['latitude_value']
         lon = self.position['longitude_value']
@@ -283,8 +284,6 @@ class NmeaMsg:
         gm = GeoMag()
         result = gm.calculate(glat=lat, glon=lon, alt=alt, time=datedec)
         self.magvar = result.d
-        #print(result.d)
-        #print(f'{result.d:06.2f}')
 
         if result.d > 0:
             self.magvar_direct = 'E'
@@ -340,7 +339,6 @@ class NmeaMsg:
     @property
     def get_targetaltitude(self) -> float:
         return self.altitude_targeted
-
 
 class Gpgga:
     """
@@ -452,13 +450,11 @@ class Gpgll:
         self._utc_time = value.strftime('%H%M%S')
 
     def __str__(self):
-        nmea_lat, nmea_lon = NmeaMsg.to_nmea_position(56.9, 12.7)
         nmea_output = f'{self.sentence_id},{self.position["latitude_nmea_value"]},' \
                       f'{self.position["latitude_direction"]},{self.position["longitude_nmea_value"]},' \
                       f'{self.position["longitude_direction"]},{self.utc_time}.000,' \
                       f'{self.data_status},{self.faa_mode}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'
-
 
 class Gprmc:
     """
@@ -478,8 +474,8 @@ class Gprmc:
     """
     sentence_id = 'GPRMC'
 
-    def __init__(self, utc_date_time, position, sog, cmg, data_status='A', faa_mode='A', magnetic_var_value='',
-                 magnetic_var_direct=''):
+    def __init__(self, utc_date_time, position, sog, cmg, data_status='A', faa_mode='A',
+                  magnetic_var_value='', magnetic_var_direct=''):
         # UTC time in format: 211250
         self.utc_time = utc_date_time
         # UTC date in format: 130720
@@ -492,8 +488,6 @@ class Gprmc:
         self.magnetic_var_direct = magnetic_var_direct
         # Course Made Good
         self.cmg = cmg
-        self.magnetic_var_value = magnetic_var_value
-        self.magnetic_var_direct = magnetic_var_direct
         # FAA Mode option in NMEA 2.3 and later
         self.faa_mode = faa_mode
 
@@ -522,11 +516,27 @@ class Gprmc:
                       f'{self.magnetic_var_value:06.2f},{self.magnetic_var_direct},{self.faa_mode}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'
 
-
 class Gpgsa:
     """
     GPS DOP and active satellites
     Example: $GPGSA,A,3,19,28,14,18,27,22,31,39,,,,,1.7,1.0,1.3*35
+
+    0 	Message ID $GNGSA
+    1 	Mode 1:
+        M = Manual
+        A = Automatic
+    2 	Mode 2: Fix type:
+        1 = not available
+        2 = 2D
+        3 = 3D
+    3 	PRN number:
+        01 to 32 for GPS
+        33 to 64 for SBAS
+        64+ for GLONASS
+    4 	PDOP: 0.5 to 99.9
+    5 	HDOP: 0.5 to 99.9
+    6 	VDOP: 0.5 to 99.9
+    7 	The checksum data, always begins with *
     """
     sentence_id: str = 'GPGSA'
 
@@ -560,10 +570,10 @@ class Gpgsa:
                       f'{self.pdop},{self.hdop},{self.vdop}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'
 
-
 class GpgsvGroup:
     """
-    The class initializes the relevant number of GPGSV sentences depending on the specified number of satellites.
+    The class initializes the relevant number of GPGSV sentences depending
+    on the specified number of satellites.
     """
     sats_in_sentence = 4
 
@@ -604,11 +614,23 @@ class GpgsvGroup:
             gpgsv_group_str += f'{gpgsv}'
         return gpgsv_group_str
 
-
 class Gpgsv:
     """
     GPS Satellites in view. During instance initialization will generate dummy (random) object's data.
     Example: $GPGSV,3,1,11,03,03,111,00,04,15,270,00,06,01,010,00,13,06,292,00*74
+
+    0 	Message ID
+    1 	Total number of messages of this type in this cycle
+    2 	Message number
+    3 	Total number of SVs visible
+    4 	SV PRN number
+    5 	Elevation, in degrees, 90° maximum
+    6 	Azimuth, degrees from True North, 000° through 359°
+    7 	SNR, 00 through 99 dB (null when not tracking)
+    8 - 11 	Information about second SV, same format as fields 4 through 7
+    12 - 15 Information about third SV, same format as fields 4 through 7
+    16 - 19 Information about fourth SV, same format as fields 4 through 7
+    20 	The checksum data, always begins with *
     """
     sentence_id: str = 'GPGSV'
 
@@ -637,6 +659,11 @@ class Gphdt:
     Heading, True.
     Actual vessel heading in degrees true produced by any device or system producing true heading.
     Example: $GPHDT,274.07,T*03
+
+    0 	Message ID $GPHDT
+    1 	Heading in degrees
+    2 	T: Indicates heading relative to True North
+    3 	The checksum data, always begins with *
     """
     sentence_id = 'GPHDT'
 
@@ -652,6 +679,24 @@ class Gpvtg:
     """
     Track Made Good and Ground Speed.
     Example: $GPVTG,360.0,T,348.7,M,000.0,N,000.0,K*43
+
+    0 	Message ID $GPVTG
+    1 	Track made good (degrees true)
+    2 	T: track made good is relative to true north
+    3 	Track made good (degrees magnetic)
+    4 	M: track made good is relative to magnetic north
+    5 	Speed, in knots
+    6 	N: speed is measured in knots
+    7 	Speed over ground in kilometers/hour (kph)
+    8 	K: speed over ground is measured in kph
+    9 	Mode indicator:
+        A: Autonomous mode
+        D: Differential mode
+        E: Estimated (dead reckoning) mode
+        M: Manual Input mode
+        S: Simulator mode
+        N: Data not valid
+    10 	The checksum data, always begins with *
     """
     sentence_id = 'GPVTG'
 
@@ -677,6 +722,15 @@ class Gpzda:
     """
     Time and date - UTC and local Time Zone
     Example: $GPZDA,095942.000,13,07,2020,0,0*50
+
+    0 	Message ID $GPZDA
+    1 	UTC
+    2 	Day, ranging between 01 and 31
+    3 	Month, ranging between 01 and 12
+    4 	Year
+    5 	Local time zone offset from GMT, ranging from 00 through ±13 hours
+    6 	Local time zone offset from GMT, ranging from 00 through 59 minutes
+    7 	The checksum data, always begins with *
     """
     sentence_id = 'GPZDA'
 

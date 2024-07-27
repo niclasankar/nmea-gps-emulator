@@ -81,41 +81,42 @@ def poi_input():
     """
     The function reads the poi file and asks for user choice
     """
-    position_dict = default_position_dict
-
+    pos_dict = default_position_dict
     try:
         # Listing of and input of selected POI
         while True:
-            print('POI:s')
             poi_filename = 'poi.json'
             poi_filename_path = os.path.join(__location__, poi_filename)
             if os.path.exists(poi_filename_path):
+                print(f'Stored POI:s')
                 with open(poi_filename_path, 'r') as file:
-                    data_list = json.load(file)
+                    poi_list = json.load(file)
 
                 # Add a number to each object in the list
-                for index, item in enumerate(data_list, start=1):
+                for index, item in enumerate(poi_list, start=1):
                     item['uid'] = index
 
                 # Loop through each object in the list
-                for poi in data_list:
-                    print(f"{poi['uid']} - {poi['name']}, ({poi['lon']:3.3f}{poi['lon_d']}, {poi['lat']:2f}{poi['lat_d']})")
+                for poi in poi_list:
+                    print(f"{poi['uid']} - {poi['name']}, " +
+                          f"({poi['lon']:3.3f}º{poi['lon_d']}, " +
+                          f"{poi['lat']:2f}º{poi['lat_d']})")
 
                 selected_uid = int(input('>>> '))
                 selected_item = None
-                for item in data_list:
-                    if item.get('uid') == selected_uid:
-                        selected_item = item
+                for poi_item in poi_list:
+                    if poi_item.get('uid') == selected_uid:
+                        sel_poi_item = poi_item
 
-                if selected_item != None:
-                    position_dict['latitude_value'] = selected_item['lat']
-                    position_dict['latitude_nmea_value'] = NmeaMsg.to_nmea(selected_item['lat'])
-                    position_dict['latitude_direction'] = selected_item['lat_d']
-                    position_dict['longitude_value'] = selected_item['lon']
-                    position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea(selected_item['lon'])
-                    position_dict['longitude_direction'] = selected_item['lon_d']
+                if sel_poi_item != None:
+                    pos_dict['latitude_value'] = sel_poi_item['lat']
+                    pos_dict['latitude_nmea_value'] = NmeaMsg.to_nmea(sel_poi_item['lat'])
+                    pos_dict['latitude_direction'] = sel_poi_item['lat_d']
+                    pos_dict['longitude_value'] = sel_poi_item['lon']
+                    pos_dict['longitude_nmea_value'] = NmeaMsg.to_nmea(sel_poi_item['lon'])
+                    pos_dict['longitude_direction'] = sel_poi_item['lon_d']
 
-                    return position_dict, selected_item['alt'], selected_item['head']
+                    return pos_dict, sel_poi_item['alt'], sel_poi_item['head']
                 else:
                     return None
             else:

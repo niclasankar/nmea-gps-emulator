@@ -85,7 +85,7 @@ based on source code by luk-kop
                     poi_data, alt, heading = poi_input()
                     nav_data_dict['position'] = poi_data
                     nav_data_dict['gps_heading'] = heading
-                    nav_data_dict['gps_speed'] = 0
+                    nav_data_dict['gps_speed'] = 2
                     nav_data_dict['gps_altitude_amsl'] = alt
                 else:
                     # Position, initial course, speed and altitude queries
