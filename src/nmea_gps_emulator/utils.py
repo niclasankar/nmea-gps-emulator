@@ -103,27 +103,38 @@ def poi_input():
                           f"{poi['lat']:2f}º{poi['lat_d']})")
 
                 selected_uid = int(input('>>> '))
-                selected_item = None
+                sel_poi_item = None
                 for poi_item in poi_list:
                     if poi_item.get('uid') == selected_uid:
                         sel_poi_item = poi_item
 
                 if sel_poi_item != None:
                     pos_dict['latitude_value'] = sel_poi_item['lat']
-                    pos_dict['latitude_nmea_value'] = NmeaMsg.to_nmea(sel_poi_item['lat'])
-                    pos_dict['latitude_direction'] = sel_poi_item['lat_d']
+                    if sel_poi_item['lat'] < 0:
+                        pos_dict['latitude_direction'] = 'S'
+                    else:
+                        pos_dict['latitude_direction'] = 'N'
+
                     pos_dict['longitude_value'] = sel_poi_item['lon']
-                    pos_dict['longitude_nmea_value'] = NmeaMsg.to_nmea(sel_poi_item['lon'])
-                    pos_dict['longitude_direction'] = sel_poi_item['lon_d']
+                    if sel_poi_item['lon'] < 0:
+                        pos_dict['longitude_direction'] = 'W'
+                    else:
+                        pos_dict['longitude_direction'] = 'E'
+
+                    pos_dict['latitude_nmea_value'], pos_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(sel_poi_item['lat'], sel_poi_item['lon'])
 
                     return pos_dict, sel_poi_item['alt'], sel_poi_item['head']
                 else:
-                    return None
+                    print('Non valid POI choice. Continue with manual input.')
+                    return None, None, None
             else:
                 print('No POI file exists! Create poi.json with data according to docs.')
                 print('Continuing with manual input.')
                 time.sleep(2)
                 return None
+    except json.JSONDecodeError as json_error:
+        print(json_error.msg)
+        return None
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
@@ -133,27 +144,20 @@ def position_sep_input() -> dict:
     The function asks for position and checks validity of entry data.
     Function returns position dictionary.
     """
-    # position_dict = {
-    #     'latitude_value': '57.70011131502446',
-    #     'latitude_nmea_value': '5742.011131502446',
-    #     'latitude_direction': 'N',
-    #     'longitude_value': '11.988278521104876',
-    #     'longitude_nmea_value': '01159.8278521104876',
-    #     'longitude_direction': 'E',
-    # }
     position_dict = default_position_dict
     try:
         # Input of latitude
         while True:
             try:
-                print(f'\n### Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}): ###')
+                print(f'\n- Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}):')
+                print(f'- (Negative for southern hemisphere) ')
                 latitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
+            # Input is empty, use default value
             if latitude_data == '':
-                # Default position
-                latitude_data = default_position_dict["latitude_value"]
+                latitude_data = float(default_position_dict["latitude_value"])
                 position_dict['latitude_value'] = latitude_data
                 break
             latitude_regex_pattern = r'^(\+|-)?(?:90(?:(?:\.0{1,14})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,14})?))$'
@@ -161,62 +165,28 @@ def position_sep_input() -> dict:
             if mo:
                 position_dict['latitude_value'] = float(mo.group())
                 break
-        # Input of latitude hemisphere
-        while True:
-            try:
-                print(f'\n### Enter unit position latitude hemisphere (defaults to {default_position_dict["latitude_direction"]}): ###')
-                latitude_hemi_data = input('>>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            if latitude_hemi_data == '':
-                # Default position
-                latitude_hemi_data = 'N'
-                position_dict['latitude_direction'] = latitude_hemi_data
-                break
-            latitude_hemi_regex_pattern = r'[N,S]'
-            mo = re.fullmatch(latitude_hemi_regex_pattern, latitude_hemi_data.upper())
-            if mo:
-                position_dict['latitude_direction'] = float(mo.group())
-                break
+            print(type(latitude_data))
         # Input of longitude
         while True:
             try:
-                print(f'\n### Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}): ###')
+                print(f'\n- Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}):')
+                print(f'- (Negative for west of Greenwich)')
                 longitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
+            # Input is empty, use default value
             if longitude_data == '':
-                # Default position
-                longitude_data = default_position_dict["longitude_value"]
+                longitude_data = float(default_position_dict["longitude_value"])
                 position_dict['longitude_value'] = longitude_data
                 break
-            longitude_regex_pattern = r'^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$'
+            longitude_regex_pattern = r'^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,14})?))$'
             mo = re.fullmatch(longitude_regex_pattern, str(longitude_data))
             if mo:
                 position_dict['longitude_value'] = float(mo.group())
-        # Input of longitude hemisphere
-        while True:
-            try:
-                print(f'\n### Enter unit position longitude hemisphere (defaults to {default_position_dict["longitude_direction"]}): ###')
-                longitude_hemi_data = input('>>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            if longitude_hemi_data == '':
-                # Default position
-                longitude_hemi_data = 'E'
-                position_dict['longitude_direction'] = longitude_hemi_data
-                break
-            latitude_hemi_regex_pattern = r'[E,W]'
-            mo = re.fullmatch(latitude_hemi_regex_pattern, longitude_hemi_data.upper())
-            if mo:
-                position_dict['longitude_direction'] = float(mo.group())
-                break
         #Convert lat/lon to NMEA form and store in dictionary
-        position_dict['latitude_nmea_value'],position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
-        #print(str(position_dict))
+        print(str(position_dict))
+        position_dict['latitude_nmea_value'], position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
         return position_dict
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
