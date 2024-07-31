@@ -9,13 +9,13 @@
         "head": 260.0
     },
     {
-        "name": "Helsingborg, Knutpunkten",
-        "lat": 56.042846426281685,
+        "name": "Washington, Capitoleum",
+        "lat": 38.88929635674423,
         "lat_d": "N",
-        "lon": 12.696462909108408,
-        "lon_d": "E",
-        "alt": 3,
-        "head": 300.0
+        "lon": -77.05015276630542,
+        "lon_d": "W",
+        "alt": 9,
+        "head": 270.0
     },
     {
         "name": "London, Prime Meridian",
@@ -27,10 +27,28 @@
         "head": 300.0
     },
     {
+        "name": "Japan, Mount Fuji",
+        "lat": 35.36055489316901,
+        "lat_d": "N",
+        "lon": 138.72738484806248,
+        "lon_d": "E",
+        "alt": 3776.0,
+        "head": 0.0
+    },
+    {
         "name": "San Fransisco, Golden Gate Bridge",
         "lat": 37.81856987922529,
         "lat_d": "N",
-        "lon": 122.47846487256828,
+        "lon": -122.47846487256828,
+        "lon_d": "W",
+        "alt": 100,
+        "head": 340.0
+    },
+    {
+        "name": "Buenos Aires, Airport",
+        "lat": -34.56042729715324,
+        "lat_d": "S",
+        "lon": -58.41363783853778,
         "lon_d": "W",
         "alt": 100,
         "head": 340.0
