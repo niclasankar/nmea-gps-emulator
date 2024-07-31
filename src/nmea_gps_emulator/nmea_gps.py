@@ -14,29 +14,30 @@ class NmeaMsg:
     """
     def __init__(self, position: dict, altitude: float, speed: float, heading: float):
         # Instance attributes
-        # TODO: Remove old time setting
-        #self.utc_date_time = datetime.datetime.utcnow()
-        #print(self.utc_date_time)
         self.utc_date_time = datetime.datetime.now(timezone.utc)
-        #print(self.utc_date_time)
         self.position = position
 
         # The unit's speed provided by the user during the operation of the script
         self.speed = speed
         self.speed_targeted = speed
 
-        # The unit's heading provided by the user during the operation of the script
-        self.heading = heading
-        self.heading_targeted = heading
-
         # The unit's altitude provided by the user during the operation of the script
         self.altitude = altitude
         self.altitude_targeted = altitude
 
-        # The magnetic variation is set to dmmy values
-        self.magvar = 0
+        # The magnetic variation is set to dummy values
+        self.magvar = 2.1
+        self.magvar_dec = 2.1
         self.magvar_direct = 'E'
+        # Calculate magnetic variation once if unit is stopped to get value
         self._magvar_update()
+
+        # The unit's heading provided by the user during the operation of the script
+        self.heading = heading
+        # The unit's active heading
+        self.heading_targeted = heading
+        # Calculate magnetic heading from heading
+        self.heading_magnetic = heading - self.magvar
 
         # NMEA sentences initialization - by default with 15 sats
         self.gpgsv_group = GpgsvGroup()
@@ -73,14 +74,16 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
+        print('Init NmeaMsg: ' + str(self.position))
 
     def __next__(self):
         utc_date_time_prev = self.utc_date_time
-        #self.utc_date_time = datetime.datetime.utcnow()
         self.utc_date_time = datetime.datetime.now(timezone.utc)
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
         self._magvar_update()
+        #print(self.magvar_dec)
+        #print(self.magvar)
         if self.heading != self.heading_targeted:
             self._heading_update()
         if self.speed != self.speed_targeted:
@@ -98,6 +101,7 @@ class NmeaMsg:
         self.gprmc.magnetic_var_direct = self.magvar_direct
         self.gphdt.heading = self.heading
         self.gpvtg.heading_true = self.heading
+        self.gpvtg.heading_magnetic = round(self.heading - self.magvar,1)
         self.gpvtg.sog_knots = self.speed
         self.gpzda.utc_time = self.utc_date_time
         return self.nmea_sentences
@@ -114,36 +118,39 @@ class NmeaMsg:
     @staticmethod
     def to_nmea_position(lat, lon) -> tuple:
         # Convert decimal position to NMEA format position for messages
-        lat_degrees = int(lat)
+        lat_abs = abs(lat)
+        lat_degrees = int(lat_abs)
         try:
-            lat_minutes = round(lat % int(lat) * 60, 3)
+            lat_minutes = round(lat_abs % int(lat_abs) * 60, 3)
         except ZeroDivisionError:
-            lat_minutes = round(lat * 60, 3)
+            lat_minutes = round(lat_abs * 60, 3)
         if lat_minutes == 60:
             lat_degrees += 1
             lat_minutes = 0
-        lon_degrees = int(lon)
+
+        lon_abs = abs(lon)
+        lon_degrees = int(lon_abs)
         try:
-            lon_minutes = round(lon % int(lon) * 60, 3)
+            lon_minutes = round(lon_abs % int(lon_abs) * 60, 3)
         except ZeroDivisionError:
-            lon_minutes = round(lon * 60, 3)
+            lon_minutes = round(lon_abs * 60, 3)
         if lon_minutes == 60:
             lon_degrees += 1
             lon_minutes = 0 
         return f'{lat_degrees:02}{lat_minutes:06.3f}', f'{lon_degrees:03}{lon_minutes:06.3f}'
 
-    @staticmethod
-    def to_nmea(dec) -> str:
-        # Convert decimal latitude to NMEA format position for messages
-        nmea_degrees = int(dec)
-        try:
-            nmea_minutes = round(dec % int(dec) * 60, 3)
-        except ZeroDivisionError:
-            nmea_minutes = round(dec * 60, 3)
-        if nmea_minutes == 60:
-            nmea_degrees += 1
-            nmea_minutes = 0
-        return f'{nmea_degrees:02}{nmea_minutes:06.3f}'
+    def _update_dir(self):
+        lat = self.position['latitude_value']
+        if lat < 0:
+            self.position['latitude_direction'] = 'S'
+        else:
+            self.position['latitude_direction'] = 'N'
+        
+        lon = self.position['longitude_value']
+        if lon < 0:
+            self.position['longitude_direction'] = 'W'
+        else:
+            self.position['longitude_direction'] = 'E'
 
     def position_update(self, utc_date_time_prev: datetime):
         """
@@ -156,39 +163,27 @@ class NmeaMsg:
         # Distance in meters.
         distance = speed_ms * time_delta
         
-        # Assignment of coords.
-        lat_a = self.position['latitude_value']
-        lat_direction = self.position['latitude_direction']
-        lon_a = self.position['longitude_value']
-        lon_direction = self.position['longitude_direction']
+        # Assignment of old coords.
+        lat_start = self.position['latitude_value']
+        lon_start = self.position['longitude_value']
         
         # Use WGS84 ellipsoid
         g = Geod(ellps='WGS84')
 
         # Forward transformation - returns longitude, latitude, back azimuth of terminus points
-        lon_end, lat_end, back_azimuth = g.fwd(lon_a, lat_a, self.heading, distance)
-
-        # Change direction when cross the equator or prime meridian (Greenwich)
-        if lat_end >= 0:
-            lat_direction = 'N'
-        else:
-            lat_direction = 'S'
-        if lon_end >= 0:
-            lon_direction = 'E'
-        else:
-            lon_direction = 'W'
-        lon_end, lat_end = abs(lon_end), abs(lat_end)
+        lon_end, lat_end, back_azimuth = g.fwd(lon_start, lat_start, self.heading, distance)
 
         # Convert the new position to NMEA form and store
-        nmea_pos_lat, nmea_pos_lon = self.to_nmea_position(lat_end,lon_end)
+        nmea_pos_lat, nmea_pos_lon = self.to_nmea_position(lat_end, lon_end)
         self.position['latitude_nmea_value'] = nmea_pos_lat
         self.position['longitude_nmea_value'] = nmea_pos_lon
 
         # Store the new position
         self.position['latitude_value'] = lat_end 
-        self.position['latitude_direction'] = f'{lat_direction.upper()}'
         self.position['longitude_value'] = lon_end
-        self.position['longitude_direction'] = f'{lon_direction.upper()}'
+
+        # Update longitude and latitude direction
+        self._update_dir()
 
     def _heading_update(self):
         """
@@ -276,15 +271,14 @@ class NmeaMsg:
         Updates the magnetic variation from WMM in pygeomag
         """
         datedec = decimal_year_from_date(self.utc_date_time)
-
         lat = self.position['latitude_value']
         lon = self.position['longitude_value']
+        #print('MagvarUpdate',lat, lon)
         alt = self.altitude
-
         gm = GeoMag()
         result = gm.calculate(glat=lat, glon=lon, alt=alt, time=datedec)
-        self.magvar = result.d
-
+        self.magvar = abs(result.d)
+        self.magvar_dec = result.d
         if result.d > 0:
             self.magvar_direct = 'E'
         else:
