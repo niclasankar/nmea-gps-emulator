@@ -23,7 +23,6 @@ from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-
 class Application:
     """
     Display a menu and respond to choices when run.
@@ -80,14 +79,17 @@ based on source code by luk-kop
                 }
                 print('Do you want to use a predefined starting point? (Y/N)')
                 poi_active = input('>>> ')
+                poi_ok = False
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
                     poi_data, alt, heading = poi_input()
-                    nav_data_dict['position'] = poi_data
-                    nav_data_dict['gps_heading'] = heading
-                    nav_data_dict['gps_speed'] = 2
-                    nav_data_dict['gps_altitude_amsl'] = alt
-                else:
+                    if poi_data != None:
+                        nav_data_dict['position'] = poi_data
+                        nav_data_dict['gps_heading'] = heading
+                        nav_data_dict['gps_speed'] = 2
+                        nav_data_dict['gps_altitude_amsl'] = alt
+                        poi_ok = True
+                if poi_ok == False:
                     # Position, initial course, speed and altitude queries
                     nav_data_dict['position'] = position_sep_input()
                     nav_data_dict['gps_heading'] = heading_input()
