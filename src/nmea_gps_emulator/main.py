@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
-# https://swairlearn.bluecover.pt/nmea_analyser
-# https://pygeomag.readthedocs.io/en/latest/api.html
-# https://pyproj4.github.io/pyproj/stable/api/geod.html
-# https://receiverhelp.trimble.com/alloy-gnss/en-us/NMEA-0183messages_MessageOverview.html
-# https://swairlearn.bluecover.pt/nmea_analyser
+"""
+Main module of NMEA-GPS-EMULATOR containing the start methods and
+menu.
+
+Created in 202f
+Based on the works of luk-kop
+
+:author: ankars
+:copyright: Ankars.se © 2024
+:license: MIT
+"""
 
 import time
 import sys
@@ -103,7 +109,6 @@ based on source code by luk-kop
                                         heading=nav_data_dict['gps_heading'])
                 action()
                 break
-        
         # Changing the unit's course and speed by the user in the main thread.
         first_run = True
         while True:
@@ -112,10 +117,10 @@ based on source code by luk-kop
                 sys.exit()
             try:
                 if first_run:
-                    time.sleep(2)
+                    time.sleep(3)
                     first_run = False
                 try:
-                    prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
+                    prompt = input('- Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
@@ -209,7 +214,7 @@ based on source code by luk-kop
                 sys.exit()
             try:
                 if first_run:
-                    time.sleep(2)
+                    time.sleep(3)
                     first_run = False
                 try:
                     prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')

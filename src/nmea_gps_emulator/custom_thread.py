@@ -1,3 +1,19 @@
+"""
+Module for threading in NMEA-GPS-EMULATOR containing:
+- Telnet thread
+- TCP Server thread
+- TCP Stream thread
+- Serial thread
+- File output thread
+
+Created in 2024
+Based on the works of luk-kop
+
+:author: ankars
+:copyright: Ankars.se © 2024
+:license: MIT
+"""
+
 import logging
 import threading
 import time

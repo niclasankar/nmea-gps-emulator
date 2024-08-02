@@ -1,6 +1,17 @@
 """
-Module for utils in nmea_gps_emulator
+Module for utilities in NMEA-GPS-EMULATOR containing:
+- Input methods
+- Log methods
+- Helpers
+
+Created in 2024
+Based on the works of luk-kop
+
+:author: ankars
+:copyright: Ankars.se © 2024
+:license: MIT
 """
+
 import re
 import sys
 import os

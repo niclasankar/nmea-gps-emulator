@@ -1,3 +1,14 @@
+"""
+Module for NMEA messages in NMEA-GPS-EMULATOR.
+
+Created in 2024
+Based on the works of luk-kop
+
+:author: ankars
+:copyright: Ankars.se © 2024
+:license: MIT
+"""
+
 import random
 from math import ceil
 import datetime
