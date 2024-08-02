@@ -165,7 +165,6 @@ def position_sep_input() -> dict:
             if mo:
                 position_dict['latitude_value'] = float(mo.group())
                 break
-            print(type(latitude_data))
         # Input of longitude
         while True:
             try:
@@ -185,8 +184,8 @@ def position_sep_input() -> dict:
             if mo:
                 position_dict['longitude_value'] = float(mo.group())
         #Convert lat/lon to NMEA form and store in dictionary
-        print(str(position_dict))
         position_dict['latitude_nmea_value'], position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
+        print(str(position_dict))
         return position_dict
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
