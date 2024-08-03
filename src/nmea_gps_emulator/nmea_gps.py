@@ -19,6 +19,8 @@ from pyproj import Geod
 from pygeomag import GeoMag
 from pygeomag import decimal_year_from_date
 
+from nmea_utils import ddd2nmeall
+
 class NmeaMsg:
     """
     The class represent a group of NMEA sentences.
@@ -85,7 +87,7 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
-        print('Init NmeaMsg: ' + str(self.position))
+        #print('Init NmeaMsg: ' + str(self.position))
 
     def __next__(self):
         utc_date_time_prev = self.utc_date_time
@@ -93,8 +95,6 @@ class NmeaMsg:
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
         self._magvar_update()
-        #print(self.magvar_dec)
-        #print(self.magvar)
         if self.heading != self.heading_targeted:
             self._heading_update()
         if self.speed != self.speed_targeted:
@@ -126,30 +126,6 @@ class NmeaMsg:
             nmea_msgs_str += f'{nmea}'
         return nmea_msgs_str
     
-    @staticmethod
-    def to_nmea_position(lat, lon) -> tuple:
-        # Convert decimal position to NMEA format position for messages
-        lat_abs = abs(lat)
-        lat_degrees = int(lat_abs)
-        try:
-            lat_minutes = round(lat_abs % int(lat_abs) * 60, 3)
-        except ZeroDivisionError:
-            lat_minutes = round(lat_abs * 60, 3)
-        if lat_minutes == 60:
-            lat_degrees += 1
-            lat_minutes = 0
-
-        lon_abs = abs(lon)
-        lon_degrees = int(lon_abs)
-        try:
-            lon_minutes = round(lon_abs % int(lon_abs) * 60, 3)
-        except ZeroDivisionError:
-            lon_minutes = round(lon_abs * 60, 3)
-        if lon_minutes == 60:
-            lon_degrees += 1
-            lon_minutes = 0 
-        return f'{lat_degrees:02}{lat_minutes:06.3f}', f'{lon_degrees:03}{lon_minutes:06.3f}'
-
     def _update_dir(self):
         lat = self.position['latitude_value']
         if lat < 0:
@@ -185,7 +161,8 @@ class NmeaMsg:
         lon_end, lat_end, back_azimuth = g.fwd(lon_start, lat_start, self.heading, distance)
 
         # Convert the new position to NMEA form and store
-        nmea_pos_lat, nmea_pos_lon = self.to_nmea_position(lat_end, lon_end)
+        nmea_pos_lat = ddd2nmeall(lat_end, 'lat')
+        nmea_pos_lon = ddd2nmeall(lon_end, 'lng')
         self.position['latitude_nmea_value'] = nmea_pos_lat
         self.position['longitude_nmea_value'] = nmea_pos_lon
 
@@ -401,7 +378,6 @@ class Gpgga:
         self._utc_time = value.strftime('%H%M%S')
 
     def __str__(self) -> str:
-        nmea_lat, nmea_lon = NmeaMsg.to_nmea_position(56.9, 12.7)
         nmea_output = f'{self.sentence_id},{self.utc_time}.00,{self.position["latitude_nmea_value"]},' \
                       f'{self.position["latitude_direction"]},{self.position["longitude_nmea_value"]},' \
                       f'{self.position["longitude_direction"]},{self.fix_quality},' \
