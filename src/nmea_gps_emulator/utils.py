@@ -23,7 +23,9 @@ import socket
 
 import psutil
 import serial.tools.list_ports
+
 from nmea_gps import NmeaMsg
+from nmea_utils import ddd2nmeall
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -132,7 +134,9 @@ def poi_input():
                     else:
                         pos_dict['longitude_direction'] = 'E'
 
-                    pos_dict['latitude_nmea_value'], pos_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(sel_poi_item['lat'], sel_poi_item['lon'])
+                    #pos_dict['latitude_nmea_value'], pos_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(sel_poi_item['lat'], sel_poi_item['lon'])
+                    pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
+                    pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
 
                     return pos_dict, sel_poi_item['alt'], sel_poi_item['head']
                 else:
@@ -194,8 +198,11 @@ def position_sep_input() -> dict:
             mo = re.fullmatch(longitude_regex_pattern, str(longitude_data))
             if mo:
                 position_dict['longitude_value'] = float(mo.group())
+        
         #Convert lat/lon to NMEA form and store in dictionary
-        position_dict['latitude_nmea_value'], position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(position_dict['latitude_value'], position_dict['longitude_value'])
+        position_dict['latitude_nmea_value'] = ddd2nmeall(position_dict['latitude_value'], 'lat')
+        position_dict['longitude_nmea_value'] = ddd2nmeall(position_dict['longitude_value'], 'lng')
+
         print(str(position_dict))
         return position_dict
     except KeyboardInterrupt:
