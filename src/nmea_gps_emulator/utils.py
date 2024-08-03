@@ -24,18 +24,17 @@ import socket
 import psutil
 import serial.tools.list_ports
 
-from nmea_gps import NmeaMsg
 from nmea_utils import ddd2nmeall
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 default_position_dict = {
-    'latitude_value': '57.70011131502446',
-    'latitude_nmea_value': '5742.011131502446',
+    'latitude_value': 57.70011131502446,
+    'latitude_nmea_value': '5742.01113',
     'latitude_direction': 'N',
-    'longitude_value': '11.988278521104876',
-    'longitude_nmea_value': '01159.8278521104876',
+    'longitude_value': 11.988278521104876,
+    'longitude_nmea_value': '01159.82785',
     'longitude_direction': 'E',
 }
 default_speed = 2
