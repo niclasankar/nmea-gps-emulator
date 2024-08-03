@@ -21,6 +21,7 @@ import os
 import json
 
 from nmea_gps import NmeaMsg
+from nmea_utils import ddd2nmeall
 from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
     change_input, serial_config_input, alt_input, filter_input, poi_input
 
@@ -190,10 +191,10 @@ based on source code by luk-kop
 
                 # Get args to dictionary
                 position_dict['latitude_value'] = lat
-                position_dict['latitude_nmea_value'] = NmeaMsg.to_nmea(lat)
+                position_dict['latitude_nmea_value'] = ddd2nmeall(lat, 'lat')
                 position_dict['latitude_direction'] = lat_d
                 position_dict['longitude_value'] = lon
-                position_dict['longitude_nmea_value'] = NmeaMsg.to_nmea(lon)
+                position_dict['longitude_nmea_value'] = ddd2nmeall(lon, 'lng')
                 position_dict['longitude_direction'] = lon_d
 
                 # Initialize NmeaMsg object
