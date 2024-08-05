@@ -4,7 +4,7 @@
 Main module of NMEA-GPS-EMULATOR containing the start methods and
 menu.
 
-Created in 202f
+Created in 2024
 Based on the works of luk-kop
 
 :author: ankars
