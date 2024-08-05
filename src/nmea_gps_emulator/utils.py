@@ -133,7 +133,6 @@ def poi_input():
                     else:
                         pos_dict['longitude_direction'] = 'E'
 
-                    #pos_dict['latitude_nmea_value'], pos_dict['longitude_nmea_value'] = NmeaMsg.to_nmea_position(sel_poi_item['lat'], sel_poi_item['lon'])
                     pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
                     pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
 
