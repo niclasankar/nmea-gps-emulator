@@ -182,24 +182,24 @@ class NmeaGuiApplication(QDialog):
                 self.serial_list_combo_box.setFocus()
             case 1: # TCP Server
                 self.networkgroupbox.setEnabled(True)
-                self.ipal_txt.setFocus()
+                self.ip_srv_txt.setFocus()
             case 2: # Stream UDP
                 self.networkgroupbox.setEnabled(True)
-                self.ipar_txt.setFocus()
+                self.ip_str_txt.setFocus()
             case 3: # Stream TCP
                 self.networkgroupbox.setEnabled(True)
-                self.ipar_txt.setFocus()
+                self.ip_str_txt.setFocus()
             case 4: # Logging
                 self.filtergroupbox.setEnabled(True)
             case _:
+                self.filtergroupbox.setEnabled(True)
                 self.mode_select = 4
 
     def create_serialgroupbox(self):
         self.serialgroupbox = QGroupBox("Serial ports:")
 
+        # Create combo box with available serial ports
         self.serial_list_combo_box = QComboBox(self)
-
-        # List available serial ports
         ports_connected = serial.tools.list_ports.comports(include_links=False)
         for device, desc, hwid in sorted(ports_connected):
             self.serial_list_combo_box.addItem(f'{device}')
@@ -207,14 +207,11 @@ class NmeaGuiApplication(QDialog):
         self.serial_select_label.width = 120
         self.serial_list_combo_box.currentIndexChanged.connect(self.check_valid_serial)
 
-        # List all baud rates
+        # Create a combo box with all baud rates
         self.baudrates_combo_box = QComboBox(self)
         baudrate_list = ['300', '600', '1200', '2400', '4800', '9600', '14400',
                      '19200', '38400', '57600', '115200', '128000']
-        # Add baud rates to the combo box
         self.baudrates_combo_box.addItems(baudrate_list)
-
-        # Set NMEA default baud rate 9600
         default_baud_rate = "9600"
         self.baudrates_combo_box.setCurrentText(default_baud_rate)
         self.baudrates_combo_box.currentIndexChanged.connect(self.check_valid_serial)
