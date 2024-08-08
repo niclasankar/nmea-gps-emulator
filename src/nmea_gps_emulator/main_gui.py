@@ -268,13 +268,13 @@ class NmeaGuiApplication(QDialog):
 
         self.port_srv_txt = QLineEdit(self)
         self.port_srv_txt.width = 60
-        self.port_srv_txt.setToolTip('Port, used for both stream and server')
+        self.port_srv_txt.setToolTip('Port, used for server')
         ipp_input_validator = QRegularExpressionValidator(
             QRegularExpression(R'''([1-9][0-9]{0,3}|[1-6][0-5]{2}[0-3][0-5])'''),
                 self.port_srv_txt
         )
         self.port_srv_txt.setValidator(ipp_input_validator)
-        self.port_srv_txt.setText(str(f'{self.network_set['port_srv']}'))
+        self.port_srv_txt.setText(str({self.network_set['port_srv']}))
         self.port_srv_txt.textChanged.connect(self.check_valid_network)
         self.port_srv_txt.textEdited.connect(self.check_valid_network)
 
@@ -283,19 +283,19 @@ class NmeaGuiApplication(QDialog):
         self.ip_str_txt.setToolTip('Remote IP address used to send messages to')
         ipar_txt_validator = QRegularExpressionValidator(ip_regex, self.ip_str_txt)
         self.ip_str_txt.setValidator(ipar_txt_validator)
-        self.ip_str_txt.setText(str(f'{self.network_set['ip_str']}'))
+        self.ip_str_txt.setText(str({self.network_set['ip_str']}))
         self.ip_str_txt.textChanged.connect(self.check_valid_network)
         self.ip_str_txt.textEdited.connect(self.check_valid_network)
 
         self.port_str_txt = QLineEdit(self)
         self.port_str_txt.width = 60
-        self.port_str_txt.setToolTip('Port, used for both stream and server')
+        self.port_str_txt.setToolTip('Port, used for stream')
         ipp_input_validator = QRegularExpressionValidator(
             QRegularExpression(R'''([1-9][0-9]{0,3}|[1-6][0-5]{2}[0-3][0-5])'''),
                 self.port_str_txt
         )
         self.port_str_txt.setValidator(ipp_input_validator)
-        self.port_str_txt.setText(str(f'{self.network_set['port_str']}'))
+        self.port_str_txt.setText(str({self.network_set['port_str']}))
         self.port_str_txt.textChanged.connect(self.check_valid_network)
         self.port_str_txt.textEdited.connect(self.check_valid_network)
 
@@ -324,7 +324,6 @@ class NmeaGuiApplication(QDialog):
 
         self.lat_txt = QLineEdit(self)
         self.lat_txt.width = 60
-        # self.lat_txt.setText(str(self.default_position_dict['latitude_value']))
         self.lat_txt.setText(str(self.nav_data_dict['position']['latitude_value']))
         self.lat_txt.setToolTip(f'Latitude in degrees, negative if on the southern hemisphere')
         lat_validator = QDoubleValidator(-89.9999999, 89.9999999, 8, self)
