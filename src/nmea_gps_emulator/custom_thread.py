@@ -14,7 +14,6 @@ Based on the works of luk-kop
 :license: MIT
 """
 
-import logging
 import threading
 import time
 import socket
@@ -24,9 +23,9 @@ import uuid
 
 import serial.tools.list_ports
 
-from utils import exit_script, system_log, data_log
+from utils import exit_script, system_log, data_log, set_status
 
-def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> None:
+def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj, gui = False) -> None:
     """
     Function starts thread with TCP (telnet) server sending NMEA data to connected client (clients).
     """
@@ -65,12 +64,11 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
                 # print(f'\n*** Connection closed with {ip_add[0]}:{ip_add[1]} ***')
                 system_log(f'Connection closed with {ip_add[0]}:{ip_add[1]}')
 
-
 class NmeaSrvThread(threading.Thread):
     """
     A class that represents a thread dedicated for TCP (telnet) server-client connection.
     """
-    def __init__(self, nmea_object, ip_add=None, conn=None, *args, **kwargs):
+    def __init__(self, nmea_object, ip_add=None, conn=None, gui=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.heading = None
         self.speed = None
@@ -82,6 +80,7 @@ class NmeaSrvThread(threading.Thread):
         self.ip_add = ip_add
         self.nmea_object = nmea_object
         self._lock = threading.RLock()
+        self.gui_running = gui
 
     def set_speed(self, speed):
         with self._lock:
@@ -101,7 +100,6 @@ class NmeaSrvThread(threading.Thread):
     def run(self):
         while True:
             timer_start = time.perf_counter()
-            print(self.nmea_object.altitude)
             with self._lock:
                 # Nmea object speed and heading update
                 if self.heading and self.heading != self._heading_cache:
@@ -138,10 +136,11 @@ class NmeaStreamThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for TCP or UDP stream connection.
     """
-    def __init__(self, proto, port, *args, **kwargs):
+    def __init__(self, proto, port, gui=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.proto = proto
         self.port = port
+        self.gui_running = gui
 
     def run(self):
         if self.proto == 'tcp':
@@ -205,9 +204,10 @@ class NmeaSerialThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for serial connection.
     """
-    def __init__(self, serial_config, *args, **kwargs):
+    def __init__(self, serial_config, gui=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.serial_config = serial_config
+        self.gui_running = gui
 
     def run(self):
         # Open serial port.
@@ -250,13 +250,18 @@ class NmeaOutputThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for logging output for debugging.
     """
-    def __init__(self, filter_mess, *args, **kwargs):
+    def __init__(self, filter_mess, gui=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filter_mess = filter_mess
+        self.gui_running = gui
 
     def run(self):
         # Output data to file.
-        print('Logging NMEA data to file...\n')
+        if self.filter_mess != '':
+            print(f'Logging NMEA data to file with filter {self.filter_mess}...\n')
+        else:
+            print(f'Logging NMEA data to file...\n')
+            
         try:
             while True:
                 timer_start = time.perf_counter()
@@ -278,10 +283,11 @@ class NmeaOutputThread(NmeaSrvThread):
                     # Loop through list and log to file
                     for nmea in nmea_list:
                         # Check filter
-                        if self.filter_mess != None:
+                        if self.filter_mess != '':
                             mo = re.match(rf"(\{self.filter_mess})", nmea)
                             if mo:
                                 data_log(nmea)
+                                print(nmea)
                         else:
                             data_log(nmea)
                     time.sleep(0.05)
