@@ -8,6 +8,7 @@ This script can be useful for testing applications or systems that require some 
 
 The script is a highly modified script based on the script originally created by GitHub user [luk-kop](https://github.com/luk-kop/nmea-gps-emulator/) and published on GitHub.
 The code has been documented and modified to use decimal coordinates, to allow input of altitude, logging to file and other changes.
+The script is also available in a version with a GUI created with PySide6.
 
 The **GPS NMEA Emulator** script can be used in one of the following operating modes:
 - NMEA TCP Stream (sends TCP packets to the specified client),
@@ -68,6 +69,7 @@ Python third party packages:
 * [pyserial](https://pypi.org/project/pyserial/)
 * [psutil](https://pypi.org/project/psutil/)
 * [pygeomag](https://pypi.org/project/pygeomag/)
+* [PySide6](https://pypi.org/project/PySide6/)
 
 In order to use **NMEA Serial** mode correctly, it is necessary to use dedicated serial null modem cable, a virtual serial port or a virtual pipe if running in a virtual machine.
 
@@ -78,7 +80,7 @@ sudo chmod a+rw /dev/ttyS0
 ```
 
 ### Installation with virtual environment
-The script can be build and run locally with virtualenv tool. Run following commands in order to create virtual environment and install the required packages.
+The script can be build and run locally with virtualenv tool. Run following commands in order to create virtual environment and install the required packages. PySide is only needed if you want to run the GUI.
 ```bash
 $ python -m venv /path/to/new/virtual/environment
 $ source venv/bin/activate
@@ -86,6 +88,7 @@ $ source venv/bin/activate
 (venv) $ pip install pyserial
 (venv) $ pip install psutil
 (venv) $ pip install pygeomag
+(venv) $ pip install PySide6
 ```
 ### Running the script
 You can start the script using the following command:
@@ -214,4 +217,11 @@ Below is a example of a config file
     "head": 230.0,
     "speed": 2
 }
+```
+
+### Running the script with a GUI
+The script can be run with a GUI (experimental)
+
+```bash
+(venv) $ python main_gui.py
 ```
