@@ -287,7 +287,6 @@ class NmeaOutputThread(NmeaSrvThread):
                             mo = re.match(rf"(\{self.filter_mess})", nmea)
                             if mo:
                                 data_log(nmea)
-                                print(nmea)
                         else:
                             data_log(nmea)
                     time.sleep(0.05)
