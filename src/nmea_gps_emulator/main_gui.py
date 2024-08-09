@@ -490,12 +490,12 @@ class NmeaGuiApplication(QDialog):
         self.statusgroupbox.setLayout(status_stack)
 
     def update_status(self):
-        self.status_lat_label.setText(f'Latitude: {str(self.nmea_obj.position['latitude_value'])}°')
-        self.status_lng_label.setText(f'Longitude: {str(self.nmea_obj.position['longitude_value'])}°')
-        self.status_speed_label.setText(f'Speed: {str(self.nmea_obj.speed)} kt')
-        self.status_alt_label.setText(f'Altitude: {str(self.nmea_obj.altitude)} msl')
-        self.status_head_label.setText(f'Heading: {str(self.nmea_obj.heading)}°')
-        self.status_magvar_label.setText(f'M: {self.nmea_obj.magvar_dec:.3f}°')
+        self.status_lat_label.setText(f"Latitude: {str(self.nmea_obj.position['latitude_value'])}°")
+        self.status_lng_label.setText(f"Longitude: {str(self.nmea_obj.position['longitude_value'])}°")
+        self.status_speed_label.setText(f"Speed: {str(self.nmea_obj.speed)} kt")
+        self.status_alt_label.setText(f"Altitude: {str(self.nmea_obj.altitude)} msl")
+        self.status_head_label.setText(f"Heading: {str(self.nmea_obj.heading)}°")
+        self.status_magvar_label.setText(f"M: {self.nmea_obj.magvar_dec:.3f}°")
         self.status_system_label.setText(get_status())
 
     def run(self):
