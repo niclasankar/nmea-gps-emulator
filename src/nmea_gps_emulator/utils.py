@@ -42,15 +42,15 @@ default_alt = 42
 default_head = 260
 
 filters_dict = {
-    '1': '$GPGGA',
-    '2': '$GPGLL',
-    '3': '$GPRMC',
-    '4': '$GPGSA',
-    '5': '$GPGSV',
-    '6': '$GPHDT',
-    '7': '$GPVTG',
-    '8': '$GPZDA',
-    '0': None
+    1: '$GPGGA',
+    2: '$GPGLL',
+    3: '$GPRMC',
+    4: '$GPGSA',
+    5: '$GPGSV',
+    6: '$GPHDT',
+    7: '$GPVTG',
+    8: '$GPZDA',
+    0: 'No filter'
 }
 default_ip = '127.0.0.1'
 default_port = 10110
@@ -72,21 +72,31 @@ def exit_script(errortx = 'unspecified'):
 def filter_input():
     """
     The function asks for type of messages to log
+
+    :return: filter message id as string
+    :rtype: str
     """
     print('Choose filter:')
     for x, y in filters_dict.items():
         print(f'  {x} - {y}') 
     try:
-        filter = input('>>> ')
-        if filter == '':
+        filter_choice = input('>>> ')
+        mo = re.match(r'([0-8])', filter_choice)
+        if mo:
+            # Filter is first match group
+            filter = int(mo.group())
+        else:
             # No filter
             filter = 0
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
     filter_type = filters_dict.get(filter)
-    if int(filter) != 0:
+    if filter != 0:
         print('Filtering messages by type ' + filter_type + '.\n')
+    else:
+        print('No message filtering active.\n')
+        filter_type = ''
     return filter_type
 
 def poi_input():
@@ -262,6 +272,7 @@ def trans_proto_input() -> str:
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
+
             if stream_proto == '' or stream_proto == 'tcp':
                 return 'tcp'
             elif stream_proto == 't':
