@@ -250,18 +250,15 @@ class NmeaOutputThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for logging output for debugging.
     """
-    def __init__(self, filter_mess, gui=False, *args, **kwargs):
+    def __init__(self, filter_mess='', gui=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filter_mess = filter_mess
         self.gui_running = gui
+        self.thread_sleep = 1
 
     def run(self):
         # Output data to file.
-        if self.filter_mess != '':
-            print(f'Logging NMEA data to file with filter {self.filter_mess}...\n')
-        else:
-            print(f'Logging NMEA data to file...\n')
-            
+        print(f'Logging NMEA data to file...\n')
         try:
             while True:
                 timer_start = time.perf_counter()
@@ -290,11 +287,17 @@ class NmeaOutputThread(NmeaSrvThread):
                         else:
                             data_log(nmea)
                     time.sleep(0.05)
-                    time.sleep(1.1 - (time.perf_counter() - timer_start))
-        except Exception as error:
-            print(error)
+                    self.thread_sleep = 1.1 - (time.perf_counter() - timer_start)
+                    time.sleep(self.thread_sleep)
+
+        except RuntimeError as rt_error:
+            print(self.thread_sleep)
             # Remove error number from output [...]
-            error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            system_log(f"{error_formatted}.")
+            error_formatted = 'RuntimeError: ' + re.sub(r'\[(.*?)\]', '', str(rt_error)).strip().replace('  ', ' ').capitalize()
             exit_script(f"{error_formatted}.")
 
+        except Exception as error:
+            # Remove error number from output [...]
+            error_formatted = 'Exception: ' + re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
+            exit_script(f"{error_formatted}.")
+            
