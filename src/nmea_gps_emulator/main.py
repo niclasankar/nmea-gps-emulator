@@ -48,12 +48,12 @@ class Application:
     def display_menu(self):
         # Show menu with choises
         print(r'''
-┳┓┳┳┓┏┓┏┓  ┏┓     ┓             
-┃┃┃┃┃┣ ┣┫  ┣ ┏┳┓┓┏┃┏┓╋┏┓┏┓      
-┛┗┛ ┗┗┛┛┗  ┗┛┛┗┗┗┻┗┗┻┗┗┛┛       
+    ┳┓┳┳┓┏┓┏┓  ┏┓     ┓             
+    ┃┃┃┃┃┣ ┣┫  ┣ ┏┳┓┓┏┃┏┓╋┏┓┏┓      
+    ┛┗┛ ┗┗┛┛┗  ┗┛┛┗┗┗┻┗┗┻┗┗┛┛       
                                 
-based on source code by luk-kop
-''')
+    based on source code by luk-kop
+        ''')
         print('### Choose emulator mode:            ###')
         print('### -------------------------------- ###')
         print('1 - NMEA Serial port output')
@@ -203,7 +203,7 @@ based on source code by luk-kop
                                         speed=speed,
                                         heading=head)
                 # Print start message
-                print(f'\nStarting emulation at {position_dict['latitude_value']},{position_dict['longitude_value']}')
+                print(f"\nStarting emulation at {position_dict['latitude_value']},{position_dict['longitude_value']}")
                 action()
                 break
         
@@ -271,6 +271,7 @@ based on source code by luk-kop
                                        filter_mess=filter_mess,
                                        nmea_object=self.nmea_obj)
         self.nmea_thread.start()
+        print(self.nmea_thread.name)
 
     def nmea_tcp_server(self):
         """
