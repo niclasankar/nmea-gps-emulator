@@ -1,25 +1,25 @@
 [
     {
         "name": "Gothenburg, Scandinavium Arena",
-        "lat": 57.70010540643474,
+        "lat": 57.70010540,
         "lat_d": "N",
-        "lon": 11.988275923454133,
+        "lon": 11.98827592,
         "lon_d": "E",
         "alt": 4,
         "head": 260.0
     },
     {
         "name": "Washington, Capitoleum",
-        "lat": 38.88929635674423,
+        "lat": 38.88929635,
         "lat_d": "N",
-        "lon": -77.05015276630542,
+        "lon": -77.05015276,
         "lon_d": "W",
         "alt": 9,
         "head": 270.0
     },
     {
         "name": "London, Prime Meridian",
-        "lat": 51.477885003700905,
+        "lat": 51.47788500,
         "lat_d": "N",
         "lon": 0.00,
         "lon_d": "E",
@@ -28,27 +28,27 @@
     },
     {
         "name": "Japan, Mount Fuji",
-        "lat": 35.36055489316901,
+        "lat": 35.36055489,
         "lat_d": "N",
-        "lon": 138.72738484806248,
+        "lon": 138.72738484,
         "lon_d": "E",
         "alt": 3776.0,
         "head": 0.0
     },
     {
         "name": "San Fransisco, Golden Gate Bridge",
-        "lat": 37.81856987922529,
+        "lat": 37.81856987,
         "lat_d": "N",
-        "lon": -122.47846487256828,
+        "lon": -122.47846487,
         "lon_d": "W",
         "alt": 100,
         "head": 340.0
     },
     {
         "name": "Buenos Aires, Airport",
-        "lat": -34.56042729715324,
+        "lat": -34.56042729,
         "lat_d": "S",
-        "lon": -58.41363783853778,
+        "lon": -58.41363783,
         "lon_d": "W",
         "alt": 100,
         "head": 340.0
