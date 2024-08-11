@@ -25,14 +25,14 @@ from PySide6.QtCore import QTimer, QRegularExpression, QLocale
 
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QComboBox, 
         QDialog, QFormLayout, QGridLayout, QGroupBox, QLabel, QLineEdit,
-        QMessageBox, QPushButton, QRadioButton, 
+        QListWidget, QListWidgetItem, QMessageBox, QPushButton, QRadioButton, 
         QVBoxLayout)
 
 from PySide6.QtGui import QDoubleValidator, QIntValidator, QRegularExpressionValidator
 
 from nmea_gps import NmeaMsg
 from nmea_utils import ddd2nmeall
-from utils import get_ip, get_status
+from utils import get_ip
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
@@ -95,6 +95,7 @@ class NmeaGuiApplication(QDialog):
             '0': 'None'
         }
         self.filter_mess = ''
+        self.poi_list = {}
 
         self.init_gui()
 
@@ -112,6 +113,7 @@ class NmeaGuiApplication(QDialog):
         self.create_networkgroupbox()
         self.create_filtergroupbox()
         self.create_statusgroupbox()
+        self.create_poigroupbox()
 
         # Create timer
         self.update_timer = QTimer()
@@ -143,6 +145,7 @@ class NmeaGuiApplication(QDialog):
 
         # Column 3
         main_grid.addWidget(self.statusgroupbox, 0, 2, 2, 1)
+        main_grid.addWidget(self.poigroupbox,2, 2)
 
         # Buttons
         main_grid.addWidget(self.start_button, 3, 0)
@@ -231,6 +234,47 @@ class NmeaGuiApplication(QDialog):
         self.serial_set['port'] = serial_select
         self.serial_set['baudrate'] = int(baudrate_select)
 
+    def create_poigroupbox(self):
+        self.poigroupbox = QGroupBox("Points of Interest:")
+
+        # Create list box with POI:s in the file poi.json
+        self.poi_list_box = QListWidget(self)
+        poi_filename = 'poi.json'
+        poi_filename_path = os.path.join(__location__, poi_filename)
+        if os.path.exists(poi_filename_path):
+            with open(poi_filename_path, 'r') as file:
+                self.poi_list = json.load(file)
+
+            # Add a number to each object in the list
+            for index, item in enumerate(self.poi_list, start=1):
+                item['uid'] = index
+
+            # Loop through each object in the list
+            for poi in self.poi_list:
+                poi_list_item = QListWidgetItem(str(poi['name']))
+                poi_list_item.setToolTip(f"({poi['lon']:3.3f}º{poi['lon_d']}, " +
+                          f"{poi['lat']:2f}º{poi['lat_d']})")
+                poi_list_item.setData(32, poi["uid"])  # 32 is the role for UserRole
+                self.poi_list_box.addItem(poi_list_item)
+
+        self.poi_list_box.currentItemChanged.connect(self.select_poi)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.poi_list_box)
+        layout.addStretch(1)
+        self.poigroupbox.setLayout(layout)
+
+    def select_poi(self, selected_item):
+        item_uid = selected_item.data(32)
+        # print(self.poi_list)
+        item = next((p for p in self.poi_list if p["uid"] == item_uid), None)
+
+        if item:
+            self.lat_txt.setText(str(item['lat']))
+            self.lng_txt.setText(str(item['lon']))
+            self.alt_txt.setText(str(item['alt']))
+            self.head_txt.setText(str(item['head']))
+
     def create_networkgroupbox(self):
         self.networkgroupbox = QGroupBox("Networking:")
 
@@ -261,8 +305,7 @@ class NmeaGuiApplication(QDialog):
         self.ip_srv_txt.setToolTip('Local IP address to use when running a TCP server')
         ipal_txt_validator = QRegularExpressionValidator(ip_regex, self.ip_srv_txt)
         self.ip_srv_txt.setValidator(ipal_txt_validator)
-        self.ip_srv_txt.setPlaceholderText('127.0.0.1')
-        self.ip_srv_txt.setText(str(f'{get_ip()}'))
+        self.ip_srv_txt.setText(get_ip())
         self.ip_srv_txt.textChanged.connect(self.check_valid_network)
         self.ip_srv_txt.textEdited.connect(self.check_valid_network)
 
@@ -274,7 +317,7 @@ class NmeaGuiApplication(QDialog):
                 self.port_srv_txt
         )
         self.port_srv_txt.setValidator(ipp_input_validator)
-        self.port_srv_txt.setText(str({self.network_set['port_srv']}))
+        self.port_srv_txt.setText(f"{self.network_set['port_srv']}")
         self.port_srv_txt.textChanged.connect(self.check_valid_network)
         self.port_srv_txt.textEdited.connect(self.check_valid_network)
 
@@ -283,7 +326,7 @@ class NmeaGuiApplication(QDialog):
         self.ip_str_txt.setToolTip('Remote IP address used to send messages to')
         ipar_txt_validator = QRegularExpressionValidator(ip_regex, self.ip_str_txt)
         self.ip_str_txt.setValidator(ipar_txt_validator)
-        self.ip_str_txt.setText(str({self.network_set['ip_str']}))
+        self.ip_str_txt.setText(f"{self.network_set['ip_str']}")
         self.ip_str_txt.textChanged.connect(self.check_valid_network)
         self.ip_str_txt.textEdited.connect(self.check_valid_network)
 
@@ -295,7 +338,7 @@ class NmeaGuiApplication(QDialog):
                 self.port_str_txt
         )
         self.port_str_txt.setValidator(ipp_input_validator)
-        self.port_str_txt.setText(str({self.network_set['port_str']}))
+        self.port_str_txt.setText(f"{self.network_set['port_str']}")
         self.port_str_txt.textChanged.connect(self.check_valid_network)
         self.port_str_txt.textEdited.connect(self.check_valid_network)
 
@@ -317,7 +360,6 @@ class NmeaGuiApplication(QDialog):
             self.network_set['port_srv'] = self.port_srv_txt
             self.network_set['ip_stream'] = self.ip_str_txt
             self.network_set['port_stream'] = self.port_str_txt
-            print(self.network_set)
 
     def create_positiongroupbox(self):
         self.positiongroupbox = QGroupBox("Position:")
@@ -434,12 +476,9 @@ class NmeaGuiApplication(QDialog):
             self.filter_button_group.addButton(filter_radio_button)
             filter_radio_button.setProperty('key', key)
             filter_radio_button.setProperty('filter', option)
-
             if key == '0':
                 filter_radio_button.setChecked(True)
-            
             filter_stack.addWidget(filter_radio_button)
-            # print(str(option), str(key))
 
         self.filter_button_group.buttonClicked.connect(self.update_filter)
 
@@ -496,7 +535,6 @@ class NmeaGuiApplication(QDialog):
         self.status_alt_label.setText(f"Altitude: {str(self.nmea_obj.altitude)} msl")
         self.status_head_label.setText(f"Heading: {str(self.nmea_obj.heading)}°")
         self.status_magvar_label.setText(f"M: {self.nmea_obj.magvar_dec:.3f}°")
-        self.status_system_label.setText(get_status())
 
     def run(self):
         """
@@ -610,7 +648,7 @@ class NmeaGuiApplication(QDialog):
         """
         Runs serial which emulates NMEA server-device
         """
-        self.nmea_thread = NmeaSerialThread(name=f'nmea_srv{uuid.uuid4().hex}',
+        self.nmea_thread = NmeaSerialThread(name=f'nmea_ser{uuid.uuid4().hex}',
                                        daemon=True,
                                        serial_config=self.serial_set,
                                        nmea_object=self.nmea_obj,
@@ -621,7 +659,7 @@ class NmeaGuiApplication(QDialog):
         """
         Runs in debug mode which outputs NMEA messages to log
         """
-        self.nmea_thread = NmeaOutputThread(name=f'nmea_srv{uuid.uuid4().hex}',
+        self.nmea_thread = NmeaOutputThread(name=f'nmea_log{uuid.uuid4().hex}',
                                        daemon=True,
                                        filter_mess=self.filter_mess,
                                        nmea_object=self.nmea_obj,
