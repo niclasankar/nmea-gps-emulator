@@ -23,9 +23,9 @@ import uuid
 
 import serial.tools.list_ports
 
-from utils import exit_script, system_log, data_log, set_status
+from utils import exit_script, system_log, data_log
 
-def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj, gui = False) -> None:
+def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> None:
     """
     Function starts thread with TCP (telnet) server sending NMEA data to connected client (clients).
     """
@@ -68,7 +68,7 @@ class NmeaSrvThread(threading.Thread):
     """
     A class that represents a thread dedicated for TCP (telnet) server-client connection.
     """
-    def __init__(self, nmea_object, ip_add=None, conn=None, gui=False, *args, **kwargs):
+    def __init__(self, nmea_object, ip_add=None, conn=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.heading = None
         self.speed = None
@@ -80,7 +80,6 @@ class NmeaSrvThread(threading.Thread):
         self.ip_add = ip_add
         self.nmea_object = nmea_object
         self._lock = threading.RLock()
-        self.gui_running = gui
 
     def set_speed(self, speed):
         with self._lock:
@@ -136,11 +135,10 @@ class NmeaStreamThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for TCP or UDP stream connection.
     """
-    def __init__(self, proto, port, gui=False, *args, **kwargs):
+    def __init__(self, proto, port, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.proto = proto
         self.port = port
-        self.gui_running = gui
 
     def run(self):
         if self.proto == 'tcp':
@@ -204,10 +202,9 @@ class NmeaSerialThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for serial connection.
     """
-    def __init__(self, serial_config, gui=False, *args, **kwargs):
+    def __init__(self, serial_config, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.serial_config = serial_config
-        self.gui_running = gui
 
     def run(self):
         # Open serial port.
@@ -250,10 +247,9 @@ class NmeaOutputThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for logging output for debugging.
     """
-    def __init__(self, filter_mess='', gui=False, *args, **kwargs):
+    def __init__(self, filter_mess='', *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filter_mess = filter_mess
-        self.gui_running = gui
         self.thread_sleep = 1
 
     def run(self):
