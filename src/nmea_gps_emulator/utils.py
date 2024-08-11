@@ -56,8 +56,6 @@ default_ip = '127.0.0.1'
 default_port = 10110
 default_telnet_port = 10110
 
-status_message = '-'
-
 def exit_script(errortx = 'unspecified'):
     """
     The function terminates the script (main thread) from inside of
@@ -511,15 +509,6 @@ def system_log(log_message):
 
 def data_log(log_message):
     data_logger.info(log_message)
-
-def set_status(message):
-    status_message = message
-    print('Status: ' + str(status_message))
-
-def get_status():
-    return status_message
-
-
 
 system_logger = setup_logger('system_logger', 'emulator_system.log')
 data_logger = setup_logger('data_logger', 'emulator_data.log')
