@@ -90,17 +90,24 @@ class NmeaMsg:
         #print('Init NmeaMsg: ' + str(self.position))
 
     def __next__(self):
+        # Get time of last execution
         utc_date_time_prev = self.utc_date_time
         self.utc_date_time = datetime.datetime.now(timezone.utc)
+        # If unit is moving update position
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
+        # Update magnetiv variation value
         self._magvar_update()
+        # Update heading
         if self.heading != self.heading_targeted:
             self._heading_update()
+        # Update speed
         if self.speed != self.speed_targeted:
             self._speed_update()
+        # Update altitude
         if self.altitude != self.altitude_targeted:
             self._altitude_update()
+        # Set values in messages
         self.gpgga.utc_time = self.utc_date_time
         self.gpgga.altitude = self.altitude
         self.gpgga.antenna_altitude_above_msl = self.altitude + 2.5
@@ -112,7 +119,7 @@ class NmeaMsg:
         self.gprmc.magnetic_var_direct = self.magvar_direct
         self.gphdt.heading = self.heading
         self.gpvtg.heading_true = self.heading
-        self.gpvtg.heading_magnetic = round(self.heading - self.magvar,1)
+        self.gpvtg.heading_magnetic = round(self.heading - self.magvar, 1)
         self.gpvtg.sog_knots = self.speed
         self.gpzda.utc_time = self.utc_date_time
         return self.nmea_sentences
@@ -226,11 +233,11 @@ class NmeaMsg:
         speed_target = self.speed_targeted
         speed_current = self.speed
         speed_diff = speed_target - speed_current
-        # Heading increment in each position update
+        print(f'C: {speed_current}, T: {speed_target}, D: {speed_diff}')
+        # Speed increment in each speed update
         speed_increment = 3
-        # Immediate change of course when the increment <= speed_target
+        # Immediate change of speed when the increment <= speed_target
         if abs(speed_diff) <= speed_increment:
-            print('Boink to value')
             speed_current = speed_target
         elif speed_target > speed_current:
             speed_current += speed_increment
@@ -238,7 +245,7 @@ class NmeaMsg:
         else:
             speed_current -= speed_increment
             print(f'Decrease to {speed_current} towards {speed_target}')
-        self.speed = round(speed_current, 3)
+        self.speed = round(speed_current, 1)
 
     def _altitude_update(self):
         """
