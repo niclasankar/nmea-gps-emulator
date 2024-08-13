@@ -207,6 +207,10 @@ class NmeaSerialThread(NmeaSrvThread):
         self.serial_config = serial_config
 
     def run(self):
+        # Print serial settings
+        print(
+            f'Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
+            f'{self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]}')
         # Open serial port.
         try:
             with serial.Serial(self.serial_config['port'], baudrate=self.serial_config['baudrate'],
@@ -214,9 +218,6 @@ class NmeaSerialThread(NmeaSrvThread):
                                parity=self.serial_config['parity'],
                                stopbits=self.serial_config['stopbits'],
                                timeout=self.serial_config['timeout']) as ser:
-                print(
-                    f'Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
-                    f'{self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]}')
                 print('Sending NMEA data...')
                 system_log(f'Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
                 while True:
