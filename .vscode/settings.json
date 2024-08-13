@@ -1,0 +1,16 @@
+{
+    "explorer.compactFolders": false,
+    "editor.renderWhitespace": "all",
+    "python.autoComplete.extraPaths": [
+        "./src/nmea_gps_emulator",
+        "./venv/lib/python3.12/site-packages/"
+    ],
+    "editor.rulers": [
+        72,
+        79,
+    ],
+    "python.analysis.extraPaths": [
+        "./src/nmea_gps_emulator",
+        "./venv/lib/python3.12/site-packages/"
+    ],
+}
