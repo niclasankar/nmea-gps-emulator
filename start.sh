@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Activate the virtual environment
+echo ">>> Activating the virtual environment"
 source venv/bin/activate
 
-# Run the Python script
+echo ">>> Run the Python script main.py"
 python ./src/nmea_gps_emulator/main.py
 
-# Deactivate the virtual environment (optional)
+echo ">>> Deactivate the virtual environment"
 #deactivate
