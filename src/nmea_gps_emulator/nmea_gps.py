@@ -87,7 +87,6 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
-        #print('Init NmeaMsg: ' + str(self.position))
 
     def __next__(self):
         # Get time of last execution
@@ -102,7 +101,9 @@ class NmeaMsg:
         if self.heading != self.heading_targeted:
             self._heading_update()
         # Update speed
-        if self.speed != self.speed_targeted:
+        if self.speed_targeted == 0:
+            self._speed_update()
+        if self.speed != self.speed_targeted and self.speed_targeted != 0:
             self._speed_update()
         # Update altitude
         if self.altitude != self.altitude_targeted:
