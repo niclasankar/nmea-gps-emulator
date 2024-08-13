@@ -394,15 +394,19 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
-            speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
-            mo = re.fullmatch(speed_regex_pattern, speed_data)
-            if mo:
-                match = mo.group()
-                if match.startswith('0') and match != '0':
-                    match = match.lstrip('0')
-                speed_new = float(match)
-                print(f'\nSpeed updated: {speed_new}\n')
+            if speed_data == 's':
+                speed_new = 0
                 break
+            else:
+                speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
+                mo = re.fullmatch(speed_regex_pattern, speed_data)
+                if mo:
+                    match = mo.group()
+                    if match.startswith('0') and match != '0':
+                        match = match.lstrip('0')
+                    speed_new = float(match)
+                    print(f'\nSpeed updated: {speed_new}\n')
+                    break
         while True:
             try:
                 alt_data = input(f'New altitude (Active target {old_altitude})>>> ')
