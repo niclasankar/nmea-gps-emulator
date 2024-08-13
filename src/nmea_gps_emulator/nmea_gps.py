@@ -234,6 +234,9 @@ class NmeaMsg:
         elif speed_target > speed_current:
             speed_current += speed_increment
             print(f'Increase to {speed_current}')
+        elif speed_target < speed_current:
+            speed_current -= speed_increment
+            print(f'Decrease to {speed_current}')
         else:
             speed_current -= speed_increment
             print(f'Decrease to {speed_current}')
