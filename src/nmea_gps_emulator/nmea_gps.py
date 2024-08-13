@@ -228,13 +228,15 @@ class NmeaMsg:
         speed_diff = speed_target - speed_current
         # Heading increment in each position update
         speed_increment = 3
-        # Immediate change of course when the increment <= turn_angle
+        # Immediate change of course when the increment <= speed_target
         if abs(speed_diff) <= speed_increment:
             speed_current = speed_target
         elif speed_target > speed_current:
             speed_current += speed_increment
+            print(f'Increase to {speed_current}')
         else:
             speed_current -= speed_increment
+            print(f'Decrease to {speed_current}')
         self.speed = round(speed_current, 3)
 
     def _altitude_update(self):
