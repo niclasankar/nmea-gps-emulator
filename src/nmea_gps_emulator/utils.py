@@ -97,7 +97,7 @@ def filter_input():
         filter_type = ''
     return filter_type
 
-def poi_input():
+def poi_input(poi_file):
     """
     The function reads the poi file and asks for user choice
     """
@@ -105,7 +105,10 @@ def poi_input():
     try:
         # Listing of and input of selected POI
         while True:
-            poi_filename = 'poi.json'
+            if poi_file != '':
+                poi_filename = poi_file
+            else:
+                poi_filename = 'poi.json'
             poi_filename_path = os.path.join(__location__, "pois", poi_filename)
             if os.path.exists(poi_filename_path):
                 print("Showing points from: " + poi_filename_path)

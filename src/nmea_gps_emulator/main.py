@@ -30,6 +30,8 @@ from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+poi_file = ''
+
 class Application:
     """
     Display a menu and respond to choices when run.
@@ -89,7 +91,7 @@ class Application:
                 poi_ok = False
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
-                    poi_data, alt, heading = poi_input()
+                    poi_data, alt, heading = poi_input(poi_file)
                     if poi_data != None:
                         nav_data_dict['position'] = poi_data
                         nav_data_dict['gps_heading'] = heading
@@ -311,11 +313,16 @@ class Application:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", help = "Name of config file.")
+    parser.add_argument("-p", "--poi", help = "Name of file for points of interest.", default="poi.json")
     args = parser.parse_args()
 
     if args.config:
         # Start Application with data from config file
         Application().run_args(config=args.config)
+    elif args.poi:
+        # Start Application with data from config file
+        poi_file = args.poi
+        Application().run()
     else:
         # Start Application
         Application().run()
