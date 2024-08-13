@@ -230,16 +230,14 @@ class NmeaMsg:
         speed_increment = 3
         # Immediate change of course when the increment <= speed_target
         if abs(speed_diff) <= speed_increment:
+            print('Boink to value')
             speed_current = speed_target
         elif speed_target > speed_current:
             speed_current += speed_increment
-            print(f'Increase to {speed_current}')
-        elif speed_target < speed_current:
-            speed_current -= speed_increment
-            print(f'Decrease to {speed_current}')
+            print(f'Increase to {speed_current} towards {speed_target}')
         else:
             speed_current -= speed_increment
-            print(f'Decrease to {speed_current}')
+            print(f'Decrease to {speed_current} towards {speed_target}')
         self.speed = round(speed_current, 3)
 
     def _altitude_update(self):
