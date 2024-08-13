@@ -106,9 +106,9 @@ def poi_input():
         # Listing of and input of selected POI
         while True:
             poi_filename = 'poi.json'
-            poi_filename_path = os.path.join(__location__, poi_filename)
+            poi_filename_path = os.path.join(__location__, "pois", poi_filename)
             if os.path.exists(poi_filename_path):
-                print(f'Stored POI:s')
+                print("Showing points from: " + poi_filename_path)
                 with open(poi_filename_path, 'r') as file:
                     poi_list = json.load(file)
 
@@ -149,9 +149,9 @@ def poi_input():
                     print('Non valid POI choice. Continue with manual input.')
                     return None, None, None
             else:
-                print('No POI file exists! Create poi.json with data according to docs.')
+                print('No POI file exists! Create pois/poi.json with data according to docs.')
                 print('Continuing with manual input.')
-                time.sleep(2)
+                time.sleep(1)
                 return None
     except json.JSONDecodeError as json_error:
         print(json_error.msg)
