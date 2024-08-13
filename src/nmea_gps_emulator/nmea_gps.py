@@ -181,13 +181,14 @@ class NmeaMsg:
         head_current = self.heading
         turn_angle = head_target - head_current
         # Heading increment in each position update
-        head_increment = 3
+        head_increment = 1
         # Immediate change of course when the increment <= turn_angle
         if abs(turn_angle) <= head_increment:
             head_current = head_target
         else:
             # The unit's heading is increased gradually (with 'head_increment')
             if head_target > head_current:
+                print("Turning")
                 if abs(turn_angle) > 180:
                     if turn_angle > 0:
                         head_current -= head_increment
