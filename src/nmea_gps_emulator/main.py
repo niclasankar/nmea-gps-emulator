@@ -149,6 +149,8 @@ class Application:
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
+                    
+                    print('- Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
