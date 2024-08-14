@@ -140,6 +140,7 @@ class Application:
                         for thr in thread_list:
                             # Update speed, heading and altitude
                             #a = time.time()
+                            print(f'Updated {thr.name}')
                             thr.set_heading(new_heading)
                             thr.set_speed(new_speed)
                             thr.set_altitude(new_altitude)
