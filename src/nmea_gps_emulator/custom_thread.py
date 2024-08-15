@@ -83,6 +83,7 @@ class NmeaSrvThread(threading.Thread):
 
     def set_speed(self, speed):
         with self._lock:
+            print(f'New speed: {speed}')
             self.speed = speed
 
     def get_speed(self):
@@ -90,6 +91,7 @@ class NmeaSrvThread(threading.Thread):
 
     def set_heading(self, heading):
         with self._lock:
+            print(f'New heading: {heading}')
             self.heading = heading
 
     def get_heading(self):
@@ -97,6 +99,7 @@ class NmeaSrvThread(threading.Thread):
 
     def set_altitude(self, altitude):
         with self._lock:
+            print(f'New altitude: {altitude}')
             self.altitude = altitude
 
     def get_altitude(self):
