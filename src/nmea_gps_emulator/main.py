@@ -150,8 +150,6 @@ class Application:
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
-                    
-                    print('- Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -186,11 +184,11 @@ class Application:
             print(type(action))
             if action:
                 position_dict = {
-                    'latitude_value': '57.70011131502446',
-                    'latitude_nmea_value': '5742.011131502446',
+                    'latitude_value': 57.70011131,
+                    'latitude_nmea_value': '',
                     'latitude_direction': 'N',
-                    'longitude_value': '11.988278521104876',
-                    'longitude_nmea_value': '01159.8278521104876',
+                    'longitude_value': 11.98827852,
+                    'longitude_nmea_value': '',
                     'longitude_direction': 'E',
                 }
 
