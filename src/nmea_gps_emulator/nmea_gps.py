@@ -78,6 +78,8 @@ class NmeaMsg:
         self.gpvtg = Gpvtg(heading_true=heading, sog_knots=speed)
         # Time and zone
         self.gpzda = Gpzda(utc_date_time=self.utc_date_time)
+        # Testing change in progress flag
+        self.change_in_progress = False
         # All sentences
         self.nmea_sentences = [self.gpgga,
                                self.gpgsa,
@@ -95,19 +97,31 @@ class NmeaMsg:
         # If unit is moving update position
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
-        # Update magnetiv variation value
+        # Update magnetic variation value
         self._magvar_update()
         # Update heading
         if self.heading != self.heading_targeted:
+            self.change_in_progress = True
             self._heading_update()
         # Update speed
         if self.speed_targeted == 0:
             self._speed_update()
-        if self.speed != self.speed_targeted and self.speed_targeted != 0:
+        #if self.speed != self.speed_targeted and self.speed_targeted != 0:
+        if self.speed != self.speed_targeted:
+            self.change_in_progress = True
             self._speed_update()
         # Update altitude
         if self.altitude != self.altitude_targeted:
+            self.change_in_progress = True
             self._altitude_update()
+        
+        if self.change_in_progress == True \
+             and self.heading == self.heading_targeted \
+             and self.speed == self.speed_targeted \
+             and self.altitude == self.altitude_targeted:
+            self.change_in_progress = False
+            print('Change ready')
+            
         # Set values in messages
         self.gpgga.utc_time = self.utc_date_time
         self.gpgga.altitude = self.altitude
@@ -196,7 +210,7 @@ class NmeaMsg:
         else:
             # The unit's heading is increased gradually (with 'head_increment')
             if head_target > head_current:
-                print("Turning")
+                #print("Turning")
                 if abs(turn_angle) > 180:
                     if turn_angle > 0:
                         head_current -= head_increment
