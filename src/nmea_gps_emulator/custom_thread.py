@@ -23,7 +23,7 @@ import uuid
 
 import serial.tools.list_ports
 
-from utils import exit_script, system_log, data_log
+from utils import exit_script, data_log
 
 def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> None:
     """
@@ -34,8 +34,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
         try:
             s.bind((srv_ip_address, srv_port))
         except socket.error as err:
-            print(f'\n*** Bind failed. Error: {err.strerror}. ***')
-            system_log(f'TCP Server, bind failed. Error: {err.strerror}.')
+            print(f'\nTCP Server, bind failed. Error: {err.strerror}.')
             print('Change IP/port settings or try again in next 2 minutes.')
             exit_script('Socket bind error')
             # sys.exit()
@@ -49,7 +48,6 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             # The server is blocked (suspended) and is waiting for a client connection.
             conn, ip_add = s.accept()
             print(f'\n*** Connected with {ip_add[0]}:{ip_add[1]} ***')
-            system_log(f'Connected with {ip_add[0]}:{ip_add[1]}')
             thread_list = [thread.name for thread in threading.enumerate()]
             if len([thread_name for thread_name in thread_list if thread_name.startswith('nmea_srv')]) < max_threads:
                 nmea_srv_thread = NmeaSrvThread(name=f'nmea_srv{uuid.uuid4().hex}',
@@ -61,8 +59,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             else:
                 # Close connection if number of scheduler jobs > max_sched_jobs
                 conn.close()
-                # print(f'\n*** Connection closed with {ip_add[0]}:{ip_add[1]} ***')
-                system_log(f'Connection closed with {ip_add[0]}:{ip_add[1]}')
+                print(f'\n*** Connection closed with {ip_add[0]}:{ip_add[1]} ***')
 
 class NmeaSrvThread(threading.Thread):
     """
@@ -81,26 +78,26 @@ class NmeaSrvThread(threading.Thread):
         self.nmea_object = nmea_object
         self._lock = threading.RLock()
 
-    def set_speed(self, speed):
+    def set_speed(self, new_speed):
         with self._lock:
-            print(f'New speed: {speed}')
-            self.speed = speed
+            print(f'Set speed: {new_speed}')
+            self.speed = new_speed
 
     def get_speed(self):
         return self.nmea_object.speed
 
-    def set_heading(self, heading):
+    def set_heading(self, new_heading):
         with self._lock:
-            print(f'New heading: {heading}')
-            self.heading = heading
+            print(f'Set heading: {new_heading}')
+            self.heading = new_heading
 
     def get_heading(self):
         return self.nmea_object.heading
 
-    def set_altitude(self, altitude):
+    def set_altitude(self, new_altitude):
         with self._lock:
-            print(f'New altitude: {altitude}')
-            self.altitude = altitude
+            print(f'Set altitude: {new_altitude}')
+            self.altitude = new_altitude
 
     def get_altitude(self):
         return self.nmea_object.altitude
@@ -111,12 +108,15 @@ class NmeaSrvThread(threading.Thread):
             with self._lock:
                 # Nmea object speed and heading update
                 if self.heading and self.heading != self._heading_cache:
+                    print('Thread run change heading')
                     self.nmea_object.heading_targeted = self.heading
                     self._heading_cache = self.heading
                 if self.speed and self.speed != self._speed_cache:
+                    print('Thread run change speed')
                     self.nmea_object.speed_targeted = self.speed
                     self._speed_cache = self.speed
                 if self.altitude and self.altitude != self._altitude_cache:
+                    print('Thread run change altitude')
                     self.nmea_object.altitude_targeted = self.altitude
                     self._altitude_cache = self.altitude
                 # The following commands allow the same copies of NMEA data is sent on all threads
@@ -133,11 +133,12 @@ class NmeaSrvThread(threading.Thread):
                         time.sleep(0.05)
                 except (BrokenPipeError, OSError):
                     self.conn.close()
-                    # print(f'\n*** Connection closed with {self.ip_add[0]}:{self.ip_add[1]} ***')
-                    system_log(f'Connection closed with {self.ip_add[0]}:{self.ip_add[1]}')
+                    print(f'\n*** Connection closed with {self.ip_add[0]}:{self.ip_add[1]} ***')
                     # Close thread
                     sys.exit()
-            time.sleep(1 - (time.perf_counter() - timer_start))
+            self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
+            time.sleep(self.thread_sleep)
+
 
 
 class NmeaStreamThread(NmeaSrvThread):
@@ -155,7 +156,6 @@ class NmeaStreamThread(NmeaSrvThread):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.connect((self.ip_add, self.port))
                     print(f'\n*** Sending NMEA data - TCP stream to {self.ip_add}:{self.port}... ***\n')
-                    system_log(f'Started sending NMEA data - TCP stream to {self.ip_add}:{self.port}')
                     while True:
                         timer_start = time.perf_counter()
                         with self._lock:
@@ -173,15 +173,15 @@ class NmeaStreamThread(NmeaSrvThread):
                             for nmea in nmea_list:
                                 s.send(nmea.encode())
                                 time.sleep(0.05)
-                            # Start next loop after 1 sec
-                        time.sleep(1 - (time.perf_counter() - timer_start))
+                        # Start next loop after 1 sec
+                        self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
+                        time.sleep(self.thread_sleep)
             except (OSError, TimeoutError, ConnectionRefusedError, BrokenPipeError) as err:
                 print(f'\n*** Error: {err.strerror} ***\n')
                 exit_script('Run error in NmeaStreamThread')
         elif self.proto == 'udp':
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 print(f'\n*** Sending NMEA data - UDP stream to {self.ip_add}:{self.port}... ***\n')
-                system_log(f'Started sending NMEA data - UDP stream to {self.ip_add}:{self.port}')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
@@ -204,8 +204,8 @@ class NmeaStreamThread(NmeaSrvThread):
                                 print(f'*** Error: {err.strerror} ***')
                                 exit_script('OSError in NmeaStreamThread')
                         # Start next loop after 1 sec
-                    time.sleep(1 - (time.perf_counter() - timer_start))
-
+                    self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
+                    time.sleep(self.thread_sleep)
 
 class NmeaSerialThread(NmeaSrvThread):
     """
@@ -227,31 +227,38 @@ class NmeaSerialThread(NmeaSrvThread):
                                parity=self.serial_config['parity'],
                                stopbits=self.serial_config['stopbits'],
                                timeout=self.serial_config['timeout']) as ser:
-                print('Sending NMEA data...')
-                system_log(f'Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
+                print(f'Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
                         # Nmea object speed and heading update
                         if self.heading and self.heading != self._heading_cache:
+                            print('Serial thread run change heading')
                             self.nmea_object.heading_targeted = self.heading
                             self._heading_cache = self.heading
                         if self.speed and self.speed != self._speed_cache:
+                            print('Serial thread run change speed')
                             self.nmea_object.speed_targeted = self.speed
                             self._speed_cache = self.speed
                         if self.altitude and self.altitude != self._altitude_cache:
+                            print('Serial thread run change altitude')
                             self.nmea_object.altitude_targeted = self.altitude
                             self._altitude_cache = self.altitude
                         nmea_list = [f'{_}' for _ in next(self.nmea_object)]
                         for nmea in nmea_list:
                             ser.write(str.encode(nmea))
                             time.sleep(0.05)
-                    time.sleep(1.1 - (time.perf_counter() - timer_start))
+                        self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
+                        time.sleep(self.thread_sleep)
         except serial.serialutil.SerialException as error:
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            system_log(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
+            print(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
             exit_script('SerialException in NmeaSerialThread')
+        except serial.SerialException as serror:
+            print(serror)
+        except serial.SerialTimeoutException as terror:
+            print(terror)
 
 class NmeaOutputThread(NmeaSrvThread):
     """
@@ -292,8 +299,8 @@ class NmeaOutputThread(NmeaSrvThread):
                                 data_log(nmea)
                         else:
                             data_log(nmea)
-                    time.sleep(0.05)
-                    self.thread_sleep = 1.1 - (time.perf_counter() - timer_start)
+                        time.sleep(0.05)
+                    self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
                     time.sleep(self.thread_sleep)
 
         except RuntimeError as rt_error:
