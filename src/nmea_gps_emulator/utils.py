@@ -371,6 +371,82 @@ def alt_input() -> float:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
+def change_heading_input(self, old_course) -> float:
+    """
+    The function asks for the unit's heading.
+    """
+    try:
+        while True:
+            try:
+                heading_data = input(f'New course (Active target {old_course})>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
+            mo = re.fullmatch(heading_regex_pattern, heading_data)
+            if mo:
+                heading_new = float(mo.group())
+                break
+        return heading_new
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
+
+def change_speed_input(self, old_speed:float = 0) -> float:
+    """
+    The function asks for the unit's speed.
+    """
+    try:
+        while True:
+            try:
+                speed_data = input(f'New speed (Active target {old_speed})>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            if speed_data == 's':
+                speed_new = 0
+                break
+            elif speed_data == '':
+                speed_new = old_speed
+                break
+            else:
+                speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
+                mo = re.fullmatch(speed_regex_pattern, speed_data)
+                if mo:
+                    match = mo.group()
+                    if match.startswith('0') and match != '0':
+                        match = match.lstrip('0')
+                    speed_new = float(match)
+                    break
+        return speed_new
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
+
+def change_altitude_input(self, old_altitude: float) -> float:
+    """
+    The function asks for the unit's heading, speed and altitude (online).
+    """
+    try:
+        while True:
+            try:
+                alt_data = input(f'New altitude (Active target {old_altitude})>>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
+            mo = re.fullmatch(alt_regex_pattern, alt_data)
+            if mo:
+                match = mo.group()
+                if match.startswith('0') and match != '0':
+                    match = match.lstrip('0')
+                altitude_new = float(match)
+                break
+        return altitude_new
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
+
 def change_input(self, old_course, old_speed, old_altitude) -> tuple:
     """
     The function asks for the unit's heading, speed and altitude (online).
