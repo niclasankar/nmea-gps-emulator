@@ -123,7 +123,7 @@ class Application:
                     time.sleep(3)
                     first_run = False
                 try:
-                    prompt = input('- Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
+                    prompt = input('\n Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
@@ -132,25 +132,24 @@ class Application:
                     old_heading = self.nmea_obj.get_heading
                     old_speed = self.nmea_obj.get_speed
                     old_altitude = self.nmea_obj.get_altitude
-                    #new_heading, new_speed, new_altitude = change_input(self, old_heading, old_speed, old_altitude)
+                    # Get new values from user
                     new_heading = change_heading_input(self, old_heading)
                     new_speed = change_speed_input(self, old_speed)
                     new_altitude = change_altitude_input(self, old_altitude)
-
-                    # Get all 'nmea_srv*' telnet server threads
+                    # Get all 'nmea_srv*' server threads
                     thread_list = [thread for thread in threading.enumerate() if thread.name.startswith('nmea_srv')]
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
                             #a = time.time()
-                            print(f'Updated {thr.name}')
+                            #print(f'Updated {thr.name}')
                             thr.set_heading(new_heading)
                             thr.set_speed(new_speed)
                             thr.set_altitude(new_altitude)
                             #print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
-                        print('Updated data without connected clients.')
+                        #print('Updated data without connected clients.')
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
@@ -315,14 +314,14 @@ class Application:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", help = "Name of config file.")
-    parser.add_argument("-p", "--poi", help = "Name of file for points of interest.", default="poi.json")
+    parser.add_argument("-p", "--poi", help = "Name of custom file for POI:s.", default="poi.json")
     args = parser.parse_args()
 
     if args.config:
         # Start Application with data from config file
         Application().run_args(config=args.config)
     elif args.poi:
-        # Start Application with data from config file
+        # Start Application with custom poi file
         poi_file = args.poi
         Application().run()
     else:
