@@ -30,10 +30,10 @@ __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 default_position_dict = {
-    'latitude_value': 57.70011131502446,
+    'latitude_value': 57.70011131,
     'latitude_nmea_value': '5742.01113',
     'latitude_direction': 'N',
-    'longitude_value': 11.988278521104876,
+    'longitude_value': 11.98827852,
     'longitude_nmea_value': '01159.82785',
     'longitude_direction': 'E',
 }
@@ -97,9 +97,14 @@ def filter_input():
         filter_type = ''
     return filter_type
 
-def poi_input(poi_file):
+def poi_input(poi_file: str):
     """
     The function reads the poi file and asks for user choice
+
+    :param string poi_file: optional file name of custom poi file 
+    :return: filter message id as string
+    :rtype: str
+    :raises: json.JSONDecodeError when JSON content i malformed
     """
     pos_dict = default_position_dict
     try:
@@ -166,7 +171,9 @@ def poi_input(poi_file):
 def position_sep_input() -> dict:
     """
     The function asks for position and checks validity of entry data.
-    Function returns position dictionary.
+
+    :return: dictionary containing latitude, longitude and lat/lon directions
+    :rtype: dictionary
     """
     position_dict = default_position_dict
     try:
@@ -174,7 +181,7 @@ def position_sep_input() -> dict:
         while True:
             try:
                 print(f'\n- Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}):')
-                print(f'- (Negative for southern hemisphere) ')
+                print(f'    (Negative for southern hemisphere) ')
                 latitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -193,7 +200,7 @@ def position_sep_input() -> dict:
         while True:
             try:
                 print(f'\n- Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}):')
-                print(f'- (Negative for west of Greenwich)')
+                print(f'    (Negative for west of Greenwich)')
                 longitude_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -221,11 +228,15 @@ def position_sep_input() -> dict:
 def ip_port_input(option: str) -> tuple:
     """
     The function asks for IP address and port number for connection.
+
+    :param string option: type of connection 
+    :return: tuple containing IP address and port
+    :rtype: tuple (string, int)
     """
     while True:
         try:
             if option == 'telnet':
-                print(f'\n### Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}): ###')
+                print(f'Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):')
                 try:
                     ip_port_socket = input('>>> ')
                 except KeyboardInterrupt:
@@ -235,7 +246,7 @@ def ip_port_input(option: str) -> tuple:
                     # All available interfaces and default NMEA port.
                     return (get_ip(), default_port)
             elif option == 'stream':
-                print(f'\n### Enter Remote IP address and port number (defaults to {default_ip}:{default_port}): ###')
+                print(f'Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):')
                 try:
                     ip_port_socket = input('>>> ')
                 except KeyboardInterrupt:
@@ -264,10 +275,13 @@ def ip_port_input(option: str) -> tuple:
 def trans_proto_input() -> str:
     """
     The function asks for transport protocol for NMEA stream.
+
+    :return: transport protocol as lowercase string
+    :rtype: str
     """
     while True:
         try:
-            print('\n### Enter transport protocol - TCP or UDP (defaults to TCP): ###')
+            print('Enter transport protocol - TCP or UDP (defaults to TCP):')
             try:
                 stream_proto = input('>>> ').strip().lower()
             except KeyboardInterrupt:
@@ -286,7 +300,13 @@ def trans_proto_input() -> str:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
-def get_ip():
+def get_ip() -> str:
+    """
+    The function gets the first local IP address of the computer.
+
+    :return: local IP address as string
+    :rtype: str
+    """
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
     try:
@@ -302,10 +322,13 @@ def get_ip():
 def heading_input() -> float:
     """
     The function asks for the unit's course.
+
+    :return: unit's heading
+    :rtype: float
     """
     while True:
         try:
-            print(f'\n### Enter unit course - range 000-359 degrees (defaults to {default_head}): ###')
+            print(f'Enter unit course - range 000-359 degrees (defaults to {default_head}):')
             try:
                 heading_data = input('>>> ')
             except KeyboardInterrupt:
@@ -324,10 +347,13 @@ def heading_input() -> float:
 def speed_input() -> float:
     """
     The function asks for the unit's speed.
+
+    :return: unit's speed
+    :rtype: float
     """
     while True:
         try:
-            print(f'\n### Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots): ###')
+            print(f'Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):')
             try:
                 speed_data = input('>>> ')
             except KeyboardInterrupt:
@@ -349,10 +375,13 @@ def speed_input() -> float:
 def alt_input() -> float:
     """
     The function asks for the unit's altitude.
+
+    :return: unit's altitude
+    :rtype: float
     """
     while True:
         try:
-            print(f'\n### Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}): ###')
+            print(f'Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):')
             try:
                 alt_data = input('>>> ')
             except KeyboardInterrupt:
@@ -371,14 +400,19 @@ def alt_input() -> float:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
-def change_heading_input(self, old_course) -> float:
+def change_heading_input(self, old_course: float) -> float:
     """
     The function asks for the unit's heading.
+
+    :param float old_course: active course of unit
+    :return: new course of unit
+    :rtype: float
     """
     try:
         while True:
             try:
-                heading_data = input(f'New course (Active target {old_course})>>> ')
+                print(f'Enter new course (Active target {old_course})')
+                heading_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -395,11 +429,16 @@ def change_heading_input(self, old_course) -> float:
 def change_speed_input(self, old_speed:float = 0) -> float:
     """
     The function asks for the unit's speed.
+
+    :param float old_speed: active speed of unit 
+    :return: new speed of unit
+    :rtype: float
     """
     try:
         while True:
             try:
-                speed_data = input(f'New speed (Active target {old_speed})>>> ')
+                print(f'Enter new speed (Active target {old_speed})')
+                speed_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -425,12 +464,17 @@ def change_speed_input(self, old_speed:float = 0) -> float:
 
 def change_altitude_input(self, old_altitude: float) -> float:
     """
-    The function asks for the unit's heading, speed and altitude (online).
+    The function asks for the unit's altitude.
+
+    :param float old_altitude: active altitude of unit 
+    :return: new altitude of unit
+    :rtype: float
     """
     try:
         while True:
             try:
-                alt_data = input(f'New altitude (Active target {old_altitude})>>> ')
+                print(f'Enter new altitude (Active target {old_altitude})')
+                alt_data = input('>>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
