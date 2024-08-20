@@ -56,12 +56,12 @@ class Application:
                                 
     based on source code by luk-kop
         ''')
-        print('### Choose emulator mode:            ###')
+        print('### Choose emulator output mode:     ###')
         print('### -------------------------------- ###')
         print('1 - NMEA Serial port output')
         print('2 - NMEA TCP Server')
         print('3 - NMEA TCP or UDP Stream')
-        print('4 - NMEA output to log')
+        print('4 - NMEA output to log file')
         print('0 - Quit')
 
     def run(self):
@@ -86,7 +86,7 @@ class Application:
                     'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
-                print('Do you want to use a predefined starting point? (Y/N)')
+                print('\n- Do you want to use a predefined starting point? (Y/N)')
                 poi_active = input('>>> ')
                 poi_ok = False
                 if poi_active.upper() == 'Y':
@@ -140,11 +140,10 @@ class Application:
                     # Get all 'nmea_srv*' telnet server threads
                     thread_list = [thread for thread in threading.enumerate() if thread.name.startswith('nmea_srv')]
                     if thread_list:
-                        print(f'Updated values in thread(s).')
                         for thr in thread_list:
                             # Update speed, heading and altitude
                             #a = time.time()
-                            #print(f'Updated {thr.name}')
+                            print(f'Updated {thr.name}')
                             thr.set_heading(new_heading)
                             thr.set_speed(new_speed)
                             thr.set_altitude(new_altitude)
