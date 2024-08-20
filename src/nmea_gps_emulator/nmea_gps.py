@@ -120,7 +120,10 @@ class NmeaMsg:
              and self.speed == self.speed_targeted \
              and self.altitude == self.altitude_targeted:
             self.change_in_progress = False
-            print('Change ready')
+            print('All changes ready...')
+            print(f'Altitude: {self.altitude}')
+            print(f'Speed: {self.speed}')
+            print(f'Heading: {self.heading}')
             
         # Set values in messages
         self.gpgga.utc_time = self.utc_date_time
@@ -203,14 +206,14 @@ class NmeaMsg:
         head_current = self.heading
         turn_angle = head_target - head_current
         # Heading increment in each position update
-        head_increment = 1
+        head_increment = 2
         # Immediate change of course when the increment <= turn_angle
         if abs(turn_angle) <= head_increment:
             head_current = head_target
         else:
+            print(f"Turning to {head_current}")
             # The unit's heading is increased gradually (with 'head_increment')
             if head_target > head_current:
-                #print("Turning")
                 if abs(turn_angle) > 180:
                     if turn_angle > 0:
                         head_current -= head_increment
@@ -248,7 +251,6 @@ class NmeaMsg:
         speed_target = self.speed_targeted
         speed_current = self.speed
         speed_diff = speed_target - speed_current
-        print(f'C: {speed_current}, T: {speed_target}, D: {speed_diff}')
         # Speed increment in each speed update
         speed_increment = 3
         # Immediate change of speed when the increment <= speed_target
