@@ -80,7 +80,7 @@ class NmeaSrvThread(threading.Thread):
 
     def set_speed(self, new_speed):
         with self._lock:
-            print(f'Set speed: {new_speed}')
+            #print(f'Set speed: {new_speed}')
             self.speed = new_speed
 
     def get_speed(self):
@@ -88,7 +88,7 @@ class NmeaSrvThread(threading.Thread):
 
     def set_heading(self, new_heading):
         with self._lock:
-            print(f'Set heading: {new_heading}')
+            #print(f'Set heading: {new_heading}')
             self.heading = new_heading
 
     def get_heading(self):
@@ -96,7 +96,7 @@ class NmeaSrvThread(threading.Thread):
 
     def set_altitude(self, new_altitude):
         with self._lock:
-            print(f'Set altitude: {new_altitude}')
+            #print(f'Set altitude: {new_altitude}')
             self.altitude = new_altitude
 
     def get_altitude(self):
@@ -278,14 +278,17 @@ class NmeaOutputThread(NmeaSrvThread):
                 with self._lock:
                     # Nmea object speed update
                     if self.heading and self.heading != self._heading_cache:
+                        print('Logging thread run change heading')
                         self.nmea_object.heading_targeted = self.heading
                         self._heading_cache = self.heading
                     # Nmea object update
                     if self.speed and self.speed != self._speed_cache:
+                        print('Logging thread run change speed')
                         self.nmea_object.speed_targeted = self.speed
                         self._speed_cache = self.speed
                     # Nmea object altitude update
                     if self.altitude and self.altitude != self._altitude_cache:
+                        print('Logging thread run change altitude')
                         self.nmea_object.altitude_targeted = self.altitude
                         self._altitude_cache = self.altitude
                     # Create list of NMEA sentences
