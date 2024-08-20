@@ -563,9 +563,9 @@ def serial_config_input() -> dict:
 
     # List of available serial port's names.
     ports_connected_names = [port.device for port in ports_connected]
-    print('\n### Connected Serial Ports: ###')
+    print('\n Connected Serial Ports:')
     for port in sorted(ports_connected):
-        print(f'   - {port}')
+        print(f' - {port}')
     
     # Check OS platform.
     platform_os = platform.system()
@@ -573,7 +573,7 @@ def serial_config_input() -> dict:
     # Asks for serial port name and checks the name validity.
     while True:
         if platform_os.lower() == 'linux':
-            print('\n### Choose Serial Port [/dev/ttyS0]: ###')
+            print('\n Choose Serial Port (defaults to /dev/ttyS0):')
             try:
                 serial_set['port'] = input('>>> ')
             except KeyboardInterrupt:
@@ -584,7 +584,7 @@ def serial_config_input() -> dict:
             if serial_set['port'] in ports_connected_names:
                 break
         elif platform_os.lower() == 'windows':
-            print('\n### Choose Serial Port [COM1]: ###')
+            print('\n Choose Serial Port (defaults to COM1):')
             try:
                 serial_set['port'] = input('>>> ')
             except KeyboardInterrupt:
@@ -602,7 +602,7 @@ def serial_config_input() -> dict:
     
     # Ask for baud rate, defaults to 9600 (NMEA standard)
     while True:
-        print('\n### Enter serial baudrate [9600]: ###')
+        print('\n Enter serial baudrate (defaults to 9600):')
         try:
             serial_set['baudrate'] = input('>>> ')
         except KeyboardInterrupt:
