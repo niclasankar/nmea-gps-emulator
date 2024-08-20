@@ -218,7 +218,7 @@ class NmeaSerialThread(NmeaSrvThread):
     def run(self):
         # Print serial settings
         print(
-            f'Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
+            f'\n Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
             f'{self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]}')
         # Open serial port.
         try:
@@ -227,7 +227,7 @@ class NmeaSerialThread(NmeaSrvThread):
                                parity=self.serial_config['parity'],
                                stopbits=self.serial_config['stopbits'],
                                timeout=self.serial_config['timeout']) as ser:
-                print(f'Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
+                print(f'\n Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
@@ -254,11 +254,7 @@ class NmeaSerialThread(NmeaSrvThread):
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
             print(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
-            exit_script('SerialException in NmeaSerialThread')
-        except serial.SerialException as serror:
-            print(serror)
-        except serial.SerialTimeoutException as terror:
-            print(terror)
+            exit_script()
 
 class NmeaOutputThread(NmeaSrvThread):
     """
