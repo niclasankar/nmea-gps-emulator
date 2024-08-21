@@ -280,8 +280,10 @@ class NmeaMsg:
             altitude_current = altitude_target
         elif altitude_target > altitude_current:
             altitude_current += altitude_increment
+            #print(f'Going up to {altitude_current}')
         else:
             altitude_current -= altitude_increment
+            #print(f'Going down to {altitude_current}')
         self.altitude = round(altitude_current, 3)
 
     def _magvar_update(self):
