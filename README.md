@@ -71,7 +71,7 @@ Python third party packages:
 * [pygeomag](https://pypi.org/project/pygeomag/)
 * [PySide6](https://pypi.org/project/PySide6/)
 
-In order to use **NMEA Serial** mode correctly, it is necessary to use dedicated serial null modem cable, a virtual serial port or a virtual pipe if running in a virtual machine.
+In order to use **NMEA Serial port output** mode correctly, it is necessary to use dedicated serial null modem cable, a virtual serial port or a virtual pipe if running in a virtual machine.
 
 On Linux systems you will probably need to change the permissions for the device matching your serial port before running the script.
 ```bash
@@ -104,14 +104,14 @@ After starting the script correctly, the following prompt should appear in the c
                                 
  based on source code by luk-kop
 
-### Choose emulator mode:            ###
-### -------------------------------- ###
-1 - NMEA Serial port output
-2 - NMEA TCP Server
-3 - NMEA TCP or UDP Stream
-4 - NMEA output to log
-0 - Quit
->>>
+ ### Choose emulator output mode:     ###
+ ### -------------------------------- ###
+ 1 - NMEA Serial port output
+ 2 - NMEA TCP Server
+ 3 - NMEA TCP or UDP Stream
+ 4 - NMEA output to log file
+ 0 - Quit
+ >>>
 ```
 
 ### Input of starting point
@@ -119,47 +119,47 @@ After selecting the mode, user is prompted for use of predefined points of inter
 If the user chooses to use a POI (Y) the user is prompted with a list of stored POIS:s.
 
 ```bash
-Do you want to use a predefined starting point? (Y/N)
->>> Y
-POI:s
-1 - Gothenburg, Scandinavium Arena, (11.988E, 57.700105N)
-2 - Helsingborg, Knutpunkten, (12.696E, 56.042846N)
-3 - London, Prime Meridian, (0.000E, 51.477885N)
-4 - San Fransisco, Golden Gate Bridge, (122.478W, 37.818570N)
->>> 4
+ Do you want to use a predefined starting point? (Y/N)
+ >>> Y
+Showing points from: ...
+ 1 - Gothenburg, Scandinavium Arena, (11.988°E, 57.700105°N)
+ 2 - Washington, Capitoleum, (-77.050°W, 38.889296°N)
+ 3 - London, Prime Meridian, (0.000°E, 51.477885°N)
+ 4 - Japan, Mount Fuji, (138.727°E, 35.360555°N)
+ 5 - San Fransisco, Golden Gate Bridge, (-122.478°W, 37.818570°N)
+ 6 - Buenos Aires, Airport, (-58.414°W, -34.560427°S)
+ >>> 4
 ```
 
-If the user chooses to manually input (N) the position data the user is prompted
+If the user chooses to manually input (N), the user will be prompted
 for input of latitude, longitude, speed, heading and altitude.
+Longitudes west of Greenwich and latitudes on the south hemisphere are
+entered by negative values. 
 
 ```bash
-### Enter unit position latitude (defaults to 57.70011131502446): ###
->>> 59.27567459
+ Enter unit position latitude (defaults to 57.70011131):
+    (Negative for southern hemisphere)
+ >>> 59.27567459
 
-### Enter unit position latitude hemisphere (defaults to N): ###
->>> N
+ Enter unit position longitude (defaults to 11.98827852):
+    (Negative for west of Greenwich)
+ >>> 15.21254755
 
-### Enter unit position longitude (defaults to 11.988278521104876): ###
->>> 15.21254755
+ Enter unit course - range 000-359 degrees (defaults to 260):
+ >>> 45
 
-### Enter unit position longitude hemisphere (defaults to E): ###
->>> E
+ Enter unit speed in knots - range 0-999 (defaults to 2 knots):
+ >>> 2
 
-### Enter unit course - range 000-359 degrees (defaults to 45): ###
->>> 45
-
-### Enter unit speed in knots - range 0-999 (defaults to 2 knots): ###
->>> 2
-
-### Enter unit altitude in meters above sea level - range -40-9000 (defaults to 42): ###
->>> 42
+ Enter unit altitude in meters above sea level - range -40-9000 (defaults to 42):
+ >>> 42
 ```
 
 ### Filtering messages when logging
 When in logging mode (4) can the NMEA messages be filtered by type to allow testing and debugging. The input below will be shown after coordinate input.
 
 ```bash
-Choose filter:
+ Choose filter:
     1 - GPGGA,
     2 - GPGLL,
     3 - GPRMC,
@@ -169,10 +169,10 @@ Choose filter:
     7 - GPVTG,
     8 - GPZDA,
     0 - No filter
->>> 1
+ >>> 1
 ```
 ### Creating the poi.json file
-The poi.json file should be located alongside the script and should have the following structure.
+The poi.json file should be located in the folder 'pois' alongside the script and should have the following structure.
 ```bash
 [
     {
@@ -195,8 +195,9 @@ The poi.json file should be located alongside the script and should have the fol
     }
 ]
 ```
+A custom POI file can be created in the same folder and can be called at runtime with the argument -p.
 
-### Starting the script with a config file
+### Starting the script with a config file (experimental)
 The script can be run by supplying a JSON config file with the starting point and type of output. The config file is given via the argument -c in the call
 The script runs and asks for serial port, ip address and data that is unique for each run.
 
@@ -219,8 +220,8 @@ Below is a example of a config file
 }
 ```
 
-### Running the script with a GUI
-The script can be run with a GUI (experimental)
+### Running the script with a GUI (experimental)
+The script can be run with a Qt GUI.
 
 ```bash
 (venv) $ python main_gui.py
