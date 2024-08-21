@@ -206,7 +206,7 @@ class NmeaMsg:
         """
         self.position['latitude_value'] = lat_reset 
         self.position['longitude_value'] = lon_reset
-        self.position['latitude_nmea_value'] = ddd2nmeall(lon_reset, 'lat')
+        self.position['latitude_nmea_value'] = ddd2nmeall(lat_reset, 'lat')
         self.position['longitude_nmea_value'] = ddd2nmeall(lon_reset, 'lng')
 
 

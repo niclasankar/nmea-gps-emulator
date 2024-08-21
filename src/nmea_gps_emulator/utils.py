@@ -168,6 +168,32 @@ def poi_input(poi_file: str):
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
 
+def position_reset():
+    """
+    The function asks if the user want the position to be reset to starting position.
+
+    :return: boolean, longitude and lat/lon directions
+    :rtype: boolean
+    """
+    try:
+        while True:
+            try:
+                print(f'\n Do you want to reset the position (Y/N) (defaults to N):')
+                reset_data = input(' >>> ')
+            except KeyboardInterrupt:
+                print('\n\n*** Closing the script... ***\n')
+                sys.exit()
+            if reset_data == '':
+                reset_choice = False
+            elif reset_data == 'Y':
+                reset_choice = True
+            else:
+                reset_choice = False
+            return reset_choice
+    except KeyboardInterrupt:
+        print('\n\n*** Closing the script... ***\n')
+        sys.exit()
+
 def position_sep_input() -> dict:
     """
     The function asks for position and checks validity of entry data.
@@ -235,7 +261,7 @@ def ip_port_input(option: str) -> tuple:
     while True:
         try:
             if option == 'telnet':
-                print(f'Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):')
+                print(f'\n Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):')
                 try:
                     ip_port_socket = input(' >>> ')
                 except KeyboardInterrupt:
@@ -245,7 +271,7 @@ def ip_port_input(option: str) -> tuple:
                     # All available interfaces and default NMEA port.
                     return (get_ip(), default_port)
             elif option == 'stream':
-                print(f'Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):')
+                print(f'\n Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):')
                 try:
                     ip_port_socket = input(' >>> ')
                 except KeyboardInterrupt:
@@ -280,7 +306,7 @@ def trans_proto_input() -> str:
     """
     while True:
         try:
-            print('Enter transport protocol - TCP or UDP (defaults to TCP):')
+            print('\n Enter transport protocol - TCP or UDP (defaults to TCP):')
             try:
                 stream_proto = input(' >>> ').strip().lower()
             except KeyboardInterrupt:
@@ -410,7 +436,7 @@ def change_heading_input(self, heading_old: float) -> float:
     try:
         while True:
             try:
-                print(f'Enter new course or enter to skip (Target {heading_old})')
+                print(f'\n Enter new course or enter to skip (Target {heading_old})')
                 heading_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -440,7 +466,7 @@ def change_speed_input(self, speed_old:float) -> float:
     try:
         while True:
             try:
-                print(f'Enter new speed or enter to skip (Target {speed_old})')
+                print(f'\n Enter new speed or enter to skip (Target {speed_old})')
                 speed_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -473,7 +499,7 @@ def change_altitude_input(self, altitude_old: float) -> float:
     try:
         while True:
             try:
-                print(f'Enter new altitude or enter to skip (Target {altitude_old})')
+                print(f'\n Enter new altitude or enter to skip (Target {altitude_old})')
                 alt_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -498,11 +524,12 @@ def change_altitude_input(self, altitude_old: float) -> float:
 def change_input(self, old_course, old_speed, old_altitude) -> tuple:
     """
     The function asks for the unit's heading, speed and altitude (online).
+    DEPRECATED
     """
     try:
         while True:
             try:
-                print(f'New course (Active target {old_course})')
+                print(f'\n New course (Active target {old_course})')
                 heading_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -515,7 +542,7 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
                 break
         while True:
             try:
-                print(f'New speed (Active target {old_speed})')
+                print(f'\n New speed (Active target {old_speed})')
                 speed_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -535,7 +562,7 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
                     break
         while True:
             try:
-                print(f'New altitude (Active target {old_altitude})')
+                print(f'\n New altitude (Active target {old_altitude})')
                 alt_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -601,7 +628,7 @@ def serial_config_input() -> dict:
                 serial_set['port'] = 'COM1'
             if serial_set['port'] in ports_connected_names:
                 break
-        print(f'\nError: \'{serial_set["port"]}\' is wrong port\'s name.')
+        print(f'\nError: \'{serial_set["port"]}\' is not a valid port name.')
 
     # Serial port settings:
     baudrate_list = ['300', '600', '1200', '2400', '4800', '9600', '14400',
@@ -619,7 +646,7 @@ def serial_config_input() -> dict:
             serial_set['baudrate'] = 9600
         if str(serial_set['baudrate']) in baudrate_list:
             break
-        print(f'\n*** Error: \'{serial_set["baudrate"]}\' is wrong port\'s baudrate. ***')
+        print(f'\n*** Error: \'{serial_set["baudrate"]}\' is not a valid baudrate. ***')
     return serial_set
 
 def setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):

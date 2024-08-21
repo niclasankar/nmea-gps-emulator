@@ -25,7 +25,8 @@ from nmea_utils import ddd2nmeall
 from utils import position_sep_input, ip_port_input, trans_proto_input, \
                   heading_input, speed_input, change_heading_input, \
                   change_speed_input, change_altitude_input, \
-                  serial_config_input, alt_input, filter_input, poi_input
+                  serial_config_input, alt_input, filter_input, poi_input, \
+                  position_reset
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
@@ -120,7 +121,7 @@ class Application:
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
-                print('\n\n*** Closing the script... Thread not started ***\n')
+                print('\n\n*** Closing the script... NMEA Thread not started ***\n')
                 sys.exit()
             try:
                 if first_run:
@@ -132,6 +133,9 @@ class Application:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
                 if prompt == '':
+                    # Ask for reset
+                    reset_choice = position_reset()
+                    print(reset_choice)
                     # Get active values
                     old_heading = self.nmea_obj.get_heading
                     old_speed = self.nmea_obj.get_speed
@@ -146,6 +150,8 @@ class Application:
                         for thr in thread_list:
                             # Update speed, heading and altitude
                             #a = time.time()
+                            if reset_choice:
+                                thr.set_position(self.backup_nav_data_dict['latitude_value'],self.backup_nav_data_dict['longitude_value'])
                             if new_heading != old_heading:
                                 thr.set_heading(new_heading)
                             if new_speed != old_speed:
@@ -158,9 +164,6 @@ class Application:
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
-                elif prompt == 'R':
-                    self.nmea_obj.reset_position(self.backup_nav_data_dict['latitude_value'],self.backup_nav_data_dict['longitude_value'])
-                    print('Position reset')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
