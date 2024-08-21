@@ -106,7 +106,8 @@ class Application:
                     nav_data_dict['gps_heading'] = heading_input()
                     nav_data_dict['gps_speed'] = speed_input()
                     nav_data_dict['gps_altitude_amsl'] = alt_input()
-
+                # Backup start position for reset function
+                self.backup_nav_data_dict = nav_data_dict['position']
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position=nav_data_dict['position'],
                                         altitude=nav_data_dict['gps_altitude_amsl'],
@@ -157,6 +158,9 @@ class Application:
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
+                elif prompt == 'R':
+                    self.nmea_obj.reset_position(self.backup_nav_data_dict['latitude_value'],self.backup_nav_data_dict['longitude_value'])
+                    print('Position reset')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
