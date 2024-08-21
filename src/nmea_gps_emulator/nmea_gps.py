@@ -97,33 +97,35 @@ class NmeaMsg:
         # If unit is moving update position
         if self.speed > 0:
             self.position_update(utc_date_time_prev)
-        # Update magnetic variation value
-        self._magvar_update()
+            # Update magnetic variation value
+            self._magvar_update()
+
         # Update heading
         if self.heading != self.heading_targeted:
             self.change_in_progress = True
             self._heading_update()
+
         # Update speed
-        if self.speed_targeted == 0:
-            self._speed_update()
-        #if self.speed != self.speed_targeted and self.speed_targeted != 0:
         if self.speed != self.speed_targeted:
             self.change_in_progress = True
             self._speed_update()
+
         # Update altitude
         if self.altitude != self.altitude_targeted:
             self.change_in_progress = True
             self._altitude_update()
         
+        # All updates done, print message
         if self.change_in_progress == True \
              and self.heading == self.heading_targeted \
              and self.speed == self.speed_targeted \
              and self.altitude == self.altitude_targeted:
             self.change_in_progress = False
-            print('All changes ready...')
-            print(f'Altitude: {self.altitude}')
-            print(f'Speed: {self.speed}')
-            print(f'Heading: {self.heading}')
+            print('\n All updates ready...')
+            print(f' Altitude: {self.altitude}')
+            print(f' Speed: {self.speed}')
+            print(f' Heading: {self.heading}')
+            print('\n Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
             
         # Set values in messages
         self.gpgga.utc_time = self.utc_date_time
@@ -206,12 +208,12 @@ class NmeaMsg:
         head_current = self.heading
         turn_angle = head_target - head_current
         # Heading increment in each position update
-        head_increment = 2
+        head_increment = 3
         # Immediate change of course when the increment <= turn_angle
         if abs(turn_angle) <= head_increment:
             head_current = head_target
         else:
-            print(f"Turning to {head_current}")
+            #print(f"Turning to {head_current}")
             # The unit's heading is increased gradually (with 'head_increment')
             if head_target > head_current:
                 if abs(turn_angle) > 180:
@@ -252,16 +254,16 @@ class NmeaMsg:
         speed_current = self.speed
         speed_diff = speed_target - speed_current
         # Speed increment in each speed update
-        speed_increment = 3
+        speed_increment = 5
         # Immediate change of speed when the increment <= speed_target
         if abs(speed_diff) <= speed_increment:
             speed_current = speed_target
         elif speed_target > speed_current:
             speed_current += speed_increment
-            print(f'Increase to {speed_current} towards {speed_target}')
+            #print(f'Increase to {speed_current} towards {speed_target}')
         else:
             speed_current -= speed_increment
-            print(f'Decrease to {speed_current} towards {speed_target}')
+            #print(f'Decrease to {speed_current} towards {speed_target}')
         self.speed = round(speed_current, 1)
 
     def _altitude_update(self):
@@ -272,7 +274,7 @@ class NmeaMsg:
         altitude_current = self.altitude
         altitude_diff = altitude_target - altitude_current
         # Altitude increment in each position update
-        altitude_increment = 0.5
+        altitude_increment = 2
         # Immediate change of course when the increment <= turn_angle
         if abs(altitude_diff) <= altitude_increment:
             altitude_current = altitude_target
@@ -289,7 +291,6 @@ class NmeaMsg:
         datedec = decimal_year_from_date(self.utc_date_time)
         lat = self.position['latitude_value']
         lon = self.position['longitude_value']
-        #print('MagvarUpdate',lat, lon)
         alt = self.altitude
         gm = GeoMag()
         result = gm.calculate(glat=lat, glon=lon, alt=alt, time=datedec)

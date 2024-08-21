@@ -22,8 +22,10 @@ import json
 
 from nmea_gps import NmeaMsg
 from nmea_utils import ddd2nmeall
-from utils import position_sep_input, ip_port_input, trans_proto_input, heading_input, speed_input, \
-    change_input, change_heading_input, change_speed_input, change_altitude_input, serial_config_input, alt_input, filter_input, poi_input
+from utils import position_sep_input, ip_port_input, trans_proto_input, \
+                  heading_input, speed_input, change_heading_input, \
+                  change_speed_input, change_altitude_input, \
+                  serial_config_input, alt_input, filter_input, poi_input
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
@@ -86,7 +88,7 @@ class Application:
                     'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
-                print('\n- Do you want to use a predefined starting point? (Y/N)')
+                print('\n Do you want to use a predefined starting point? (Y/N)')
                 poi_active = input('>>> ')
                 poi_ok = False
                 if poi_active.upper() == 'Y':
@@ -110,6 +112,7 @@ class Application:
                                         altitude=nav_data_dict['gps_altitude_amsl'],
                                         speed=nav_data_dict['gps_speed'],
                                         heading=nav_data_dict['gps_heading'])
+                print(f"\n Starting emulation at {nav_data_dict['position']['latitude_value']}, {nav_data_dict['position']['longitude_value']}")
                 action()
                 break
         # Changing the unit's course and speed by the user in the main thread.
@@ -142,14 +145,15 @@ class Application:
                         for thr in thread_list:
                             # Update speed, heading and altitude
                             #a = time.time()
-                            #print(f'Updated {thr.name}')
-                            thr.set_heading(new_heading)
-                            thr.set_speed(new_speed)
-                            thr.set_altitude(new_altitude)
+                            if new_heading != old_heading:
+                                thr.set_heading(new_heading)
+                            if new_speed != old_speed:
+                                thr.set_speed(new_speed)
+                            if new_altitude != old_altitude:
+                                thr.set_altitude(new_altitude)
                             #print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
-                        #print('Updated data without connected clients.')
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
@@ -176,9 +180,8 @@ class Application:
                     alt = config_list['alt']
                     speed = config_list['speed']
                     head = config_list['head']
-            #print(config_list)
         except FileNotFoundError:
-            print('Config file not found')
+            print('\n Config file not found!')
             sys.exit()
 
         while True:
@@ -207,7 +210,7 @@ class Application:
                                         speed=speed,
                                         heading=head)
                 # Start message
-                print(f"\nStarting emulation at {position_dict['latitude_value']},{position_dict['longitude_value']}")
+                print(f"\n Starting emulation at {position_dict['latitude_value']}, {position_dict['longitude_value']}")
                 action()
                 break
         
@@ -231,17 +234,22 @@ class Application:
                     old_heading = self.nmea_obj.get_heading
                     old_speed = self.nmea_obj.get_speed
                     old_altitude = self.nmea_obj.get_altitude
-                    new_heading, new_speed, new_altitude = change_input(self, old_heading, old_speed, old_altitude)
-
+                    # Get new values from user
+                    new_heading = change_heading_input(self, old_heading)
+                    new_speed = change_speed_input(self, old_speed)
+                    new_altitude = change_altitude_input(self, old_altitude)
                     # Get all 'nmea_srv*' telnet server threads
                     thread_list = [thread for thread in threading.enumerate() if thread.name.startswith('nmea_srv')]
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
                             #a = time.time()
-                            thr.set_heading(new_heading)
-                            thr.set_speed(new_speed)
-                            thr.set_altitude(new_altitude)
+                            if new_heading != old_heading:
+                                thr.set_heading(new_heading)
+                            if new_speed != old_speed:
+                                thr.set_speed(new_speed)
+                            if new_altitude != old_altitude:
+                                thr.set_altitude(new_altitude)
                             #print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients

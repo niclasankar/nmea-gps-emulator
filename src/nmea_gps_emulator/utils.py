@@ -78,7 +78,7 @@ def filter_input():
     for x, y in filters_dict.items():
         print(f'  {x} - {y}') 
     try:
-        filter_choice = input('>>> ')
+        filter_choice = input(' >>> ')
         mo = re.match(r'([0-8])', filter_choice)
         if mo:
             # Filter is first match group
@@ -103,7 +103,7 @@ def poi_input(poi_file: str):
 
     :param string poi_file: optional file name of custom poi file 
     :return: filter message id as string
-    :rtype: str
+    :rtype: str (None if loading failed or file is malformed)
     :raises: json.JSONDecodeError when JSON content i malformed
     """
     pos_dict = default_position_dict
@@ -126,11 +126,11 @@ def poi_input(poi_file: str):
 
                 # Loop through each object in the list
                 for poi in poi_list:
-                    print(f"{poi['uid']} - {poi['name']}, " +
-                          f"({poi['lon']:3.3f}º{poi['lon_d']}, " +
-                          f"{poi['lat']:2f}º{poi['lat_d']})")
+                    print(f" {poi['uid']} - {poi['name']}, " +
+                          f"({poi['lon']:3.3f}°{poi['lon_d']}, " +
+                          f"{poi['lat']:2f}°{poi['lat_d']})")
 
-                selected_uid = int(input('>>> '))
+                selected_uid = int(input(' >>> '))
                 sel_poi_item = None
                 for poi_item in poi_list:
                     if poi_item.get('uid') == selected_uid:
@@ -160,10 +160,10 @@ def poi_input(poi_file: str):
                 print('No POI file exists! Create pois/poi.json with data according to docs.')
                 print('Continuing with manual input.')
                 time.sleep(1)
-                return None
-    except json.JSONDecodeError as json_error:
-        print(json_error.msg)
-        return None
+                return None, None, None
+    except json.JSONDecodeError as jer:
+        print(f'Could not parse the supplied JSON file. Continuing with manual input. ({jer.msg})')
+        return None, None, None
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
@@ -182,7 +182,7 @@ def position_sep_input() -> dict:
             try:
                 print(f'\n- Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}):')
                 print(f'    (Negative for southern hemisphere) ')
-                latitude_data = input('>>> ')
+                latitude_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -201,7 +201,7 @@ def position_sep_input() -> dict:
             try:
                 print(f'\n- Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}):')
                 print(f'    (Negative for west of Greenwich)')
-                longitude_data = input('>>> ')
+                longitude_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -238,7 +238,7 @@ def ip_port_input(option: str) -> tuple:
             if option == 'telnet':
                 print(f'Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):')
                 try:
-                    ip_port_socket = input('>>> ')
+                    ip_port_socket = input(' >>> ')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
@@ -248,7 +248,7 @@ def ip_port_input(option: str) -> tuple:
             elif option == 'stream':
                 print(f'Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):')
                 try:
-                    ip_port_socket = input('>>> ')
+                    ip_port_socket = input(' >>> ')
                 except KeyboardInterrupt:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
@@ -283,7 +283,7 @@ def trans_proto_input() -> str:
         try:
             print('Enter transport protocol - TCP or UDP (defaults to TCP):')
             try:
-                stream_proto = input('>>> ').strip().lower()
+                stream_proto = input(' >>> ').strip().lower()
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -330,7 +330,7 @@ def heading_input() -> float:
         try:
             print(f'Enter unit course - range 000-359 degrees (defaults to {default_head}):')
             try:
-                heading_data = input('>>> ')
+                heading_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -355,7 +355,7 @@ def speed_input() -> float:
         try:
             print(f'Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):')
             try:
-                speed_data = input('>>> ')
+                speed_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -383,7 +383,7 @@ def alt_input() -> float:
         try:
             print(f'Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):')
             try:
-                alt_data = input('>>> ')
+                alt_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -400,7 +400,7 @@ def alt_input() -> float:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
-def change_heading_input(self, old_course: float) -> float:
+def change_heading_input(self, heading_old: float) -> float:
     """
     The function asks for the unit's heading.
 
@@ -411,22 +411,26 @@ def change_heading_input(self, old_course: float) -> float:
     try:
         while True:
             try:
-                print(f'Enter new course (Active target {old_course})')
-                heading_data = input('>>> ')
+                print(f'Enter new course or enter to skip (Target {heading_old})')
+                heading_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
-            heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
-            mo = re.fullmatch(heading_regex_pattern, heading_data)
-            if mo:
-                heading_new = float(mo.group())
+            if heading_data == '':
+                heading_new = heading_old
                 break
+            else:
+                heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
+                mo = re.fullmatch(heading_regex_pattern, heading_data)
+                if mo:
+                    heading_new = float(mo.group())
+                    break
         return heading_new
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
 
-def change_speed_input(self, old_speed:float = 0) -> float:
+def change_speed_input(self, speed_old:float) -> float:
     """
     The function asks for the unit's speed.
 
@@ -437,16 +441,13 @@ def change_speed_input(self, old_speed:float = 0) -> float:
     try:
         while True:
             try:
-                print(f'Enter new speed (Active target {old_speed})')
-                speed_data = input('>>> ')
+                print(f'Enter new speed or enter to skip (Target {speed_old})')
+                speed_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
-            if speed_data == 's':
-                speed_new = 0
-                break
-            elif speed_data == '':
-                speed_new = old_speed
+            if speed_data == '':
+                speed_new = speed_old
                 break
             else:
                 speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
@@ -462,7 +463,7 @@ def change_speed_input(self, old_speed:float = 0) -> float:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
 
-def change_altitude_input(self, old_altitude: float) -> float:
+def change_altitude_input(self, altitude_old: float) -> float:
     """
     The function asks for the unit's altitude.
 
@@ -473,19 +474,23 @@ def change_altitude_input(self, old_altitude: float) -> float:
     try:
         while True:
             try:
-                print(f'Enter new altitude (Active target {old_altitude})')
-                alt_data = input('>>> ')
+                print(f'Enter new altitude or enter to skip (Target {altitude_old})')
+                alt_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
-            alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
-            mo = re.fullmatch(alt_regex_pattern, alt_data)
-            if mo:
-                match = mo.group()
-                if match.startswith('0') and match != '0':
-                    match = match.lstrip('0')
-                altitude_new = float(match)
+            if alt_data == '':
+                altitude_new = altitude_old
                 break
+            else:
+                alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
+                mo = re.fullmatch(alt_regex_pattern, alt_data)
+                if mo:
+                    match = mo.group()
+                    if match.startswith('0') and match != '0':
+                        match = match.lstrip('0')
+                    altitude_new = float(match)
+                    break
         return altitude_new
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
@@ -498,7 +503,8 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
     try:
         while True:
             try:
-                heading_data = input(f'New course (Active target {old_course})>>> ')
+                print(f'New course (Active target {old_course})')
+                heading_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -510,7 +516,8 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
                 break
         while True:
             try:
-                speed_data = input(f'New speed (Active target {old_speed})>>> ')
+                print(f'New speed (Active target {old_speed})')
+                speed_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -529,7 +536,8 @@ def change_input(self, old_course, old_speed, old_altitude) -> tuple:
                     break
         while True:
             try:
-                alt_data = input(f'New altitude (Active target {old_altitude})>>> ')
+                print(f'New altitude (Active target {old_altitude})')
+                alt_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -575,7 +583,7 @@ def serial_config_input() -> dict:
         if platform_os.lower() == 'linux':
             print('\n Choose Serial Port (defaults to /dev/ttyS0):')
             try:
-                serial_set['port'] = input('>>> ')
+                serial_set['port'] = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -586,7 +594,7 @@ def serial_config_input() -> dict:
         elif platform_os.lower() == 'windows':
             print('\n Choose Serial Port (defaults to COM1):')
             try:
-                serial_set['port'] = input('>>> ')
+                serial_set['port'] = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -604,7 +612,7 @@ def serial_config_input() -> dict:
     while True:
         print('\n Enter serial baudrate (defaults to 9600):')
         try:
-            serial_set['baudrate'] = input('>>> ')
+            serial_set['baudrate'] = input(' >>> ')
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
