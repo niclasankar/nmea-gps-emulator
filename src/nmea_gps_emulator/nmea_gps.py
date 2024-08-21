@@ -200,6 +200,10 @@ class NmeaMsg:
         # Update longitude and latitude direction
         self._update_dir()
 
+    def reset_position(self, lat_reset: float, lon_reset: float):
+        self.position['latitude_value'] = lat_reset 
+        self.position['longitude_value'] = lon_reset
+
     def _heading_update(self):
         """
         Updates the unit's heading (course) in case of changes performed by the user.
