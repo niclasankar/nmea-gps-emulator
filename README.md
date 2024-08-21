@@ -156,7 +156,9 @@ entered by negative values.
 ```
 
 ### Filtering messages when logging
-When in logging mode (4) can the NMEA messages be filtered by type to allow testing and debugging. The input below will be shown after coordinate input.
+When in logging mode (4) can the NMEA messages be filtered by type to allow testing
+and debugging or to create files for import to parsers. The input below will be shown
+after coordinate input.
 
 ```bash
  Choose filter:
