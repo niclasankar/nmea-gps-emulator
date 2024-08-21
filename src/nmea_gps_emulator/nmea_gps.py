@@ -201,8 +201,14 @@ class NmeaMsg:
         self._update_dir()
 
     def reset_position(self, lat_reset: float, lon_reset: float):
+        """
+        Reset the unit's position immediately.
+        """
         self.position['latitude_value'] = lat_reset 
         self.position['longitude_value'] = lon_reset
+        self.position['latitude_nmea_value'] = ddd2nmeall(lon_reset, 'lat')
+        self.position['longitude_nmea_value'] = ddd2nmeall(lon_reset, 'lng')
+
 
     def _heading_update(self):
         """
