@@ -116,7 +116,7 @@ def poi_input(poi_file: str):
                 poi_filename = 'poi.json'
             poi_filename_path = os.path.join(__location__, "pois", poi_filename)
             if os.path.exists(poi_filename_path):
-                print("Showing points from: " + poi_filename_path)
+                print(" Showing points from: " + poi_filename_path)
                 with open(poi_filename_path, 'r') as file:
                     poi_list = json.load(file)
 
