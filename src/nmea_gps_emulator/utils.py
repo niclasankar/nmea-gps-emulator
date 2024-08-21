@@ -180,7 +180,7 @@ def position_sep_input() -> dict:
         # Input of latitude
         while True:
             try:
-                print(f'\n- Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}):')
+                print(f'\n Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}):')
                 print(f'    (Negative for southern hemisphere) ')
                 latitude_data = input(' >>> ')
             except KeyboardInterrupt:
@@ -199,7 +199,7 @@ def position_sep_input() -> dict:
         # Input of longitude
         while True:
             try:
-                print(f'\n- Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}):')
+                print(f'\n Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}):')
                 print(f'    (Negative for west of Greenwich)')
                 longitude_data = input(' >>> ')
             except KeyboardInterrupt:
@@ -219,7 +219,6 @@ def position_sep_input() -> dict:
         position_dict['latitude_nmea_value'] = ddd2nmeall(position_dict['latitude_value'], 'lat')
         position_dict['longitude_nmea_value'] = ddd2nmeall(position_dict['longitude_value'], 'lng')
 
-        print(str(position_dict))
         return position_dict
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
@@ -328,7 +327,7 @@ def heading_input() -> float:
     """
     while True:
         try:
-            print(f'Enter unit course - range 000-359 degrees (defaults to {default_head}):')
+            print(f'\n Enter unit course - range 000-359 degrees (defaults to {default_head}):')
             try:
                 heading_data = input(' >>> ')
             except KeyboardInterrupt:
@@ -353,7 +352,7 @@ def speed_input() -> float:
     """
     while True:
         try:
-            print(f'Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):')
+            print(f'\n Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):')
             try:
                 speed_data = input(' >>> ')
             except KeyboardInterrupt:
@@ -381,7 +380,7 @@ def alt_input() -> float:
     """
     while True:
         try:
-            print(f'Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):')
+            print(f'\n Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):')
             try:
                 alt_data = input(' >>> ')
             except KeyboardInterrupt:

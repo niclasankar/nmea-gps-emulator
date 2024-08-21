@@ -58,13 +58,13 @@ class Application:
                                 
     based on source code by luk-kop
         ''')
-        print('### Choose emulator output mode:     ###')
-        print('### -------------------------------- ###')
-        print('1 - NMEA Serial port output')
-        print('2 - NMEA TCP Server')
-        print('3 - NMEA TCP or UDP Stream')
-        print('4 - NMEA output to log file')
-        print('0 - Quit')
+        print(' ### Choose emulator output mode:     ###')
+        print(' ### -------------------------------- ###')
+        print(' 1 - NMEA Serial port output')
+        print(' 2 - NMEA TCP Server')
+        print(' 3 - NMEA TCP or UDP Stream')
+        print(' 4 - NMEA output to log file')
+        print(' 0 - Quit')
 
     def run(self):
         """
@@ -75,7 +75,7 @@ class Application:
         # Get choise from user
         while True:
             try:
-                choice = input('>>> ')
+                choice = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -89,7 +89,7 @@ class Application:
                     'position': {}
                 }
                 print('\n Do you want to use a predefined starting point? (Y/N)')
-                poi_active = input('>>> ')
+                poi_active = input(' >>> ')
                 poi_ok = False
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
