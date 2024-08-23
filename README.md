@@ -228,3 +228,12 @@ The script can be run with a Qt GUI.
 ```bash
 (venv) $ python main_gui.py
 ```
+
+## NMEA messages warnings
+
+### GPZDA
+The time zone offset given in the messages is the one for the starting
+position and it is not recalculated as the unit moves.
+
+### GPGGA
+The antenna altitude is always 2.5 meters above the calculated altitude
