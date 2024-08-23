@@ -10,11 +10,13 @@ Based on the works of luk-kop
 """
 
 import random
+import time
 from math import ceil
 import datetime
-from datetime import timezone 
-from typing import Union
+from datetime import timezone
 
+from timezonefinder import TimezoneFinder
+import pytz
 from pyproj import Geod
 from pygeomag import GeoMag
 from pygeomag import decimal_year_from_date
@@ -25,32 +27,48 @@ class NmeaMsg:
     """
     The class represent a group of NMEA sentences.
     """
-    def __init__(self, position: dict, altitude: float, speed: float, heading: float):
+    def __init__(self, position_init: dict, altitude_init: float, speed_init: float, heading_init: float):
+        """ Class Constructor.
+
+        Creates the initial collection of NMEA messages from supplied values.
+
+        :param dict position_init: initial position dictionary
+        :param float altitude_init: initial altitude msl float value
+        :param float speed_init: initial speed float value
+        :param float heading_init: initial heading float value
+        :return: None
+        :rtype: None
+        """
         # Instance attributes
         self.utc_date_time = datetime.datetime.now(timezone.utc)
-        self.position = position
+        self.position = position_init
+        self.position_backup = position_init
+
+        # Get timezone offset
+        lat = self.position['latitude_value']
+        lon = self.position['longitude_value']
+        timezone_offset_hours, timezone_offset_minutes = self.get_timezone_offset(lat, lon)
 
         # The unit's speed provided by the user during the operation of the script
-        self.speed = speed
-        self.speed_targeted = speed
+        self.speed = speed_init
+        self.speed_targeted = speed_init
 
         # The unit's altitude provided by the user during the operation of the script
-        self.altitude = altitude
-        self.altitude_targeted = altitude
+        self.altitude = altitude_init
+        self.altitude_targeted = altitude_init
 
         # The magnetic variation is set to dummy values
         self.magvar = 2.1
         self.magvar_dec = 2.1
         self.magvar_direct = 'E'
-        # Calculate magnetic variation once if unit is stopped to get value
+        # Calculate magnetic variation once if unit is stopped to get real values
         self._magvar_update()
 
         # The unit's heading provided by the user during the operation of the script
-        self.heading = heading
-        # The unit's active heading
-        self.heading_targeted = heading
+        self.heading = heading_init
+        self.heading_targeted = heading_init
         # Calculate magnetic heading from heading
-        self.heading_magnetic = heading - self.magvar
+        self.heading_magnetic = self.heading - self.magvar
 
         # NMEA sentences initialization - by default with 15 sats
         self.gpgsv_group = GpgsvGroup()
@@ -59,26 +77,28 @@ class NmeaMsg:
         # Fix data message
         self.gpgga = Gpgga(sats_count=self.gpgsa.sats_count,
                          utc_date_time=self.utc_date_time,
-                         position=position,
-                         altitude=altitude,
-                         antenna_altitude_above_msl=altitude+2.5)
+                         position=position_init,
+                         altitude=altitude_init,
+                         antenna_altitude_above_msl=altitude_init+2.5)
         # Position data: position fix, time of position fix, and status
         self.gpgll = Gpgll(utc_date_time=self.utc_date_time,
-                           position=position)
+                           position=position_init)
         # Recommended minimum specific GPS/Transit data
         self.gprmc = Gprmc(utc_date_time=self.utc_date_time,
-                           position=position,
-                           sog=speed,
-                           cmg=heading,
+                           position=position_init,
+                           sog=speed_init,
+                           cmg=heading_init,
                            magnetic_var_value=self.magvar,
                            magnetic_var_direct=self.magvar_direct)
         # True heading
-        self.gphdt = Gphdt(heading=heading)
+        self.gphdt = Gphdt(heading=heading_init)
         # Track Made Good and Ground Speed
-        self.gpvtg = Gpvtg(heading_true=heading, sog_knots=speed)
+        self.gpvtg = Gpvtg(heading_true=heading_init, sog_knots=speed_init)
         # Time and zone
-        self.gpzda = Gpzda(utc_date_time=self.utc_date_time)
-        # Testing change in progress flag
+        self.gpzda = Gpzda(utc_date_time=self.utc_date_time,
+                           offset_hrs=timezone_offset_hours,
+                           offset_min=timezone_offset_minutes)
+        # Change in progress flag
         self.change_in_progress = False
         # All sentences
         self.nmea_sentences = [self.gpgga,
@@ -91,6 +111,13 @@ class NmeaMsg:
                                self.gpzda,]
 
     def __next__(self):
+        """ Iterator function.
+
+        Calculates the next values for generation of NMEA messages.
+
+        :return: list of NMEA messages
+        :rtype: list
+        """
         # Get time of last execution
         utc_date_time_prev = self.utc_date_time
         self.utc_date_time = datetime.datetime.now(timezone.utc)
@@ -100,17 +127,17 @@ class NmeaMsg:
             # Update magnetic variation value
             self._magvar_update()
 
-        # Update heading
+        # Update heading and set progress flag
         if self.heading != self.heading_targeted:
             self.change_in_progress = True
             self._heading_update()
 
-        # Update speed
+        # Update speed and set progress flag
         if self.speed != self.speed_targeted:
             self.change_in_progress = True
             self._speed_update()
 
-        # Update altitude
+        # Update altitude and set progress flag
         if self.altitude != self.altitude_targeted:
             self.change_in_progress = True
             self._altitude_update()
@@ -127,7 +154,7 @@ class NmeaMsg:
             print(f' Heading: {self.heading}')
             print('\n Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
             
-        # Set values in messages
+        # Set new values in messages
         self.gpgga.utc_time = self.utc_date_time
         self.gpgga.altitude = self.altitude
         self.gpgga.antenna_altitude_above_msl = self.altitude + 2.5
@@ -153,22 +180,61 @@ class NmeaMsg:
             nmea_msgs_str += f'{nmea}'
         return nmea_msgs_str
     
+    # Function to get timezone and offset from latitude and longitude
+    def get_timezone_offset(self, lat, lon):
+        # Initialize TimezoneFinder
+        tf = TimezoneFinder()
+
+        # Get the timezone name from latitude and longitude
+        timezone_str = tf.timezone_at(lng=lon, lat=lat)
+
+        if timezone_str is None:
+            return None, None, None
+
+        # Get the timezone object
+        timezone = pytz.timezone(timezone_str)
+
+        # Get the current time in the timezone
+        current_time = datetime.datetime.now(timezone)
+
+        # Get the UTC offset in hours and minutes
+        utc_offset_seconds = current_time.utcoffset().total_seconds() - current_time.dst().total_seconds()
+        utc_offset_hours = int(utc_offset_seconds // 3600)
+        utc_offset_minutes = int((utc_offset_seconds % 3600) // 60)
+
+        # Get the DST offset in hours and minutes
+        #dst_offset_seconds = current_time.dst().total_seconds()
+        #dst_offset_hours = int(dst_offset_seconds // 3600)
+        #dst_offset_minutes = int((dst_offset_seconds % 3600) // 60)
+
+        return utc_offset_hours, utc_offset_minutes
+    
     def _update_dir(self):
+        """ Direction update
+
+        Function that updates the direction letters in the position object.
+
+        :return: None
+        :rtype: None
+        """
         lat = self.position['latitude_value']
-        if lat < 0:
-            self.position['latitude_direction'] = 'S'
-        else:
-            self.position['latitude_direction'] = 'N'
-        
         lon = self.position['longitude_value']
+        lat_dir = 'N'
+        lon_dir = 'E'
+        if lat < 0:
+            lat_dir = 'S'
         if lon < 0:
-            self.position['longitude_direction'] = 'W'
-        else:
-            self.position['longitude_direction'] = 'E'
+            lon_dir = 'W'
+        self.position['longitude_direction'] = lon_dir
+        self.position['latitude_direction'] = lat_dir
 
     def position_update(self, utc_date_time_prev: datetime):
         """
         Update position when unit in move.
+
+        :param datetime utc_date_time_prev: datetime object representing the last time function was called
+        :return: None
+        :rtype: None
         """
         # The time that has elapsed since the last fix
         time_delta = (self.utc_date_time - utc_date_time_prev).total_seconds()
@@ -197,56 +263,62 @@ class NmeaMsg:
         self.position['latitude_value'] = lat_end 
         self.position['longitude_value'] = lon_end
 
-        # Update longitude and latitude direction
+        # Update longitude and latitude direction letters
         self._update_dir()
 
     def reset_position(self, lat_reset: float, lon_reset: float):
         """
-        Reset the unit's position immediately.
-        """
-        self.position['latitude_value'] = lat_reset 
-        self.position['longitude_value'] = lon_reset
-        self.position['latitude_nmea_value'] = ddd2nmeall(lat_reset, 'lat')
-        self.position['longitude_nmea_value'] = ddd2nmeall(lon_reset, 'lng')
+        Reset the unit's position to the starting position.
 
+        :return: None
+        :rtype: None
+        """
+        self.speed = 0.0
+        self.speed_targeted = 0.0
+        self.position = self.position_backup
+        utc_date_time = datetime.datetime.now(timezone.utc)
+        self.position_update(utc_date_time)
 
     def _heading_update(self):
         """
         Updates the unit's heading (course) in case of changes performed by the user.
+
+        :return: None
+        :rtype: None
         """
+        # Get active values
         head_target = self.heading_targeted
         head_current = self.heading
         turn_angle = head_target - head_current
-        # Heading increment in each position update
-        head_increment = 3
-        # Immediate change of course when the increment <= turn_angle
-        if abs(turn_angle) <= head_increment:
+        # Heading increment in each update
+        heading_increment = 3
+        # Immediate change of course when the head_increment <= turn_angle
+        if abs(turn_angle) <= heading_increment:
             head_current = head_target
         else:
-            #print(f"Turning to {head_current}")
-            # The unit's heading is increased gradually (with 'head_increment')
+            # The unit's heading is increased gradually (with 'heading_increment')
             if head_target > head_current:
                 if abs(turn_angle) > 180:
                     if turn_angle > 0:
-                        head_current -= head_increment
+                        head_current -= heading_increment
                     else:
-                        head_current += head_increment
+                        head_current += heading_increment
                 else:
                     if turn_angle > 0:
-                        head_current += head_increment
+                        head_current += heading_increment
                     else:
-                        head_current -= head_increment
+                        head_current -= heading_increment
             else:
                 if abs(turn_angle) > 180:
                     if turn_angle > 0:
-                        head_current -= head_increment
+                        head_current -= heading_increment
                     else:
-                        head_current += head_increment
+                        head_current += heading_increment
                 else:
                     if turn_angle > 0:
-                        head_current += head_increment
+                        head_current += heading_increment
                     else:
-                        head_current -= head_increment
+                        head_current -= heading_increment
         # Heading range: 0-359
         if head_current == 360:
             head_current = 0
@@ -279,7 +351,11 @@ class NmeaMsg:
     def _altitude_update(self):
         """
         Updates the unit's altitude in case of changes performed by the user.
+
+        :return: None
+        :rtype: None
         """
+        # Get active values
         altitude_target = self.altitude_targeted
         altitude_current = self.altitude
         altitude_diff = altitude_target - altitude_current
@@ -290,22 +366,20 @@ class NmeaMsg:
             altitude_current = altitude_target
         elif altitude_target > altitude_current:
             altitude_current += altitude_increment
-            #print(f'Going up to {altitude_current}')
         else:
             altitude_current -= altitude_increment
-            #print(f'Going down to {altitude_current}')
         self.altitude = round(altitude_current, 3)
 
     def _magvar_update(self):
         """
-        Updates the magnetic variation from WMM in pygeomag
+        Updates the magnetic declination from WMM in pygeomag
         """
-        datedec = decimal_year_from_date(self.utc_date_time)
+        date_decimal = decimal_year_from_date(self.utc_date_time)
         lat = self.position['latitude_value']
         lon = self.position['longitude_value']
         alt = self.altitude
         gm = GeoMag()
-        result = gm.calculate(glat=lat, glon=lon, alt=alt, time=datedec)
+        result = gm.calculate(glat=lat, glon=lon, alt=alt, time=date_decimal)
         self.magvar = abs(result.d)
         self.magvar_dec = result.d
         if result.d > 0:
@@ -333,34 +407,74 @@ class NmeaMsg:
     
     @property
     def get_latitude(self) -> float:
+        """ Property getter for latitude variable
+        
+        :return: float latitude value
+        :rtype: float
+        """
         return self.position['latitude_value']
 
     @property
     def get_longitude(self) -> float:
-        return self.position['latitude_value']
+        """ Property getter for longitude variable
+        
+        :return: float longitude value
+        :rtype: float
+        """
+        return self.position['longitude']
 
     @property
     def get_speed(self) -> float:
+        """ Property getter for speed variable
+        
+        :return: float speed value
+        :rtype: float
+        """
         return self.speed
 
     @property
     def get_heading(self) -> float:
+        """ Property getter for heading variable
+        
+        :return: float heading value
+        :rtype: float
+        """
         return self.heading
 
     @property
     def get_altitude(self) -> float:
+        """ Property getter for altitude variable
+        
+        :return: float altitude value
+        :rtype: float
+        """
         return self.altitude
     
     @property
     def get_targetspeed(self) -> float:
+        """ Property getter for target speed variable
+        
+        :return: float speed value
+        :rtype: float
+        """
         return self.speed_targeted
     
     @property
     def get_targetheading(self) -> float:
+        """ Property getter for target heading variable
+        
+        :return: float heading value
+        :rtype: float
+        """
         return self.heading_targeted
     
     @property
-    def get_targetaltitude(self) -> float:
+    def get_targetaltitudedef(self) -> float:
+        """ Property getter for target altitude variable
+        
+        :return: float altitude value
+        :rtype: float
+        """
         return self.altitude_targeted
 
 class Gpgga:
@@ -381,25 +495,42 @@ class Gpgga:
     6 	GPS Quality indicator:
         0: Fix not valid
         1: GPS fix
-        2: Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode
+        2: Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon,
+           RTX in GVBS mode
         3: Not applicable
         4: RTK Fixed, xFill
         5: RTK Float, OmniSTAR XP/HP, Location RTK, RTX
         6: INS Dead reckoning
     7 	Number of SVs in use, range from 00 through to 24+
-    8 	HDOP
+    8 	HDOP, Horizontal Dilution of Precision
     9 	Orthometric height (MSL reference)
     10 	M: unit of measure for orthometric height is meters
     11 	Geoid separation
     12 	M: geoid separation measured in meters
-    13 	Age of differential GPS data record, Type 1 or Type 9. Null field when DGPS is not used.
-    14 	Reference station ID, range 0000 to 4095. A null field when any reference station ID is selected and no corrections are received.
+    13 	Age of differential GPS data record, Type 1 or Type 9.
+        Null field when DGPS is not used.
+    14 	Reference station ID, range 0000 to 4095. A null field when any
+        reference station ID is selected and no corrections are received.
     15 	The checksum data, always begins with *
     """
     sentence_id: str = 'GPGGA'
 
     def __init__(self, sats_count, utc_date_time, position, altitude, antenna_altitude_above_msl=32.5, fix_quality=1,
                  hdop=0.92, dgps_last_update='', dgps_ref_station_id=''):
+        """ GPGGA Class Constructor.
+
+        Initiates the GGA message object
+        
+        :param int sats_count: number of satellites in use
+        :param datetime utc_date_time: UTC datetime object
+        :param dict position: position dictionary
+        :param float altitude: altitude msl
+        :param float antenna_altitude_above_msl: altitude msl of antenna, defaults to 32.5
+        :param int fix_quality: GPS fix quality indicator, defaults to 1
+        :param float hdop: horizontal dilution of precision, defaults to 0.92
+        :param str dgps_last_update: age of DGPS data record in seconds
+        :param str dgps_ref_station_id: reference station ID, range 0000 to 4095, defaults to empty string
+        """
         self.sats_count = sats_count
         self.utc_time = utc_date_time
         self.position = position
@@ -456,6 +587,15 @@ class Gpgll:
     sentence_id: str = 'GPGLL'
 
     def __init__(self, utc_date_time, position, data_status='A', faa_mode='A'):
+        """ GPGLL Class Constructor.
+
+        Initiates the GLL message object
+        
+        :param datetime utc_date_time: UTC datetime object
+        :param dict position: position dictionary
+        :param str data_status: data status, defaults to A = valid
+        :param str faa_mode: FAA Mode option
+        """
         # UTC time in format: 211250
         self.utc_time = utc_date_time
         self.position = position
@@ -497,7 +637,20 @@ class Gprmc:
     sentence_id = 'GPRMC'
 
     def __init__(self, utc_date_time, position, sog, cmg, data_status='A', faa_mode='A',
-                  magnetic_var_value='', magnetic_var_direct=''):
+                  magnetic_var_value=0.0, magnetic_var_direct='E'):
+        """ GPRMC Class Constructor.
+
+        Initiates the RMC message object
+        
+        :param datetime utc_date_time: UTC datetime object
+        :param dict position: position dictionary
+        :param float sog: speed over ground in knots
+        :param float cmg: course made good
+        :param str data_status: data status, defaults to A = valid
+        :param str faa_mode: FAA Mode option
+        :param float magnetic_var_value: magnetic variation value
+        :param str magnetic_var_direct: direction of magnetic variation
+        """
         # UTC time in format: 211250
         self.utc_time = utc_date_time
         # UTC date in format: 130720
@@ -562,7 +715,18 @@ class Gpgsa:
     """
     sentence_id: str = 'GPGSA'
 
-    def __init__(self, gpgsv_group, select_mode='A', mode=3, pdop=1.56, hdop=0.92, vdop=1.25):
+    def __init__(self, gpgsv_group, select_mode: str='A', mode: int=3, pdop: float=1.56, hdop: float=0.92, vdop: float=1.25):
+        """ GPGSA Class Constructor.
+
+        Initiates the GSA message object
+        
+        :param object gpgsv_group: reference to GPGSV object to use
+        :param str select_mode: mode = M = Manual, A = Automatic, defaults to A
+        :param int mode: mode fix type: 1 = not available, 2 = 2D, 3 = 3D, defaults to 3
+        :param float pdop: position precision
+        :param float hdop: horizontal precision
+        :param float vdop: vertical precision
+        """
         self.select_mode = select_mode
         self.mode = mode
         self.sats_ids = gpgsv_group.sats_ids
@@ -600,6 +764,12 @@ class GpgsvGroup:
     sats_in_sentence = 4
 
     def __init__(self, sats_total=15):
+        """ GpgsvGroup Class Constructor.
+
+        Collection of GPGSV messages
+        
+        :param int sats_total: number of satellites in use
+        """
         self.gpgsv_instances = []
         self.sats_total = sats_total
         self.num_of_gsv_in_group = ceil(self.sats_total / self.sats_in_sentence)
@@ -657,6 +827,16 @@ class Gpgsv:
     sentence_id: str = 'GPGSV'
 
     def __init__(self, num_of_gsv_in_group, sentence_num, sats_total, sats_in_sentence, sats_ids):
+        """ GPGSV Class Constructor.
+
+        Initiates the GSV message object. Creates random elevation, azimuth and S/N values for SV:s
+        
+        :param int num_of_gsv_in_group: Total number of messages of this type in this cycle
+        :param int sentence_num: Message number
+        :param int sats_total: Total number of SV:s visible
+        :param int sats_in_sentence: Total number of SVs in this message
+        :param int sats_ids: ID:s of SV:s
+        """
         self.num_of_gsv_in_group = num_of_gsv_in_group
         self.sentence_num = sentence_num
         self.sats_total = sats_total
@@ -690,6 +870,12 @@ class Gphdt:
     sentence_id = 'GPHDT'
 
     def __init__(self, heading):
+        """ GPHDT Class Constructor.
+
+        Initiates the HDT message object.
+        
+        :param float heading: Unit's heading
+        """
         self.heading = heading
 
     def __str__(self):
@@ -722,7 +908,15 @@ class Gpvtg:
     """
     sentence_id = 'GPVTG'
 
-    def __init__(self, heading_true: float, sog_knots: float, heading_magnetic: Union[float, str] = '') -> None:
+    def __init__(self, heading_true: float, sog_knots: float, heading_magnetic: float = 0.0) -> None:
+        """ GPVTG Class Constructor.
+
+        Initiates the VTG message object.
+        
+        :param float heading_true: Unit's heading true
+        :param float sog_knots: Unit's speed
+        :param float heading_magnetic: Unit's heading magnetic
+        """
         self.heading_true = heading_true
         self.heading_magnetic = heading_magnetic
         self.sog_knots = sog_knots
@@ -742,23 +936,24 @@ class Gpvtg:
 
 class Gpzda:
     """
-    Time and date - UTC and local Time Zone
-    Example: $GPZDA,095942.000,13,07,2020,0,0*50
+    GPZDA class
 
-    0 	Message ID $GPZDA
-    1 	UTC
-    2 	Day, ranging between 01 and 31
-    3 	Month, ranging between 01 and 12
-    4 	Year
-    5 	Local time zone offset from GMT, ranging from 00 through ±13 hours
-    6 	Local time zone offset from GMT, ranging from 00 through 59 minutes
-    7 	The checksum data, always begins with *
+    Reference: https://receiverhelp.trimble.com/alloy-gnss/en-us/NMEA-0183messages_ZDA.html
+
     """
     sentence_id = 'GPZDA'
 
-    def __init__(self, utc_date_time):
+    def __init__(self, utc_date_time, offset_hrs:int=0, offset_min:int=0):
+        """ GPZDA Class Constructor.
+
+        Initiates the GPZDA message object.
+        
+        :param datetime utc_date_time: Datetime object to use
+        """
         # UTC time in format: 211250
         self.utc_time = utc_date_time
+        self.offset_hrs = offset_hrs
+        self.offset_min = offset_min
 
     @property
     def utc_time(self) -> str:
@@ -778,7 +973,8 @@ class Gpzda:
         self._utc_date = value.strftime('%d,%m,%Y')
 
     def __str__(self):
-        # Local Zone not used
-        nmea_output = f'{self.sentence_id},{self.utc_time}.000,{self.utc_date},0,0'
+        # Local timezone is always the os timezone, not the position
+        nmea_output = f'{self.sentence_id},{self.utc_time}.000,{self.utc_date},' \
+                      f'{self.offset_hrs:+03},{self.offset_min:02}'
         return f'${nmea_output}*{NmeaMsg.check_sum(nmea_output)}\r\n'
 

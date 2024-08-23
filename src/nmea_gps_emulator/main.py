@@ -110,10 +110,10 @@ class Application:
                 # Backup start position for reset function
                 self.backup_nav_data_dict = nav_data_dict['position']
                 # Initialize NmeaMsg object
-                self.nmea_obj = NmeaMsg(position=nav_data_dict['position'],
-                                        altitude=nav_data_dict['gps_altitude_amsl'],
-                                        speed=nav_data_dict['gps_speed'],
-                                        heading=nav_data_dict['gps_heading'])
+                self.nmea_obj = NmeaMsg(position_init=nav_data_dict['position'],
+                                        altitude_init=nav_data_dict['gps_altitude_amsl'],
+                                        speed_init=nav_data_dict['gps_speed'],
+                                        heading_init=nav_data_dict['gps_heading'])
                 print(f"\n Starting emulation at {nav_data_dict['position']['latitude_value']}, {nav_data_dict['position']['longitude_value']}")
                 action()
                 break
@@ -212,10 +212,10 @@ class Application:
                 position_dict['longitude_direction'] = lon_d
 
                 # Initialize NmeaMsg object
-                self.nmea_obj = NmeaMsg(position=position_dict,
-                                        altitude=alt,
-                                        speed=speed,
-                                        heading=head)
+                self.nmea_obj = NmeaMsg(position_init=position_dict,
+                                        altitude_init=alt,
+                                        speed_init=speed,
+                                        heading_init=head)
                 # Start message
                 print(f"\n Starting emulation at {position_dict['latitude_value']}, {position_dict['longitude_value']}")
                 action()
