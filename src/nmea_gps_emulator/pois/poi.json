@@ -52,5 +52,23 @@
         "lon_d": "W",
         "alt": 100,
         "head": 340.0
+    },
+    {
+        "name": "Howland Island, United States (-12 GMT)",
+        "lat": 0.8056528527702284,
+        "lat_d": "N",
+        "lon": -176.6192650243712,
+        "lon_d": "W",
+        "alt": 154,
+        "head": 90.0
+    },
+    {
+        "name": "East Cape Lighthouse, New Zeeland (+12 GMT)",
+        "lat": -37.68899790444831,
+        "lat_d": "S",
+        "lon": 178.54812819713842,
+        "lon_d": "E",
+        "alt": 154,
+        "head": 90.0
     }
 ]
