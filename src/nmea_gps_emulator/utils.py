@@ -20,7 +20,6 @@ import platform
 import logging
 import json
 import socket
-
 import psutil
 import serial.tools.list_ports
 
@@ -31,11 +30,11 @@ __location__ = os.path.realpath(
 
 default_position_dict = {
     'latitude_value': 57.70011131,
-    'latitude_nmea_value': '5742.01113',
-    'latitude_direction': 'N',
+    #'latitude_nmea_value': '5742.01113',
+    #'latitude_direction': 'N',
     'longitude_value': 11.98827852,
-    'longitude_nmea_value': '01159.82785',
-    'longitude_direction': 'E',
+    #'longitude_nmea_value': '01159.82785',
+    #'longitude_direction': 'E',
 }
 default_speed = 2
 default_alt = 42
