@@ -105,9 +105,9 @@ class NmeaSrvThread(threading.Thread):
     def get_altitude(self):
         return self.nmea_object.altitude
     
-    def set_position(self, new_lat, new_lon):
+    def reset_position(self):
         with self._lock:
-            self.nmea_object.reset_position(new_lat, new_lon)
+            self.nmea_object.reset_position()
 
     def run(self):
         while True:

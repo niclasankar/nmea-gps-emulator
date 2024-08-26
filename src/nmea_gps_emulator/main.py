@@ -21,7 +21,7 @@ import os
 import json
 
 from nmea_gps import NmeaMsg
-from nmea_utils import ddd2nmeall
+#from nmea_utils import ddd2nmea
 from utils import position_sep_input, ip_port_input, trans_proto_input, \
                   heading_input, speed_input, change_heading_input, \
                   change_speed_input, change_altitude_input, \
@@ -85,7 +85,7 @@ class Application:
                 # Dummy 'nav_data_dict'
                 nav_data_dict = {
                     'gps_speed': 10.035,
-                    'gps_heading': 45.0,
+                    'heading': 45.0,
                     'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
@@ -97,14 +97,14 @@ class Application:
                     poi_data, alt, heading = poi_input(poi_file)
                     if poi_data != None:
                         nav_data_dict['position'] = poi_data
-                        nav_data_dict['gps_heading'] = heading
-                        nav_data_dict['gps_speed'] = 2
+                        nav_data_dict['heading'] = heading
+                        nav_data_dict['gps_speed'] = 0
                         nav_data_dict['gps_altitude_amsl'] = alt
                         poi_ok = True
                 if poi_ok == False:
                     # Position, initial course, speed and altitude queries
                     nav_data_dict['position'] = position_sep_input()
-                    nav_data_dict['gps_heading'] = heading_input()
+                    nav_data_dict['heading'] = heading_input()
                     nav_data_dict['gps_speed'] = speed_input()
                     nav_data_dict['gps_altitude_amsl'] = alt_input()
                 # Backup start position for reset function
@@ -113,8 +113,8 @@ class Application:
                 self.nmea_obj = NmeaMsg(position_init=nav_data_dict['position'],
                                         altitude_init=nav_data_dict['gps_altitude_amsl'],
                                         speed_init=nav_data_dict['gps_speed'],
-                                        heading_init=nav_data_dict['gps_heading'])
-                print(f"\n Starting emulation at {nav_data_dict['position']['latitude_value']}, {nav_data_dict['position']['longitude_value']}")
+                                        heading_init=nav_data_dict['heading'])
+                print(f"\n Starting emulation at {nav_data_dict['position']['lat']}, {nav_data_dict['position']['lng']}")
                 action()
                 break
         # Changing the unit's course and speed by the user in the main thread.
@@ -136,6 +136,8 @@ class Application:
                     # Ask for reset
                     reset_choice = position_reset()
                     print(reset_choice)
+                    #if reset_choice != True:
+
                     # Get active values
                     old_heading = self.nmea_obj.get_heading
                     old_speed = self.nmea_obj.get_speed
@@ -149,21 +151,24 @@ class Application:
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
-                            #a = time.time()
                             if reset_choice:
-                                thr.set_position(self.backup_nav_data_dict['latitude_value'],self.backup_nav_data_dict['longitude_value'])
-                            if new_heading != old_heading:
-                                thr.set_heading(new_heading)
-                            if new_speed != old_speed:
-                                thr.set_speed(new_speed)
-                            if new_altitude != old_altitude:
-                                thr.set_altitude(new_altitude)
-                            #print(time.time() - a)
+                                thr.reset_position()
+                            else:
+                                #a = time.time()
+                                if new_heading != old_heading:
+                                    thr.set_heading(new_heading)
+                                if new_speed != old_speed:
+                                    thr.set_speed(new_speed)
+                                if new_altitude != old_altitude:
+                                    thr.set_altitude(new_altitude)
+                                #print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
+                        if reset_choice:
+                            self.nmea_obj.reset_position()
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -195,21 +200,21 @@ class Application:
             action = self.choices.get(str(output))
             if action:
                 position_dict = {
-                    'latitude_value': 57.70011131,
-                    'latitude_nmea_value': '',
-                    'latitude_direction': 'N',
-                    'longitude_value': 11.98827852,
-                    'longitude_nmea_value': '',
-                    'longitude_direction': 'E',
+                    'lat': 57.70011131,
+                    #'lat_nmea': '',
+                    #'lat_dir': 'N',
+                    'lng': 11.98827852,
+                    #'lng_nmea': '',
+                    #'lng_dir': 'E',
                 }
 
                 # Get args to dictionary
-                position_dict['latitude_value'] = lat
-                position_dict['latitude_nmea_value'] = ddd2nmeall(lat, 'lat')
-                position_dict['latitude_direction'] = lat_d
-                position_dict['longitude_value'] = lon
-                position_dict['longitude_nmea_value'] = ddd2nmeall(lon, 'lng')
-                position_dict['longitude_direction'] = lon_d
+                position_dict['lat'] = lat
+                #position_dict['latitude_nmea_value'] = ddd2nmeall(lat, 'lat')
+                #position_dict['latitude_direction'] = lat_d
+                position_dict['lon'] = lon
+                #position_dict['longitude_nmea_value'] = ddd2nmeall(lon, 'lng')
+                #position_dict['longitude_direction'] = lon_d
 
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position_init=position_dict,
@@ -217,7 +222,7 @@ class Application:
                                         speed_init=speed,
                                         heading_init=head)
                 # Start message
-                print(f"\n Starting emulation at {position_dict['latitude_value']}, {position_dict['longitude_value']}")
+                print(f"\n Starting emulation at {position_dict['lat']}, {position_dict['lng']}")
                 action()
                 break
         

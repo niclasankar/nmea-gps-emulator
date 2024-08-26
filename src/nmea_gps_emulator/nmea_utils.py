@@ -10,7 +10,31 @@ Created in 2024
 
 from datetime import datetime
 
-def nmeall2ddd(pos: str) -> float:
+def ll2dir(degrees: float, attr: str) -> str:
+    """ Direction return
+
+    Function returns latitude or longitude direction from given lat/long
+
+    :param float degrees: latitude/longitude float value
+    :param str attr: String 'lat' for latitude and 'lng' for longitude
+    :return: Lat or Long direction letter or None if no attribute given
+    :rtype: str
+    """
+    if attr.lower() == 'lat':
+        if degrees < 0:
+            _dir = 'S'
+        else: _dir = 'N'
+    elif attr.lower() == 'lng':
+        if degrees < 0:
+            _dir = 'W'
+        else:
+            _dir = 'E'
+    else:
+        _dir = None
+
+    return _dir
+
+def nmea2ddd(pos: str) -> float:
     """
     Convert NMEA lat/lon string to (unsigned) decimal degrees.
 
@@ -29,7 +53,7 @@ def nmeall2ddd(pos: str) -> float:
     except (TypeError, ValueError):
         return None
     
-def ddd2nmeall(degrees: float, att: str, hprec: bool = False) -> str:
+def ddd2nmea(degrees: float, att: str, hprec: bool = False) -> str:
     """
     Convert decimal degrees to NMEA degrees decimal minutes string
 

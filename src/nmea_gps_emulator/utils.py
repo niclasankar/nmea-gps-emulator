@@ -23,16 +23,16 @@ import socket
 import psutil
 import serial.tools.list_ports
 
-from nmea_utils import ddd2nmeall
+from nmea_utils import ddd2nmea
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 default_position_dict = {
-    'latitude_value': 57.70011131,
+    'lat': 57.70011131,
     #'latitude_nmea_value': '5742.01113',
     #'latitude_direction': 'N',
-    'longitude_value': 11.98827852,
+    'lng': 11.98827852,
     #'longitude_nmea_value': '01159.82785',
     #'longitude_direction': 'E',
 }
@@ -126,8 +126,8 @@ def poi_input(poi_file: str):
                 # Loop through each object in the list
                 for poi in poi_list:
                     print(f" {poi['uid']} - {poi['name']}, " +
-                          f"({poi['lon']:3.3f}°{poi['lon_d']}, " +
-                          f"{poi['lat']:2f}°{poi['lat_d']})")
+                          f"({poi['lng']:3.3f}°{poi['lng_dir']}, " +
+                          f"{poi['lat']:2f}°{poi['lat_dir']})")
 
                 selected_uid = int(input(' >>> '))
                 sel_poi_item = None
@@ -136,21 +136,21 @@ def poi_input(poi_file: str):
                         sel_poi_item = poi_item
 
                 if sel_poi_item != None:
-                    pos_dict['latitude_value'] = sel_poi_item['lat']
+                    pos_dict['lat'] = sel_poi_item['lat']
                     if sel_poi_item['lat'] < 0:
-                        pos_dict['latitude_direction'] = 'S'
+                        pos_dict['lat_dir'] = 'S'
                     else:
-                        pos_dict['latitude_direction'] = 'N'
+                        pos_dict['lat_dir'] = 'N'
 
-                    pos_dict['longitude_value'] = sel_poi_item['lon']
-                    if sel_poi_item['lon'] < 0:
-                        pos_dict['longitude_direction'] = 'W'
+                    pos_dict['lng'] = sel_poi_item['lng']
+                    if sel_poi_item['lng'] < 0:
+                        pos_dict['lng_dir'] = 'W'
                     else:
-                        pos_dict['longitude_direction'] = 'E'
+                        pos_dict['lng_dir'] = 'E'
 
-                    pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
-                    pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
-
+                    #pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
+                    #pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
+                    print(pos_dict)
                     return pos_dict, sel_poi_item['alt'], sel_poi_item['head']
                 else:
                     print('Non valid POI choice. Continue with manual input.')
@@ -205,7 +205,7 @@ def position_sep_input() -> dict:
         # Input of latitude
         while True:
             try:
-                print(f'\n Enter unit position latitude (defaults to {default_position_dict["latitude_value"]}):')
+                print(f'\n Enter unit position latitude (defaults to {default_position_dict["lat"]}):')
                 print(f'    (Negative for southern hemisphere) ')
                 latitude_data = input(' >>> ')
             except KeyboardInterrupt:
@@ -213,18 +213,18 @@ def position_sep_input() -> dict:
                 sys.exit()
             # Input is empty, use default value
             if latitude_data == '':
-                latitude_data = float(default_position_dict["latitude_value"])
-                position_dict['latitude_value'] = latitude_data
+                latitude_data = float(default_position_dict["lat"])
+                position_dict['lat'] = latitude_data
                 break
             latitude_regex_pattern = r'^(\+|-)?(?:90(?:(?:\.0{1,14})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,14})?))$'
             mo = re.fullmatch(latitude_regex_pattern, str(latitude_data))
             if mo:
-                position_dict['latitude_value'] = float(mo.group())
+                position_dict['lat'] = float(mo.group())
                 break
         # Input of longitude
         while True:
             try:
-                print(f'\n Enter unit position longitude (defaults to {default_position_dict["longitude_value"]}):')
+                print(f'\n Enter unit position longitude (defaults to {default_position_dict["lng"]}):')
                 print(f'    (Negative for west of Greenwich)')
                 longitude_data = input(' >>> ')
             except KeyboardInterrupt:
@@ -232,17 +232,17 @@ def position_sep_input() -> dict:
                 sys.exit()
             # Input is empty, use default value
             if longitude_data == '':
-                longitude_data = float(default_position_dict["longitude_value"])
-                position_dict['longitude_value'] = longitude_data
+                longitude_data = float(default_position_dict["lng"])
+                position_dict['lng'] = longitude_data
                 break
             longitude_regex_pattern = r'^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,14})?))$'
             mo = re.fullmatch(longitude_regex_pattern, str(longitude_data))
             if mo:
-                position_dict['longitude_value'] = float(mo.group())
+                position_dict['lng'] = float(mo.group())
         
         #Convert lat/lon to NMEA form and store in dictionary
-        position_dict['latitude_nmea_value'] = ddd2nmeall(position_dict['latitude_value'], 'lat')
-        position_dict['longitude_nmea_value'] = ddd2nmeall(position_dict['longitude_value'], 'lng')
+        #position_dict['lat_nmea'] = ddd2nmeall(position_dict['lat'], 'lat')
+        #position_dict['lng_nmea'] = ddd2nmeall(position_dict['lng'], 'lng')
 
         return position_dict
     except KeyboardInterrupt:
