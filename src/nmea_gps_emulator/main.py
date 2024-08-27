@@ -167,13 +167,13 @@ class Application:
         try:
             # Load the supplied config JSON file
             config_filename = config
-            config_filename_path = os.path.join(__location__, config_filename)
+            config_filename_path = os.path.join(__location__, "confs", config_filename)
             if os.path.exists(config_filename_path):
                 with open(config_filename_path, 'r') as file:
                     config_list = json.load(file)
                     output = config_list['output']
                     lat = config_list['lat']
-                    lon = config_list['lon']
+                    lng = config_list['lng']
                     alt = config_list['alt']
                     speed = config_list['speed']
                     head = config_list['head']
@@ -190,7 +190,7 @@ class Application:
                 }
                 # Get args to dictionary
                 position_dict['lat'] = lat
-                position_dict['lon'] = lon
+                position_dict['lng'] = lng
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position_init=position_dict,
                                         altitude_init=alt,
