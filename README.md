@@ -180,18 +180,14 @@ The poi.json file should be located in the folder 'pois' alongside the script an
     {
         "name": "Gothenburg, Scandinavium Arena",
         "lat": 57.70010540643474,
-        "lat_d": "N",
-        "lon": 11.988275923454133,
-        "lon_d": "E",
+        "lng": 11.988275923454133,
         "alt": 4,
         "head": 260.0
     },
     {
         "name": "Helsingborg, Knutpunkten",
         "lat": 56.042846426281685,
-        "lat_d": "N",
-        "lon": 12.696462909108408,
-        "lon_d": "E",
+        "lng": 12.696462909108408,
         "alt": 3,
         "head": 300.0
     }
@@ -213,9 +209,7 @@ Below is a example of a config file
     "name": "Gothenburg, Scandinavium Arena, with Stream output",
     "output": 3,
     "lat": 57.70010540643474,
-    "lat_d": "N",
-    "lon": 11.988275923454133,
-    "lon_d": "E",
+    "lng": 11.988275923454133,
     "alt": 38,
     "head": 230.0,
     "speed": 2
@@ -228,12 +222,40 @@ The script can be run with a Qt GUI.
 ```bash
 (venv) $ python main_gui.py
 ```
+### Controling the unit
+When running the script the unit's position can be controlled by entering new input data.
+To start the input sequence press the ENTER button when the text below is visible.
+A series of values are requested and the values are controlled.
+When all new values are given and the script is ready changing the speed, heading or altitude a text is shown with the values.
+```bash
+ Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...
+
+ Enter new course or press "Enter" to skip (Target 260.0)
+ >>> 255
+
+ Enter new speed or press "Enter" to skip (Target 0)
+ >>> 10
+
+ Enter new altitude or press "Enter" to skip (Target 4)
+ >>> 32
+ 
+ All updates ready...
+ Lat: 57.70009968259188°N
+ Lng: 11.988229663475428°E
+ Alt: 4 m
+ Spd: 10.0 kt
+ Head: 255.0°
+
+ Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...
+ ```
+
 
 ## NMEA messages warnings
 
 ### GPZDA
 The time zone offset given in the messages is the one for the starting
-position and it is not recalculated as the unit moves.
+position and it is not recalculated as the unit moves to save system
+resources.
 
 ### GPGGA
 The antenna altitude is always 2.5 meters above the calculated altitude
