@@ -133,11 +133,6 @@ class Application:
                     print('\n\n*** Closing the script... ***\n')
                     sys.exit()
                 if prompt == '':
-                    # Ask for reset
-                    reset_choice = position_reset()
-                    print(reset_choice)
-                    #if reset_choice != True:
-
                     # Get active values
                     old_heading = self.nmea_obj.get_heading
                     old_speed = self.nmea_obj.get_speed
@@ -151,24 +146,19 @@ class Application:
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
-                            if reset_choice:
-                                thr.reset_position()
-                            else:
-                                #a = time.time()
-                                if new_heading != old_heading:
-                                    thr.set_heading(new_heading)
-                                if new_speed != old_speed:
-                                    thr.set_speed(new_speed)
-                                if new_altitude != old_altitude:
-                                    thr.set_altitude(new_altitude)
-                                #print(time.time() - a)
+                            #a = time.time()
+                            if new_heading != old_heading:
+                                thr.set_heading(new_heading)
+                            if new_speed != old_speed:
+                                thr.set_speed(new_speed)
+                            if new_altitude != old_altitude:
+                                thr.set_altitude(new_altitude)
+                            #print(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
-                        if reset_choice:
-                            self.nmea_obj.reset_position()
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
@@ -178,7 +168,7 @@ class Application:
         Run the application with provided args.
         """
         try:
-        # Listing of and input of selected POI
+            # Load the supplied config JSON file
             config_filename = config
             config_filename_path = os.path.join(__location__, config_filename)
             if os.path.exists(config_filename_path):
@@ -186,9 +176,7 @@ class Application:
                     config_list = json.load(file)
                     output = config_list['output']
                     lat = config_list['lat']
-                    lat_d = config_list['lat_d']
                     lon = config_list['lon']
-                    lon_d = config_list['lon_d']
                     alt = config_list['alt']
                     speed = config_list['speed']
                     head = config_list['head']
@@ -201,21 +189,11 @@ class Application:
             if action:
                 position_dict = {
                     'lat': 57.70011131,
-                    #'lat_nmea': '',
-                    #'lat_dir': 'N',
                     'lng': 11.98827852,
-                    #'lng_nmea': '',
-                    #'lng_dir': 'E',
                 }
-
                 # Get args to dictionary
                 position_dict['lat'] = lat
-                #position_dict['latitude_nmea_value'] = ddd2nmeall(lat, 'lat')
-                #position_dict['latitude_direction'] = lat_d
                 position_dict['lon'] = lon
-                #position_dict['longitude_nmea_value'] = ddd2nmeall(lon, 'lng')
-                #position_dict['longitude_direction'] = lon_d
-
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position_init=position_dict,
                                         altitude_init=alt,
@@ -276,7 +254,6 @@ class Application:
         """
         Runs serial which emulates NMEA server-device
         """
-        # serial_port = '/dev/ttyUSB0'
         # Serial configuration query
         serial_config = serial_config_input()
         self.nmea_thread = NmeaSerialThread(name=f'nmea_srv{uuid.uuid4().hex}',

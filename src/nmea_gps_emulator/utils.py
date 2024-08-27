@@ -23,7 +23,7 @@ import socket
 import psutil
 import serial.tools.list_ports
 
-from nmea_utils import ddd2nmea
+from nmea_utils import ddd2nmea, ll2dir
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -98,7 +98,15 @@ def filter_input():
 
 def poi_input(poi_file: str):
     """
-    The function reads the poi file and asks for user choice
+    The method reads the poi file and asks for user choice.
+    POI file must contain posts formed like below
+    {
+        "name": "East Cape Lighthouse, New Zeeland (+12 GMT)",
+        "lat": -37.68899790444831,
+        "lng": 178.54812819713842,
+        "alt": 154,
+        "head": 90.0
+    }
 
     :param string poi_file: optional file name of custom poi file 
     :return: filter message id as string
@@ -125,10 +133,13 @@ def poi_input(poi_file: str):
 
                 # Loop through each object in the list
                 for poi in poi_list:
+                    lat_dir = ll2dir(poi['lat'], 'lat')
+                    lng_dir = ll2dir(poi['lng'], 'lng')
                     print(f" {poi['uid']} - {poi['name']}, " +
-                          f"({poi['lng']:3.3f}°{poi['lng_dir']}, " +
-                          f"{poi['lat']:2f}°{poi['lat_dir']})")
+                          f"({poi['lat']:2f}°{lat_dir}, " +
+                          f"{poi['lng']:3.3f}°{lng_dir})")
 
+                # Get the chosen POI
                 selected_uid = int(input(' >>> '))
                 sel_poi_item = None
                 for poi_item in poi_list:
@@ -137,16 +148,16 @@ def poi_input(poi_file: str):
 
                 if sel_poi_item != None:
                     pos_dict['lat'] = sel_poi_item['lat']
-                    if sel_poi_item['lat'] < 0:
-                        pos_dict['lat_dir'] = 'S'
-                    else:
-                        pos_dict['lat_dir'] = 'N'
+                    # if sel_poi_item['lat'] < 0:
+                    #     pos_dict['lat_dir'] = 'S'
+                    # else:
+                    #     pos_dict['lat_dir'] = 'N'
 
                     pos_dict['lng'] = sel_poi_item['lng']
-                    if sel_poi_item['lng'] < 0:
-                        pos_dict['lng_dir'] = 'W'
-                    else:
-                        pos_dict['lng_dir'] = 'E'
+                    # if sel_poi_item['lng'] < 0:
+                    #     pos_dict['lng_dir'] = 'W'
+                    # else:
+                    #     pos_dict['lng_dir'] = 'E'
 
                     #pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
                     #pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
@@ -435,7 +446,7 @@ def change_heading_input(self, heading_old: float) -> float:
     try:
         while True:
             try:
-                print(f'\n Enter new course or enter to skip (Target {heading_old})')
+                print(f'\n Enter new course or press "Enter" to skip (Target {heading_old})')
                 heading_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -465,7 +476,7 @@ def change_speed_input(self, speed_old:float) -> float:
     try:
         while True:
             try:
-                print(f'\n Enter new speed or enter to skip (Target {speed_old})')
+                print(f'\n Enter new speed or press "Enter" to skip (Target {speed_old})')
                 speed_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -498,7 +509,7 @@ def change_altitude_input(self, altitude_old: float) -> float:
     try:
         while True:
             try:
-                print(f'\n Enter new altitude or enter to skip (Target {altitude_old})')
+                print(f'\n Enter new altitude or press "Enter" to skip (Target {altitude_old})')
                 alt_data = input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
@@ -520,71 +531,11 @@ def change_altitude_input(self, altitude_old: float) -> float:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
 
-def change_input(self, old_course, old_speed, old_altitude) -> tuple:
-    """
-    The function asks for the unit's heading, speed and altitude (online).
-    DEPRECATED
-    """
-    try:
-        while True:
-            try:
-                print(f'\n New course (Active target {old_course})')
-                heading_data = input(' >>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
-            mo = re.fullmatch(heading_regex_pattern, heading_data)
-            if mo:
-                heading_new = float(mo.group())
-                print(f'\nCourse updated: {heading_new}\n')
-                break
-        while True:
-            try:
-                print(f'\n New speed (Active target {old_speed})')
-                speed_data = input(' >>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            if speed_data == 's':
-                speed_new = 0
-                break
-            else:
-                speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
-                mo = re.fullmatch(speed_regex_pattern, speed_data)
-                if mo:
-                    match = mo.group()
-                    if match.startswith('0') and match != '0':
-                        match = match.lstrip('0')
-                    speed_new = float(match)
-                    print(f'\nSpeed updated: {speed_new}\n')
-                    break
-        while True:
-            try:
-                print(f'\n New altitude (Active target {old_altitude})')
-                alt_data = input(' >>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
-            mo = re.fullmatch(alt_regex_pattern, alt_data)
-            if mo:
-                match = mo.group()
-                if match.startswith('0') and match != '0':
-                    match = match.lstrip('0')
-                altitude_new = float(match)
-                print(f'\nAltitude updated: {altitude_new}\n')
-                break
-        return heading_new, speed_new, altitude_new
-    except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
-        sys.exit()
-
 def serial_config_input() -> dict:
     """
-    The function asks for serial configuration.
+    Method asking for serial settings
+    Lists available ports for the user
     """
-    # serial_port = '/dev/ttyS0'
     # Dict with all serial port settings.
     serial_set = {'bytesize': 8,
                   'parity': 'N',

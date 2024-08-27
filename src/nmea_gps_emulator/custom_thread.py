@@ -105,10 +105,6 @@ class NmeaSrvThread(threading.Thread):
     def get_altitude(self):
         return self.nmea_object.altitude
     
-    def reset_position(self):
-        with self._lock:
-            self.nmea_object.reset_position()
-
     def run(self):
         while True:
             timer_start = time.perf_counter()

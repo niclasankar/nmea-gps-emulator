@@ -265,32 +265,9 @@ class NmeaMsg:
         # Forward transformation - returns longitude, latitude, back azimuth of terminus points
         lon_end, lat_end, back_azimuth = g.fwd(lon_start, lat_start, self.heading, distance)
 
-        # Convert the new position to NMEA form and store
-        #nmea_pos_lat = ddd2nmeall(lat_end, 'lat')
-        #nmea_pos_lon = ddd2nmeall(lon_end, 'lng')
-        #self.position['lat_nmea'] = nmea_pos_lat
-        #self.position['lng_nmea'] = nmea_pos_lon
-
         # Store the new position
         self.position['lat'] = lat_end 
         self.position['lng'] = lon_end
-
-        # Update longitude and latitude direction letters
-        #self._update_dir()
-
-    def reset_position(self):
-        """
-        Reset the unit's position to the starting position.
-
-        :return: None
-        :rtype: None
-        """
-        self.speed = 0.0
-        self.speed_targeted = 0.0
-        self.position = self.position_backup
-        print(self.position)
-        #utc_date_time = datetime.datetime.now(timezone.utc)
-        #self.position_update(utc_date_time)
 
     def _heading_update(self):
         """
@@ -385,20 +362,24 @@ class NmeaMsg:
 
     def _magvar_update(self):
         """
-        Updates the magnetic declination from WMM in pygeomag
+        Updates the magnetic declination variables from WMM in pygeomag
+        Protected method
         """
-        date_decimal = decimal_year_from_date(self.utc_date_time)
-        lat = self.position['lat']
-        lon = self.position['lng']
-        alt = self.altitude
-        gm = GeoMag()
-        result = gm.calculate(glat=lat, glon=lon, alt=alt, time=date_decimal)
-        self.magvar = abs(result.d)
-        self.magvar_dec = result.d
-        if result.d > 0:
-            self.magvar_direct = 'E'
-        else:
-            self.magvar_direct = 'W'
+        try:
+            date_decimal = decimal_year_from_date(self.utc_date_time)
+            lat = self.position['lat']
+            lon = self.position['lng']
+            alt = self.altitude
+            gm = GeoMag()
+            result = gm.calculate(glat=lat, glon=lon, alt=alt, time=date_decimal)
+            self.magvar = abs(result.d)
+            self.magvar_dec = result.d
+            if result.d > 0:
+                self.magvar_direct = 'E'
+            else:
+                self.magvar_direct = 'W'
+        except Exception as error:
+            print('Magvar error!')
 
     @staticmethod
     def check_sum(data: str):

@@ -2,72 +2,56 @@
     {
         "name": "Gothenburg, Scandinavium Arena",
         "lat": 57.70010540,
-        "lat_dir": "N",
         "lng": 11.98827592,
-        "lng_dir": "E",
         "alt": 4,
         "head": 260.0
     },
     {
         "name": "Washington, Capitoleum",
         "lat": 38.88929635,
-        "lat_dir": "N",
         "lng": -77.05015276,
-        "lng_dir": "W",
         "alt": 9,
         "head": 270.0
     },
     {
         "name": "London, Prime Meridian",
         "lat": 51.47788500,
-        "lat_dir": "N",
         "lng": 0.00,
-        "lng_dir": "E",
         "alt": 47,
         "head": 300.0
     },
     {
         "name": "Japan, Mount Fuji",
         "lat": 35.36055489,
-        "lat_dir": "N",
         "lng": 138.72738484,
-        "lng_dir": "E",
         "alt": 3776.0,
         "head": 0.0
     },
     {
         "name": "San Fransisco, Golden Gate Bridge",
         "lat": 37.81856987,
-        "lat_dir": "N",
         "lng": -122.47846487,
-        "lng_dir": "W",
         "alt": 100,
         "head": 340.0
     },
     {
         "name": "Buenos Aires, Airport",
         "lat": -34.56042729,
-        "lat_dir": "S",
         "lng": -58.41363783,
-        "lng_dir": "W",
         "alt": 100,
         "head": 340.0
     },
     {
         "name": "Howland Island, United States (-12 GMT)",
         "lat": 0.8056528527702284,
-        "lat_dir": "N",
         "lng": -176.6192650243712,
-        "lng_dir": "W",
         "alt": 154,
         "head": 90.0
     },
     {
         "name": "East Cape Lighthouse, New Zeeland (+12 GMT)",
         "lat": -37.68899790444831,
-        "lat_dir": "S",
         "lng": 178.54812819713842,
-        "lng_dir": "E",
         "alt": 154,
         "head": 90.0
     }
