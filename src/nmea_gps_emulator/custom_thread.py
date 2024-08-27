@@ -27,26 +27,33 @@ from utils import exit_script, data_log
 
 def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> None:
     """
-    Function starts thread with TCP (telnet) server sending NMEA data to connected client (clients).
+    Method starts thread with TCP (telnet) server sending NMEA
+    data to connected client (clients).
+
+    :param str srv_ip_address: String with IP address
+    :param str srv_port: String with port
+    :param object nmea_obj: NmeaMsg object
+    :return: None
+    :rtype: None
     """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sck:
         # Bind socket to local host and port.
         try:
-            s.bind((srv_ip_address, srv_port))
+            sck.bind((srv_ip_address, srv_port))
         except socket.error as err:
             print(f'\n TCP Server, bind failed. Error: {err.strerror}.')
             print(' Change IP/port settings or try again in next 2 minutes.')
-            exit_script('Socket bind error')
+            exit_script()
             # sys.exit()
         # Start listening on socket
-        s.listen(10)
+        sck.listen(10)
         print(f'\n Server listening on {srv_ip_address}:{srv_port}... \n')
         while True:
             # Number of allowed connections to TCP server.
             max_threads = 10
             # Scripts waiting for client calls
             # The server is blocked (suspended) and is waiting for a client connection.
-            conn, ip_add = s.accept()
+            conn, ip_add = sck.accept()
             print(f'\n Connected with {ip_add[0]}:{ip_add[1]} ')
             thread_list = [thread.name for thread in threading.enumerate()]
             if len([thread_name for thread_name in thread_list if thread_name.startswith('nmea_srv')]) < max_threads:
@@ -66,6 +73,14 @@ class NmeaSrvThread(threading.Thread):
     A class that represents a thread dedicated for TCP (telnet) server-client connection.
     """
     def __init__(self, nmea_object, ip_add=None, conn=None, *args, **kwargs):
+        """ Class constructor
+
+        :param object nmea_object: NmeaMsg object
+        :param str ip_add: String with IP address
+        :param str conn: Unknown function of argument
+        :param tuple *args: Additional arguments in tuple
+        :param dict **kwargs: Additional arguments in a dictionary
+        """
         super().__init__(*args, **kwargs)
         self.heading = 0
         self.speed = 0
@@ -76,6 +91,7 @@ class NmeaSrvThread(threading.Thread):
         self._heading_change = False
         self._speed_change = False
         self._altitude_change = False
+        # TODO: Is the self.conn variable used?
         self.conn = conn
         self.ip_add = ip_add
         self.nmea_object = nmea_object
@@ -149,6 +165,13 @@ class NmeaStreamThread(NmeaSrvThread):
     A class that represents a thread dedicated for TCP or UDP stream connection.
     """
     def __init__(self, proto, port, *args, **kwargs):
+        """ Class constructor
+
+        :param str proto: String 'udp' or 'tcp'
+        :param int port: Integer representing the port to use for stream
+        :param tuple *args: Additional arguments in tuple
+        :param dict **kwargs: Additional arguments in a dictionary
+        """
         super().__init__(*args, **kwargs)
         self.proto = proto
         self.port = port
@@ -184,7 +207,7 @@ class NmeaStreamThread(NmeaSrvThread):
                         time.sleep(self.thread_sleep)
             except (OSError, TimeoutError, ConnectionRefusedError, BrokenPipeError) as err:
                 print(f'\n Error: {err.strerror}\n')
-                exit_script('Run error in NmeaStreamThread')
+                exit_script()
         elif self.proto == 'udp':
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 print(f'\n Sending NMEA data - UDP stream to {self.ip_add}:{self.port}... \n')
@@ -211,7 +234,7 @@ class NmeaStreamThread(NmeaSrvThread):
                                 time.sleep(0.05)
                             except OSError as err:
                                 print(f' Error: {err.strerror} ')
-                                exit_script('OSError in NmeaStreamThread')
+                                exit_script()
                         # Start next loop after 1 sec
                     self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
                     time.sleep(self.thread_sleep)
@@ -221,6 +244,12 @@ class NmeaSerialThread(NmeaSrvThread):
     A class that represents a thread dedicated for serial connection.
     """
     def __init__(self, serial_config, *args, **kwargs):
+        """ Class constructor
+
+        :param str filter_mess: String with sentence ID to search and filter
+        :param tuple *args: Additional arguments in tuple
+        :param dict **kwargs: Additional arguments in a dictionary
+        """
         super().__init__(*args, **kwargs)
         self.serial_config = serial_config
 
@@ -269,9 +298,16 @@ class NmeaSerialThread(NmeaSrvThread):
 
 class NmeaOutputThread(NmeaSrvThread):
     """
-    A class that represents a thread dedicated for logging output for debugging.
+    A class that represents a thread dedicated for logging output.
+    Inherits NmeaSrvThread
     """
     def __init__(self, filter_mess='', *args, **kwargs):
+        """ Class constructor
+
+        :param str filter_mess: String with sentence ID to search and filter
+        :param tuple *args: Additional arguments in tuple
+        :param dict **kwargs: Additional arguments in a dictionary
+        """
         super().__init__(*args, **kwargs)
         self.filter_mess = filter_mess
         self.thread_sleep = 1
@@ -313,9 +349,11 @@ class NmeaOutputThread(NmeaSrvThread):
         except RuntimeError as rt_error:
             # Remove error number from output [...]
             error_formatted = 'RuntimeError: ' + re.sub(r'\[(.*?)\]', '', str(rt_error)).strip().replace('  ', ' ').capitalize()
-            exit_script(f"{error_formatted}.")
+            print(f"{error_formatted}.")
+            exit_script()
         except Exception as error:
             # Remove error number from output [...]
             error_formatted = 'Exception: ' + re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            exit_script(f"{error_formatted}.")
+            print(f"{error_formatted}.")
+            exit_script()
             
