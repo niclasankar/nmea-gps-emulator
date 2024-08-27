@@ -21,13 +21,10 @@ import os
 import json
 
 from nmea_gps import NmeaMsg
-#from nmea_utils import ddd2nmea
 from utils import position_sep_input, ip_port_input, trans_proto_input, \
-                  heading_input, speed_input, change_heading_input, \
+                  heading_input, speed_input, change_heading_input, alt_input, \
                   change_speed_input, change_altitude_input, \
-                  serial_config_input, alt_input, filter_input, poi_input, \
-                  position_reset
-
+                  serial_config_input, filter_input, poi_input
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
 __location__ = os.path.realpath(

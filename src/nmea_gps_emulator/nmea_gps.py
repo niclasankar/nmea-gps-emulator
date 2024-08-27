@@ -168,7 +168,7 @@ class NmeaMsg:
             print(f' Lng: {self.position['lng']}°{self.position['lng_dir']}')
             print(f' Alt: {self.altitude} m')
             print(f' Spd: {self.speed} kt')
-            print(f' Head: {self.heading} °')
+            print(f' Head: {self.heading}°')
             print('\n Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
             
         # Set new values in messages
@@ -197,22 +197,29 @@ class NmeaMsg:
             nmea_msgs_str += f'{nmea}'
         return nmea_msgs_str
     
-    # Function to get timezone and offset from latitude and longitude
-    def get_timezone_offset(self, lat, lon):
+    def get_timezone_offset(self, lat, lng):
+        """
+        The method gets the timezone and offset from latitude and longitude
+
+        :param float lat: Latitude value
+        :param float lng: Longitude value
+        :return: UTC offset hours and minutes in a tuple
+        :rtype: int, int
+        """
         # Initialize TimezoneFinder
-        tf = TimezoneFinder()
+        tzf = TimezoneFinder()
 
         # Get the timezone name from latitude and longitude
-        timezone_str = tf.timezone_at(lng=lon, lat=lat)
+        timezone_str = tzf.timezone_at(lng=lng, lat=lat)
 
         if timezone_str is None:
-            return None, None, None
+            return None, None
 
-        # Get the timezone object
-        timezone = pytz.timezone(timezone_str)
+        # Get the timezone object from pytz
+        pytz_tz = pytz.timezone(timezone_str)
 
         # Get the current time in the timezone
-        current_time = datetime.datetime.now(timezone)
+        current_time = datetime.datetime.now(pytz_tz)
 
         # Get the UTC offset in hours and minutes
         utc_offset_seconds = current_time.utcoffset().total_seconds() - current_time.dst().total_seconds()
@@ -221,25 +228,6 @@ class NmeaMsg:
 
         return utc_offset_hours, utc_offset_minutes
     
-    # def _update_dir(self):
-    #     """ Direction update
-
-    #     Function that updates the direction letters in the position object.
-
-    #     :return: None
-    #     :rtype: None
-    #     """
-    #     lat = self.position['lat']
-    #     lon = self.position['lng']
-    #     lat_dir = 'N'
-    #     lon_dir = 'E'
-    #     if lat < 0:
-    #         lat_dir = 'S'
-    #     if lon < 0:
-    #         lon_dir = 'W'
-    #     self.position['lng_dir'] = lon_dir
-    #     self.position['lat_dir'] = lat_dir
-
     def position_update(self, utc_date_time_prev: datetime):
         """
         Update position when unit in move.
@@ -321,6 +309,9 @@ class NmeaMsg:
     def _speed_update(self):
         """
         Updates the unit's speed in case of changes performed by the user.
+
+        :return: None
+        :rtype: None
         """
         speed_target = self.speed_targeted
         speed_current = self.speed
@@ -364,6 +355,9 @@ class NmeaMsg:
         """
         Updates the magnetic declination variables from WMM in pygeomag
         Protected method
+
+        :return: None
+        :rtype: None
         """
         try:
             date_decimal = decimal_year_from_date(self.utc_date_time)
@@ -379,7 +373,9 @@ class NmeaMsg:
             else:
                 self.magvar_direct = 'W'
         except Exception as error:
-            print('Magvar error!')
+            print('Magnetic variation calculation error! Setting value to 0°E')
+            self.magvar_dec = 0
+            self.magvar_direct = 'E'
 
     @staticmethod
     def check_sum(data: str):
@@ -387,6 +383,10 @@ class NmeaMsg:
         Function changes ASCII char to decimal representation, perform XOR operation of
         all the bytes between the $ and the * (not including the delimiters themselves),
         and returns NMEA check-sum in hexadecimal notation.
+
+        :param str data: NMEA data string to create checksum for
+        :return: Checksum
+        :rtype: str
         """
         check_sum: int = 0
         for char in data:
@@ -509,8 +509,11 @@ class Gpgga:
     """
     sentence_id: str = 'GPGGA'
 
-    def __init__(self, sats_count, utc_date_time, position, altitude, antenna_altitude_above_msl=32.5, fix_quality=1,
-                 hdop=0.92, dgps_last_update='', dgps_ref_station_id=''):
+    def __init__(self, sats_count: int, utc_date_time: datetime,
+                 position: dict, altitude: float, 
+                 antenna_altitude_above_msl: float=32.5, 
+                 fix_quality: int=1, hdop: float=0.92, 
+                 dgps_last_update: str='', dgps_ref_station_id: str=''):
         """ GPGGA Class Constructor.
 
         Initiates the GGA message object

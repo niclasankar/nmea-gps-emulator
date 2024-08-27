@@ -36,7 +36,7 @@ default_position_dict = {
     #'longitude_nmea_value': '01159.82785',
     #'longitude_direction': 'E',
 }
-default_speed = 2
+default_speed = 0
 default_alt = 42
 default_head = 260
 
@@ -55,20 +55,20 @@ default_ip = '127.0.0.1'
 default_port = 10110
 default_telnet_port = 10110
 
-def exit_script(errortx = 'unspecified'):
+def exit_script():
     """
-    The function terminates the script (main thread) from inside of
+    The method terminates the script (main thread) from inside of
     child thread
     """
     current_script_pid = os.getpid()
     current_script = psutil.Process(current_script_pid)
-    print(f'*** Closing the script ({errortx})... ***\n')
+    print(f'*** Closing the script ({current_script_pid})... ***\n')
     time.sleep(1)
     current_script.terminate()
 
 def filter_input():
     """
-    The function asks for type of messages to log
+    The method asks for type of messages to log
 
     :return: filter message id as string
     :rtype: str
@@ -171,42 +171,16 @@ def poi_input(poi_file: str):
                 print('Continuing with manual input.')
                 time.sleep(1)
                 return None, None, None
-    except json.JSONDecodeError as jer:
-        print(f'Could not parse the supplied JSON file. Continuing with manual input. ({jer.msg})')
+    except json.JSONDecodeError as jsonerr:
+        print(f' Could not parse the supplied JSON file. Continuing with manual input. ({jsonerr.msg})')
         return None, None, None
-    except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
-        sys.exit()
-
-def position_reset():
-    """
-    The function asks if the user want the position to be reset to starting position.
-
-    :return: boolean, longitude and lat/lon directions
-    :rtype: boolean
-    """
-    try:
-        while True:
-            try:
-                print(f'\n Do you want to reset the position (Y/N) (defaults to N):')
-                reset_data = input(' >>> ')
-            except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
-                sys.exit()
-            if reset_data == '':
-                reset_choice = False
-            elif reset_data == 'Y':
-                reset_choice = True
-            else:
-                reset_choice = False
-            return reset_choice
     except KeyboardInterrupt:
         print('\n\n*** Closing the script... ***\n')
         sys.exit()
 
 def position_sep_input() -> dict:
     """
-    The function asks for position and checks validity of entry data.
+    The method asks for position and checks validity of entry data.
 
     :return: dictionary containing latitude, longitude and lat/lon directions
     :rtype: dictionary
@@ -262,7 +236,7 @@ def position_sep_input() -> dict:
 
 def ip_port_input(option: str) -> tuple:
     """
-    The function asks for IP address and port number for connection.
+    The method asks for IP address and port number for connection.
 
     :param string option: type of connection 
     :return: tuple containing IP address and port
@@ -309,7 +283,7 @@ def ip_port_input(option: str) -> tuple:
 
 def trans_proto_input() -> str:
     """
-    The function asks for transport protocol for NMEA stream.
+    The method asks for transport protocol for NMEA stream.
 
     :return: transport protocol as lowercase string
     :rtype: str
@@ -337,26 +311,26 @@ def trans_proto_input() -> str:
 
 def get_ip() -> str:
     """
-    The function gets the first local IP address of the computer.
+    The method gets the first local IP address of the computer.
 
     :return: local IP address as string
     :rtype: str
     """
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(0)
+    sck = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sck.settimeout(0)
     try:
         # Doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
-        ip_local = s.getsockname()[0]
+        sck.connect(('10.254.254.254', 1))
+        _ip_local = sck.getsockname()[0]
     except Exception:
-        ip_local = '127.0.0.1'
+        _ip_local = '127.0.0.1'
     finally:
-        s.close()
-    return ip_local
+        sck.close()
+    return _ip_local
 
 def heading_input() -> float:
     """
-    The function asks for the unit's course.
+    The method asks for the unit's start heading.
 
     :return: unit's heading
     :rtype: float
@@ -375,13 +349,18 @@ def heading_input() -> float:
             mo = re.fullmatch(heading_regex_pattern, heading_data)
             if mo:
                 return float(mo.group())
+        except re.error as reerr:
+            print("Error occurred:", reerr.msg)
+            print("Pattern:", reerr.pattern)
+            print("Position:", reerr.pos)
+            return 0.0
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
 def speed_input() -> float:
     """
-    The function asks for the unit's speed.
+    The method asks for the unit's starting speed.
 
     :return: unit's speed
     :rtype: float
@@ -403,13 +382,18 @@ def speed_input() -> float:
                 if match.startswith('0') and match != '0':
                     match = match.lstrip('0')
                 return float(match)
+        except re.error as reerr:
+            print("Error occurred:", reerr.msg)
+            print("Pattern:", reerr.pattern)
+            print("Position:", reerr.pos)
+            return 0.0
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
 def alt_input() -> float:
     """
-    The function asks for the unit's altitude.
+    The method asks for the unit's starting altitude.
 
     :return: unit's altitude
     :rtype: float
@@ -431,13 +415,18 @@ def alt_input() -> float:
                 if match.startswith('0') and match != '0':
                     match = match.lstrip('0')
                 return float(match)
+        except re.error as reerr:
+            print("Error occurred:", reerr.msg)
+            print("Pattern:", reerr.pattern)
+            print("Position:", reerr.pos)
+            return 0.0
         except KeyboardInterrupt:
             print('\n\n*** Closing the script... ***\n')
             sys.exit()
 
 def change_heading_input(self, heading_old: float) -> float:
     """
-    The function asks for the unit's heading.
+    The method asks for the unit's new  heading.
 
     :param float old_course: active course of unit
     :return: new course of unit
@@ -467,7 +456,7 @@ def change_heading_input(self, heading_old: float) -> float:
 
 def change_speed_input(self, speed_old:float) -> float:
     """
-    The function asks for the unit's speed.
+    The method asks for the unit's new speed.
 
     :param float old_speed: active speed of unit 
     :return: new speed of unit
@@ -500,7 +489,7 @@ def change_speed_input(self, speed_old:float) -> float:
 
 def change_altitude_input(self, altitude_old: float) -> float:
     """
-    The function asks for the unit's altitude.
+    The method asks for the unit's new altitude.
 
     :param float old_altitude: active altitude of unit 
     :return: new altitude of unit
@@ -533,8 +522,20 @@ def change_altitude_input(self, altitude_old: float) -> float:
 
 def serial_config_input() -> dict:
     """
-    Method asking for serial settings
+    The method is asking for serial settings
     Lists available ports for the user
+    Complete serial config set should look like below:
+    {
+        'bytesize': 8,
+        'parity': 'N',
+        'stopbits': 1,
+        'timeout': 1,
+        'port': '/dev/ttyS0',
+        'baudrate': 9600
+    }
+
+    :return: Dictionary storing serial settings
+    :rtype: dict
     """
     # Dict with all serial port settings.
     serial_set = {'bytesize': 8,
@@ -597,11 +598,19 @@ def serial_config_input() -> dict:
         if str(serial_set['baudrate']) in baudrate_list:
             break
         print(f'\n*** Error: \'{serial_set["baudrate"]}\' is not a valid baudrate. ***')
+    print(serial_set)
     return serial_set
 
-def setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):
+def _setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):
     """
-    The function creates a logging instance and returns it.
+    The method creates a logging instance and returns it.
+
+    :param str logger_name: Name of the logging instance
+    :param str log_file: Name of the logging file
+    :param str log_format: Logging format, defaults to %(message)s
+    :param object level: Logging level, defaults to logging.INFO
+    :return: Logging instance to use in other methods
+    :rtype: object
     """
     # Get logger instance
     new_logger = logging.getLogger(logger_name)
@@ -615,11 +624,7 @@ def setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.
     new_logger.addHandler(fileHandler)
     return new_logger
 
-def system_log(log_message):
-    system_logger.info(log_message)
-
 def data_log(log_message):
     data_logger.info(log_message)
 
-system_logger = setup_logger('system_logger', 'emulator_system.log')
-data_logger = setup_logger('data_logger', 'emulator_data.log')
+data_logger = _setup_logger('data_logger', 'emulator_data.log')
