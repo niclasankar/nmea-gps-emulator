@@ -115,7 +115,7 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
-        print(self.position)
+        # print(self.position)
 
     def __next__(self):
         """ Iterator function.
@@ -164,11 +164,11 @@ class NmeaMsg:
              and self.altitude == self.altitude_targeted:
             self.change_in_progress = False
             print('\n All updates ready...')
-            print(f' Lat: {self.position['lat']}°{self.position['lat_dir']}')
-            print(f' Lng: {self.position['lng']}°{self.position['lng_dir']}')
-            print(f' Alt: {self.altitude} m')
-            print(f' Spd: {self.speed} kt')
-            print(f' Head: {self.heading}°')
+            print(f' Latitude: {self.position['lat']}°{self.position['lat_dir']}')
+            print(f' Longitude: {self.position['lng']}°{self.position['lng_dir']}')
+            print(f' Altitude: {self.altitude} m')
+            print(f' Speed: {self.speed} kt')
+            print(f' Heading: {self.heading}°')
             print('\n Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
             
         # Set new values in messages
