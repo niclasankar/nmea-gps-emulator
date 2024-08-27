@@ -2,9 +2,7 @@
     "name": "Gothenburg, Scandinavium Arena, with Stream output",
     "output": 3,
     "lat": 57.70010540,
-    "lat_d": "N",
-    "lon": 11.98827592,
-    "lon_d": "E",
+    "lng": 11.98827592,
     "alt": 4,
     "head": 260.0,
     "speed": 2
