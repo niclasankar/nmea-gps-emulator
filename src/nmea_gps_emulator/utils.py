@@ -30,11 +30,7 @@ __location__ = os.path.realpath(
 
 default_position_dict = {
     'lat': 57.70011131,
-    #'latitude_nmea_value': '5742.01113',
-    #'latitude_direction': 'N',
     'lng': 11.98827852,
-    #'longitude_nmea_value': '01159.82785',
-    #'longitude_direction': 'E',
 }
 default_speed = 0
 default_alt = 42
@@ -161,7 +157,7 @@ def poi_input(poi_file: str):
 
                     #pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
                     #pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
-                    print(pos_dict)
+                    # print(pos_dict)
                     return pos_dict, sel_poi_item['alt'], sel_poi_item['head']
                 else:
                     print('Non valid POI choice. Continue with manual input.')
@@ -598,7 +594,7 @@ def serial_config_input() -> dict:
         if str(serial_set['baudrate']) in baudrate_list:
             break
         print(f'\n*** Error: \'{serial_set["baudrate"]}\' is not a valid baudrate. ***')
-    print(serial_set)
+    # print(serial_set)
     return serial_set
 
 def _setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):
