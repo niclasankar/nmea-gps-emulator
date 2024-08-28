@@ -210,7 +210,7 @@ The poi.json file should be located in the folder 'pois' alongside the script an
     }
 ]
 ```
-A custom POI file can also be created in the same folder and can be called at runtime with the argument '-p filename'.
+A custom POI file can also be created and can be called at runtime with the argument '-p filename_with_full_path'.
 
 ### Starting the script with a config file (experimental)
 The script can be run by supplying a JSON config file with the starting point and type
