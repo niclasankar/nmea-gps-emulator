@@ -114,12 +114,14 @@ def poi_input(poi_file: str):
         # Listing of and input of selected POI
         while True:
             if poi_file != '':
-                poi_filename = poi_file
+                print(f"Using points from '{poi_file}'")
+                poi_filename_path = poi_file
             else:
                 poi_filename = 'poi.json'
-            poi_filename_path = os.path.join(__location__, "pois", poi_filename)
+                poi_filename_path = os.path.join(__location__, "pois", poi_filename)
+
             if os.path.exists(poi_filename_path):
-                print(" Showing points from: " + poi_filename_path)
+                #print(" Showing points from: " + poi_filename_path)
                 with open(poi_filename_path, 'r') as file:
                     poi_list = json.load(file)
 
