@@ -29,14 +29,6 @@
             "args": "-h"
         },
         {
-            "name": "Python Debugger: Custom POI file",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "args": "-p poicustom.json"
-        },
-        {
             "name": "Python Debugger: Current File without Arguments",
             "type": "debugpy",
             "request": "launch",
