@@ -4,6 +4,7 @@ lib/
 venv/
 .DS_store
 *.log
+*.sh
 pyvenv.cfg
 src/nmea_gps_emulator/pois/poi_custom.json
 src/nmea_gps_emulator/pois/poi_err.json
