@@ -29,25 +29,25 @@ __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 default_position_dict = {
-    'lat': 57.70011131,
-    'lng': 11.98827852,
+    "lat": 57.70011131,
+    "lng": 11.98827852,
 }
 default_speed = 0
 default_alt = 42
 default_head = 260
 
 filters_dict = {
-    1: '$GPGGA',
-    2: '$GPGLL',
-    3: '$GPRMC',
-    4: '$GPGSA',
-    5: '$GPGSV',
-    6: '$GPHDT',
-    7: '$GPVTG',
-    8: '$GPZDA',
-    0: 'No filter'
+    1: "$GPGGA",
+    2: "$GPGLL",
+    3: "$GPRMC",
+    4: "$GPGSA",
+    5: "$GPGSV",
+    6: "$GPHDT",
+    7: "$GPVTG",
+    8: "$GPZDA",
+    0: "No filter"
 }
-default_ip = '127.0.0.1'
+default_ip = "127.0.0.1"
 default_port = 10110
 default_telnet_port = 10110
 
@@ -58,7 +58,7 @@ def exit_script():
     """
     current_script_pid = os.getpid()
     current_script = psutil.Process(current_script_pid)
-    print(f'*** Closing the script ({current_script_pid})... ***\n')
+    print(f"*** Closing the script ({current_script_pid})... ***\n")
     time.sleep(1)
     current_script.terminate()
 
@@ -69,12 +69,12 @@ def filter_input():
     :return: filter message id as string
     :rtype: str
     """
-    print('Choose filter:')
+    print("\n Choose message filter:")
     for x, y in filters_dict.items():
-        print(f'  {x} - {y}') 
+        print(f"  {x} - {y}") 
     try:
-        filter_choice = input(' >>> ')
-        mo = re.match(r'([0-8])', filter_choice)
+        filter_choice = input(" >>> ")
+        mo = re.match(r"([0-8])", filter_choice)
         if mo:
             # Filter is first match group
             filter = int(mo.group())
@@ -82,98 +82,87 @@ def filter_input():
             # No filter
             filter = 0
     except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
+        print("\n\n*** Closing the script... ***\n")
         sys.exit()
     filter_type = filters_dict.get(filter)
     if filter != 0:
-        print('Filtering messages by type ' + filter_type + '.\n')
+        print(f"Filtering messages by type {filter_type}.\n")
     else:
-        print('No message filtering active.\n')
-        filter_type = ''
+        print("No message filtering active.\n")
+        filter_type = ""
     return filter_type
 
 def poi_input(poi_file: str):
     """
     The method reads the poi file and asks for user choice.
     POI file must contain posts formed like below
-    {
+    [{
         "name": "East Cape Lighthouse, New Zeeland (+12 GMT)",
         "lat": -37.68899790444831,
         "lng": 178.54812819713842,
         "alt": 154,
         "head": 90.0
-    }
+    }]
 
-    :param string poi_file: optional file name of custom poi file 
-    :return: filter message id as string
-    :rtype: str (None if loading failed or file is malformed)
+    :param string poi_file: optional file name with complete path
+    :return: position dictionary, float altitude, float heading
+    :rtype: tuple (dict, float, float) (None, None, None) on error
     :raises: json.JSONDecodeError when JSON content i malformed
     """
     pos_dict = default_position_dict
     try:
         # Listing of and input of selected POI
         while True:
-            if poi_file != '':
-                print(f"Using points from '{poi_file}'")
+            if poi_file != "":
                 poi_filename_path = poi_file
             else:
-                poi_filename = 'poi.json'
+                poi_filename = "poi.json"
                 poi_filename_path = os.path.join(__location__, "pois", poi_filename)
 
             if os.path.exists(poi_filename_path):
-                #print(" Showing points from: " + poi_filename_path)
-                with open(poi_filename_path, 'r') as file:
+                print(" Showing points from: " + poi_filename_path)
+                with open(poi_filename_path, "r") as file:
                     poi_list = json.load(file)
 
                 # Add a number to each object in the list
                 for index, item in enumerate(poi_list, start=1):
-                    item['uid'] = index
+                    item["uid"] = index
 
                 # Loop through each object in the list
                 for poi in poi_list:
-                    lat_dir = ll2dir(poi['lat'], 'lat')
-                    lng_dir = ll2dir(poi['lng'], 'lng')
-                    print(f" {poi['uid']} - {poi['name']}, " +
-                          f"({poi['lat']:2f}°{lat_dir}, " +
-                          f"{poi['lng']:3.3f}°{lng_dir})")
+                    lat_dir = ll2dir(poi["lat"], "lat")
+                    lng_dir = ll2dir(poi["lng"], "lng")
+                    print(f" {poi["uid"]} - {poi["name"]}, " +
+                          f"({poi["lat"]:2f}°{lat_dir}, " +
+                          f"{poi["lng"]:3.3f}°{lng_dir})")
 
                 # Get the chosen POI
-                selected_uid = int(input(' >>> '))
+                selected_uid = int(input(" >>> "))
                 sel_poi_item = None
                 for poi_item in poi_list:
-                    if poi_item.get('uid') == selected_uid:
+                    if poi_item.get("uid") == selected_uid:
                         sel_poi_item = poi_item
 
                 if sel_poi_item != None:
-                    pos_dict['lat'] = sel_poi_item['lat']
-                    # if sel_poi_item['lat'] < 0:
-                    #     pos_dict['lat_dir'] = 'S'
-                    # else:
-                    #     pos_dict['lat_dir'] = 'N'
-
-                    pos_dict['lng'] = sel_poi_item['lng']
-                    # if sel_poi_item['lng'] < 0:
-                    #     pos_dict['lng_dir'] = 'W'
-                    # else:
-                    #     pos_dict['lng_dir'] = 'E'
-
-                    #pos_dict['latitude_nmea_value'] = ddd2nmeall(sel_poi_item['lat'], 'lat')
-                    #pos_dict['longitude_nmea_value'] = ddd2nmeall(sel_poi_item['lon'], 'lng')
-                    # print(pos_dict)
-                    return pos_dict, sel_poi_item['alt'], sel_poi_item['head']
+                    pos_dict["lat"] = sel_poi_item["lat"]
+                    pos_dict["lng"] = sel_poi_item["lng"]
+                    # Return position dictionary, alt and heding
+                    return pos_dict, sel_poi_item["alt"], sel_poi_item["head"]
                 else:
-                    print('Non valid POI choice. Continue with manual input.')
+                    print("Non valid POI choice. Continue with manual input.")
                     return None, None, None
             else:
-                print('No POI file exists! Create pois/poi.json with data according to docs.')
-                print('Continuing with manual input.')
-                time.sleep(1)
+                print("The POI file doesn't exist!")
+                print("Create the POI file according to docs or supply the path to the file with argument -p.")
+                print("Continuing with manual input.")
+                time.sleep(2)
                 return None, None, None
+            
     except json.JSONDecodeError as jsonerr:
-        print(f' Could not parse the supplied JSON file. Continuing with manual input. ({jsonerr.msg})')
+        print(f" Could not parse the supplied JSON file. Continuing with manual input. ({jsonerr.msg})")
         return None, None, None
     except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
+        print("\n\n*** Closing the script... ***\n")
         sys.exit()
 
 def position_sep_input() -> dict:
@@ -187,49 +176,46 @@ def position_sep_input() -> dict:
     try:
         # Input of latitude
         while True:
+            print("\n Enter unit position:")
             try:
-                print(f'\n Enter unit position latitude (defaults to {default_position_dict["lat"]}):')
-                print(f'    (Negative for southern hemisphere) ')
-                latitude_data = input(' >>> ')
+                print(f"\n Latitude (defaults to {default_position_dict["lat"]}):")
+                print(f" Negative for southern hemisphere")
+                latitude_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
             # Input is empty, use default value
-            if latitude_data == '':
+            if latitude_data == "":
                 latitude_data = float(default_position_dict["lat"])
-                position_dict['lat'] = latitude_data
+                position_dict["lat"] = latitude_data
                 break
-            latitude_regex_pattern = r'^(\+|-)?(?:90(?:(?:\.0{1,14})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,14})?))$'
+            latitude_regex_pattern = r"^(\+|-)?(?:90(?:(?:\.0{1,14})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,14})?))$"
             mo = re.fullmatch(latitude_regex_pattern, str(latitude_data))
             if mo:
-                position_dict['lat'] = float(mo.group())
+                position_dict["lat"] = float(mo.group())
                 break
         # Input of longitude
         while True:
             try:
-                print(f'\n Enter unit position longitude (defaults to {default_position_dict["lng"]}):')
-                print(f'    (Negative for west of Greenwich)')
-                longitude_data = input(' >>> ')
+                print(f"\n Longitude (defaults to {default_position_dict["lng"]}):")
+                print(f" Negative for west of Greenwich)")
+                longitude_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
             # Input is empty, use default value
-            if longitude_data == '':
+            if longitude_data == "":
                 longitude_data = float(default_position_dict["lng"])
-                position_dict['lng'] = longitude_data
+                position_dict["lng"] = longitude_data
                 break
-            longitude_regex_pattern = r'^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,14})?))$'
+            longitude_regex_pattern = r"^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,14})?))$"
             mo = re.fullmatch(longitude_regex_pattern, str(longitude_data))
             if mo:
-                position_dict['lng'] = float(mo.group())
-        
-        #Convert lat/lon to NMEA form and store in dictionary
-        #position_dict['lat_nmea'] = ddd2nmeall(position_dict['lat'], 'lat')
-        #position_dict['lng_nmea'] = ddd2nmeall(position_dict['lng'], 'lng')
+                position_dict["lng"] = float(mo.group())
 
         return position_dict
     except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
+        print("\n\n*** Closing the script... ***\n")
         sys.exit()
 
 def ip_port_input(option: str) -> tuple:
@@ -242,24 +228,24 @@ def ip_port_input(option: str) -> tuple:
     """
     while True:
         try:
-            if option == 'telnet':
-                print(f'\n Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):')
+            if option == "telnet":
+                print(f"\n Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
                 try:
-                    ip_port_socket = input(' >>> ')
+                    ip_port_socket = input(" >>> ")
                 except KeyboardInterrupt:
-                    print('\n\n*** Closing the script... ***\n')
+                    print("\n\n*** Closing the script... ***\n")
                     sys.exit()
-                if ip_port_socket == '':
+                if ip_port_socket == "":
                     # All available interfaces and default NMEA port.
                     return (get_ip(), default_port)
-            elif option == 'stream':
-                print(f'\n Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):')
+            elif option == "stream":
+                print(f"\n Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):")
                 try:
-                    ip_port_socket = input(' >>> ')
+                    ip_port_socket = input(" >>> ")
                 except KeyboardInterrupt:
-                    print('\n\n*** Closing the script... ***\n')
+                    print("\n\n*** Closing the script... ***\n")
                     sys.exit()
-                if ip_port_socket == '':
+                if ip_port_socket == "":
                     return (default_ip, default_port)
             # Regex matchs only unicast IP addr from range 0.0.0.0 - 223.255.255.255
             # and port numbers from range 1 - 65535.
@@ -274,9 +260,9 @@ def ip_port_input(option: str) -> tuple:
             if mo:
                 # return tuple with IP address (str) and port number (int).
                 return (mo.group(2), int(mo.group(6)))
-            print(f'\n\nError: Wrong format use - 192.168.10.10:2020.')
+            print(f"\n\nError: Wrong format use - 192.168.10.10:2020.")
         except KeyboardInterrupt:
-            print('\n*** Closing the script... ***\n')
+            print("\n*** Closing the script... ***\n")
             sys.exit()
 
 def trans_proto_input() -> str:
@@ -288,23 +274,23 @@ def trans_proto_input() -> str:
     """
     while True:
         try:
-            print('\n Enter transport protocol - TCP or UDP (defaults to TCP):')
+            print("\n Enter transport protocol - TCP or UDP (defaults to TCP):")
             try:
-                stream_proto = input(' >>> ').strip().lower()
+                stream_proto = input(" >>> ").strip().lower()
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
 
-            if stream_proto == '' or stream_proto == 'tcp':
-                return 'tcp'
-            elif stream_proto == 't':
-                return 'tcp'
-            elif stream_proto == 'udp':
-                return 'udp'
-            elif stream_proto == 'u':
-                return 'udp'
+            if stream_proto == "" or stream_proto == "tcp":
+                return "tcp"
+            elif stream_proto == "t":
+                return "tcp"
+            elif stream_proto == "udp":
+                return "udp"
+            elif stream_proto == "u":
+                return "udp"
         except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
+            print("\n\n*** Closing the script... ***\n")
             sys.exit()
 
 def get_ip() -> str:
@@ -318,10 +304,10 @@ def get_ip() -> str:
     sck.settimeout(0)
     try:
         # Doesn't even have to be reachable
-        sck.connect(('10.254.254.254', 1))
+        sck.connect(("10.254.254.254", 1))
         _ip_local = sck.getsockname()[0]
     except Exception:
-        _ip_local = '127.0.0.1'
+        _ip_local = "127.0.0.1"
     finally:
         sck.close()
     return _ip_local
@@ -335,15 +321,15 @@ def heading_input() -> float:
     """
     while True:
         try:
-            print(f'\n Enter unit course - range 000-359 degrees (defaults to {default_head}):')
+            print(f"\n Enter unit course - range 000-359 degrees (defaults to {default_head}):")
             try:
-                heading_data = input(' >>> ')
+                heading_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if heading_data == '':
+            if heading_data == "":
                 return 45.0
-            heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
+            heading_regex_pattern = r"(3[0-5]\d|[0-2]\d{2}|\d{1,2})"
             mo = re.fullmatch(heading_regex_pattern, heading_data)
             if mo:
                 return float(mo.group())
@@ -353,7 +339,7 @@ def heading_input() -> float:
             print("Position:", reerr.pos)
             return 0.0
         except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
+            print("\n\n*** Closing the script... ***\n")
             sys.exit()
 
 def speed_input() -> float:
@@ -365,20 +351,20 @@ def speed_input() -> float:
     """
     while True:
         try:
-            print(f'\n Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):')
+            print(f"\n Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):")
             try:
-                speed_data = input(' >>> ')
+                speed_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if speed_data == '':
+            if speed_data == "":
                 return default_speed
-            speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
+            speed_regex_pattern = r"(\d{1,3}(\.\d)?)"
             mo = re.fullmatch(speed_regex_pattern, speed_data)
             if mo:
                 match = mo.group()
-                if match.startswith('0') and match != '0':
-                    match = match.lstrip('0')
+                if match.startswith("0") and match != "0":
+                    match = match.lstrip("0")
                 return float(match)
         except re.error as reerr:
             print("Error occurred:", reerr.msg)
@@ -386,7 +372,7 @@ def speed_input() -> float:
             print("Position:", reerr.pos)
             return 0.0
         except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
+            print("\n\n*** Closing the script... ***\n")
             sys.exit()
 
 def alt_input() -> float:
@@ -398,20 +384,20 @@ def alt_input() -> float:
     """
     while True:
         try:
-            print(f'\n Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):')
+            print(f"\n Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):")
             try:
-                alt_data = input(' >>> ')
+                alt_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if alt_data == '':
+            if alt_data == "":
                 return default_alt
-            alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
+            alt_regex_pattern = r"(\d{1,3}(\.\d)?)"
             mo = re.fullmatch(alt_regex_pattern, alt_data)
             if mo:
                 match = mo.group()
-                if match.startswith('0') and match != '0':
-                    match = match.lstrip('0')
+                if match.startswith("0") and match != "0":
+                    match = match.lstrip("0")
                 return float(match)
         except re.error as reerr:
             print("Error occurred:", reerr.msg)
@@ -419,7 +405,7 @@ def alt_input() -> float:
             print("Position:", reerr.pos)
             return 0.0
         except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
+            print("\n\n*** Closing the script... ***\n")
             sys.exit()
 
 def change_heading_input(self, heading_old: float) -> float:
@@ -433,23 +419,23 @@ def change_heading_input(self, heading_old: float) -> float:
     try:
         while True:
             try:
-                print(f'\n Enter new course or press "Enter" to skip (Target {heading_old})')
-                heading_data = input(' >>> ')
+                print(f"\n Enter new course or press \"Enter\" to skip (Target {heading_old})")
+                heading_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if heading_data == '':
+            if heading_data == "":
                 heading_new = heading_old
                 break
             else:
-                heading_regex_pattern = r'(3[0-5]\d|[0-2]\d{2}|\d{1,2})'
+                heading_regex_pattern = r"(3[0-5]\d|[0-2]\d{2}|\d{1,2})"
                 mo = re.fullmatch(heading_regex_pattern, heading_data)
                 if mo:
                     heading_new = float(mo.group())
                     break
         return heading_new
     except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
+        print("\n\n*** Closing the script... ***\n")
         sys.exit()
 
 def change_speed_input(self, speed_old:float) -> float:
@@ -463,26 +449,26 @@ def change_speed_input(self, speed_old:float) -> float:
     try:
         while True:
             try:
-                print(f'\n Enter new speed or press "Enter" to skip (Target {speed_old})')
-                speed_data = input(' >>> ')
+                print(f"\n Enter new speed or press \"Enter\" to skip (Target {speed_old})")
+                speed_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if speed_data == '':
+            if speed_data == "":
                 speed_new = speed_old
                 break
             else:
-                speed_regex_pattern = r'(\d{1,3}(\.\d)?)'
+                speed_regex_pattern = r"(\d{1,3}(\.\d)?)"
                 mo = re.fullmatch(speed_regex_pattern, speed_data)
                 if mo:
                     match = mo.group()
-                    if match.startswith('0') and match != '0':
-                        match = match.lstrip('0')
+                    if match.startswith("0") and match != "0":
+                        match = match.lstrip("0")
                     speed_new = float(match)
                     break
         return speed_new
     except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
+        print("\n\n*** Closing the script... ***\n")
         sys.exit()
 
 def change_altitude_input(self, altitude_old: float) -> float:
@@ -496,26 +482,26 @@ def change_altitude_input(self, altitude_old: float) -> float:
     try:
         while True:
             try:
-                print(f'\n Enter new altitude or press "Enter" to skip (Target {altitude_old})')
-                alt_data = input(' >>> ')
+                print(f"\n Enter new altitude or press \"Enter\" to skip (Target {altitude_old})")
+                alt_data = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if alt_data == '':
+            if alt_data == "":
                 altitude_new = altitude_old
                 break
             else:
-                alt_regex_pattern = r'(\d{1,3}(\.\d)?)'
+                alt_regex_pattern = r"(\d{1,3}(\.\d)?)"
                 mo = re.fullmatch(alt_regex_pattern, alt_data)
                 if mo:
                     match = mo.group()
-                    if match.startswith('0') and match != '0':
-                        match = match.lstrip('0')
+                    if match.startswith("0") and match != "0":
+                        match = match.lstrip("0")
                     altitude_new = float(match)
                     break
         return altitude_new
     except KeyboardInterrupt:
-        print('\n\n*** Closing the script... ***\n')
+        print("\n\n*** Closing the script... ***\n")
         sys.exit()
 
 def serial_config_input() -> dict:
@@ -524,82 +510,82 @@ def serial_config_input() -> dict:
     Lists available ports for the user
     Complete serial config set should look like below:
     {
-        'bytesize': 8,
-        'parity': 'N',
-        'stopbits': 1,
-        'timeout': 1,
-        'port': '/dev/ttyS0',
-        'baudrate': 9600
+        "bytesize": 8,
+        "parity": "N",
+        "stopbits": 1,
+        "timeout": 1,
+        "port": "/dev/ttyS0",
+        "baudrate": 9600
     }
 
     :return: Dictionary storing serial settings
     :rtype: dict
     """
     # Dict with all serial port settings.
-    serial_set = {'bytesize': 8,
-                  'parity': 'N',
-                  'stopbits': 1,
-                  'timeout': 1}
+    serial_set = {"bytesize": 8,
+                  "parity": "N",
+                  "stopbits": 1,
+                  "timeout": 1}
 
     # List of available serial ports.
     ports_connected = serial.tools.list_ports.comports(include_links=False)
 
     # List of available serial port's names.
     ports_connected_names = [port.device for port in ports_connected]
-    print('\n Connected Serial Ports:')
+    print("\n Connected Serial Ports:")
     for port in sorted(ports_connected):
-        print(f' - {port}')
+        print(f" - {port}")
     
     # Check OS platform.
     platform_os = platform.system()
 
     # Asks for serial port name and checks the name validity.
     while True:
-        if platform_os.lower() == 'linux':
-            print('\n Choose Serial Port (defaults to /dev/ttyS0):')
+        if platform_os.lower() == "linux":
+            print("\n Choose Serial Port (defaults to /dev/ttyS0):")
             try:
-                serial_set['port'] = input(' >>> ')
+                serial_set["port"] = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if serial_set['port'] == '':
-                serial_set['port'] = '/dev/ttyS0'
-            if serial_set['port'] in ports_connected_names:
+            if serial_set["port"] == "":
+                serial_set["port"] = "/dev/ttyS0"
+            if serial_set["port"] in ports_connected_names:
                 break
-        elif platform_os.lower() == 'windows':
-            print('\n Choose Serial Port (defaults to COM1):')
+        elif platform_os.lower() == "windows":
+            print("\n Choose Serial Port (defaults to COM1):")
             try:
-                serial_set['port'] = input(' >>> ')
+                serial_set["port"] = input(" >>> ")
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                print("\n\n*** Closing the script... ***\n")
                 sys.exit()
-            if serial_set['port'] == '':
-                serial_set['port'] = 'COM1'
-            if serial_set['port'] in ports_connected_names:
+            if serial_set["port"] == "":
+                serial_set["port"] = "COM1"
+            if serial_set["port"] in ports_connected_names:
                 break
-        print(f'\nError: \'{serial_set["port"]}\' is not a valid port name.')
+        print(f"\nError: '{serial_set["port"]}' is not a valid port name.")
 
     # Serial port settings:
-    baudrate_list = ['300', '600', '1200', '2400', '4800', '9600', '14400',
-                     '19200', '38400', '57600', '115200', '128000']
+    baudrate_list = ["300", "600", "1200", "2400", "4800", "9600", "14400",
+                     "19200", "38400", "57600", "115200", "128000"]
     
     # Ask for baud rate, defaults to 9600 (NMEA standard)
     while True:
-        print('\n Enter serial baudrate (defaults to 9600):')
+        print("\n Enter serial baudrate (defaults to 9600):")
         try:
-            serial_set['baudrate'] = input(' >>> ')
+            serial_set["baudrate"] = input(" >>> ")
         except KeyboardInterrupt:
-            print('\n\n*** Closing the script... ***\n')
+            print("\n\n*** Closing the script... ***\n")
             sys.exit()
-        if serial_set['baudrate'] == '':
-            serial_set['baudrate'] = 9600
-        if str(serial_set['baudrate']) in baudrate_list:
+        if serial_set["baudrate"] == "":
+            serial_set["baudrate"] = 9600
+        if str(serial_set["baudrate"]) in baudrate_list:
             break
-        print(f'\n*** Error: \'{serial_set["baudrate"]}\' is not a valid baudrate. ***')
+        print(f"\n Error: '{serial_set["baudrate"]}' is not a valid baudrate.")
     # print(serial_set)
     return serial_set
 
-def _setup_logger(logger_name, log_file, log_format='%(message)s', level=logging.INFO):
+def _setup_logger(logger_name, log_file, log_format="%(message)s", level=logging.INFO):
     """
     The method creates a logging instance and returns it.
 
@@ -615,7 +601,7 @@ def _setup_logger(logger_name, log_file, log_format='%(message)s', level=logging
     # Create formatter, defaults to '%(message)s'
     formatter = logging.Formatter(log_format)
     # Create file handler and add formatter
-    fileHandler = logging.FileHandler(log_file, mode='w')
+    fileHandler = logging.FileHandler(log_file, mode="w")
     fileHandler.setFormatter(formatter)
     # Set level add handler
     new_logger.setLevel(level)
@@ -625,4 +611,4 @@ def _setup_logger(logger_name, log_file, log_format='%(message)s', level=logging
 def data_log(log_message):
     data_logger.info(log_message)
 
-data_logger = _setup_logger('data_logger', 'emulator_data.log')
+data_logger = _setup_logger("data_logger", "emulator_data.log")
