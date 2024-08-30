@@ -8,7 +8,7 @@ dependencies = [
     "psutil>=5.8.0",
     "pyproj>=3.6.0",
     "pyserial>=3.5",
-    "certifi==2024.6.2",
+    "certifi==2024.07.04",
     "pygeomag==1.0.2",
     "timezonefinder>=6",
     "pytz>=2023.4",
