@@ -10,20 +10,22 @@ class TestNmeaGps(unittest.TestCase):
     """
     def setUp(self):
         self.time = datetime(2021, 3, 9, 12, 9, 44, 855497)
-        self.speed = 12.3
+        self.time = datetime(2024, 8, 30, 11, 11, 13, 855497)
+        self.speed = 0
         self.course = 123.1
         self.altitude = 15.2
         self.position = {
-            'latitude_value': '5425.123',
-            'latitude_direction': 'N',
-            'longitude_value': '01832.664',
-            'longitude_direction': 'E',
+            'lat': '57.70011131',
+            'lat_dir': 'N',
+            'lng': '11.98827852',
+            'lng_dir': 'E',
         }
 
     def test_checksum(self):
+        test_data = "GPRMC,111113.000,A,5742.00668,N,01159.29671,E,0.000,45.0,300824,004.95,E,A"
         test_data = 'GPRMC,095940.000,A,5432.216088,N,01832.664132,E,0.019,0.00,130720,,,A'
         check_sum = NmeaMsg.check_sum(test_data)
-        self.assertEqual(check_sum, '59')
+        self.assertEqual(check_sum, "08")
 
     def test_gprmc_str(self):
         expected = '$GPRMC,120944.000,A,5425.123,N,01832.664,E,12.300,123.1,090321,,,A*56\r\n'
