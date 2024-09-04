@@ -30,7 +30,7 @@ from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-poi_file = ''
+poi_file = ""
 
 class Application:
     """
