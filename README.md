@@ -9,14 +9,14 @@ This script can be useful for testing applications or systems that require some 
 
 The script is a highly modified script based on the script originally published by GitHub user [luk-kop](https://github.com/luk-kop/) and published on GitHub.
 The code has been documented and modified in many ways:
- - use decimal coordinates
+ - use decimal coordinates instead of NMEA formatted
  - allow input of altitude
  - output through logging to file
- - storing of points of interest in file
+ - storing of predefined points in JSON file
  - input of custom point of interest file
  - starting with a base config in a JSON file
  - other changes...
-The script is also available in a version with a GUI created with PySide6 (experimental).
+The script is also available in a version with a GUI created with PySide6 (still experimental).
 
 The GPS NMEA Emulator script can be used in one of the following operating modes:
 - NMEA TCP Stream (sends TCP packets to the specified client),
