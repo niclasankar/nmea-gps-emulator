@@ -49,7 +49,8 @@ GPGGA - Time, position, and fix related data
 GPGLL - Position data: position fix, time of position fix, and status
 GPRMC - Position, velocity, and time
 GPGSA - GPS DOP and active satellites
-GPGSV - GSV message string identifies the number of SVs in view, the PRN numbers, elevations, azimuths, and SNR values.
+GPGSV - GSV message string identifies the number of SVs in view, the PRN numbers,
+        elevations, azimuths, and SNR values.
 GPHDT - True Heading
 GPVTG - Track made good and ground speed
 GPZDA - Date & Time
@@ -57,7 +58,7 @@ GPZDA - Date & Time
 
 Output example:
 
-```bash
+```text
 $GPGGA,125638.00,3853.35778,N,07703.01251,W,1,12,0.92,9,M,11.5,M,,*58
 $GPGSA,A,3,02,28,06,19,01,09,14,03,16,05,13,17,1.56,0.92,1.25*03
 $GPGSV,4,1,15,19,90,135,25,28,58,234,87,01,62,215,21,03,50,219,25*7F
