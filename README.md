@@ -190,9 +190,10 @@ after coordinate input.
     0 - No filter
  >>> 1
 ```
-### Creating the poi.json file or custom point of interest file
-The poi.json file should be located in the folder 'pois' alongside the script and should have the following structure.
-```bash
+### Creating the poi.json file or using a custom point of interest file
+The poi.json file should be located in the folder 'pois' alongside the
+script and should have the following structure.
+```json
 [
     {
         "name": "San Fransisco, Golden Gate Bridge",
@@ -210,7 +211,10 @@ The poi.json file should be located in the folder 'pois' alongside the script an
     }
 ]
 ```
-A custom POI file can also be created and can be called at runtime with the argument '-p filename_with_full_path'.
+A custom POI file can also be created and can be called at runtime with the
+argument '-p filename_or_filename_with_full_path'.
+If the file resides in the pois folder it can be called by using the
+filename. If the files is located elsewhere it should be called with full path.
 
 ### Starting the script with a config file (experimental)
 The script can be run by supplying a JSON config file with the starting point and type
@@ -222,7 +226,7 @@ The script runs and asks for serial port, ip address and data that is unique for
 ```
 
 Below is a example of a config file
-```bash
+```json
 {
     "name": "Gothenburg, Scandinavium Arena, with Stream output",
     "output": 3,
