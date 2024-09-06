@@ -109,12 +109,18 @@ def poi_input(poi_file: str):
     :rtype: tuple (dict, float, float) (None, None, None) on error
     :raises: json.JSONDecodeError when JSON content i malformed
     """
+    print(f"input: {poi_file}")
     pos_dict = default_position_dict
     try:
         # Listing of and input of selected POI
         while True:
             if poi_file != "":
-                poi_filename_path = poi_file
+                if os.path.isabs(poi_file):
+                    # The argument is a absolute path and can be used as-is
+                    poi_filename_path = poi_file
+                else:
+                    # Assume the input is a filename and append it to the default directory
+                    poi_filename_path = os.path.join(__location__, "pois", poi_file)
             else:
                 poi_filename = "poi.json"
                 poi_filename_path = os.path.join(__location__, "pois", poi_filename)
