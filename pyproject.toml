@@ -1,6 +1,6 @@
 [project]
 name = "nmea-gps-emulator"
-version = "0.8.0"
+version = "0.9.0"
 description = "GNSS Emulator for serial, file or network output"
 author = "Niclas Ankar <niclasankar@outlook.com>"
 keywords = ["gps", "emulator", "nmea", "gnss"]
