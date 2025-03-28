@@ -88,13 +88,17 @@ class TestNmeaGps(unittest.TestCase):
     @mock.patch('random.randint')
     @mock.patch('random.sample')
     def test_gpgsv_group(self, mock_random_sample, mock_random_randint):
-        expected = '$GPGSV,4,1,15,04,48,327,97,30,38,247,10,06,71,325,41,18,38,143,73*71\r\n' \
-                   '$GPGSV,4,2,15,19,04,097,74,20,32,250,24,23,57,273,88,24,28,051,46*77\r\n' \
-                   '$GPGSV,4,3,15,28,88,126,15,14,24,087,32,13,58,119,15,29,67,331,77*75\r\n' \
-                   '$GPGSV,4,4,15,08,61,202,29,32,73,298,36,05,69,004,14*41\r\n'
+
+        expected = '$GPGSV,4,1,15,20,80,349,89,30,80,349,89,10,80,349,89,21,80,349,89*7B\r\n' \
+                   '$GPGSV,4,2,15,03,80,349,89,02,80,349,89,19,80,349,89,08,80,349,89*7A\r\n' \
+                   '$GPGSV,4,3,15,12,80,349,89,26,80,349,89,24,80,349,89,22,80,349,89*7B\r\n' \
+                   '$GPGSV,4,4,15,09,80,349,89,01,80,349,89,25,80,349,89*45\r\n'
+
         mock_random_sample.return_value = ['20', '30', '10', '21', '03', '02', '19', '08', '12', '26', '24', '22', '09', '01', '25']
         mock_random_randint.side_effect = lambda x, y: y - 10
+
         test_obj = GpgsvGroup()
+        print(test_obj.__str__())
         self.assertEqual(test_obj.__str__(), expected)
 
 
