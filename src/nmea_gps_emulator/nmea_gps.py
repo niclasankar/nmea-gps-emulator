@@ -7,6 +7,10 @@ Based on the works of luk-kop
 :author: ankars
 :copyright: Ankars.se © 2024
 :license: MIT
+
+https://pygeomag.readthedocs.io
+https://pyproj4.github.io/pyproj
+
 """
 
 import random
@@ -52,6 +56,9 @@ class NmeaMsg:
         self.position['lat_dir'] = ll2dir(lat, 'lat')
         self.position['lng_dir'] = ll2dir(lon, 'lng')
 
+        # Create Geod object for position calculation
+        self.geod = Geod(ellps='WGS84')
+
         # Get timezone offset
         timezone_offset_hours, timezone_offset_minutes = self.get_timezone_offset(lat, lon)
 
@@ -63,17 +70,19 @@ class NmeaMsg:
         self.altitude = altitude_init
         self.altitude_targeted = altitude_init
 
-        # The magnetic variation is set to dummy values
-        self.magvar = 2.1
-        self.magvar_dec = 2.1
-        self.magvar_direct = 'E'
-        # Calculate magnetic variation once if unit is stopped to get real values
+        # The GeoMag object is created and magnetic variation values are calculated from given coordinates
+        self.geomag = GeoMag()
+        print('\n Loaded VMM: ' + self.geomag.model )
+        date_decimal = decimal_year_from_date(self.utc_date_time)
+        # Print message if todays date is not within WMM life span
+        if date_decimal > max(self.geomag.life_span) or date_decimal < min(self.geomag.life_span):
+            print('\n Todays date is not within the WMM lifespan.')
         self._magvar_update()
 
         # The unit's heading provided by the user during the operation of the script
         self.heading = heading_init
         self.heading_targeted = heading_init
-        # Calculate magnetic heading from heading
+        # Calculate magnetic heading from heading and magvar
         self.heading_magnetic = self.heading - self.magvar
 
         # NMEA sentences initialization - by default with 15 sats
@@ -115,7 +124,6 @@ class NmeaMsg:
                                self.gphdt,
                                self.gpvtg,
                                self.gpzda,]
-        # print(self.position)
 
     def __next__(self):
         """ Iterator function.
@@ -164,8 +172,8 @@ class NmeaMsg:
              and self.altitude == self.altitude_targeted:
             self.change_in_progress = False
             print('\n All updates ready...')
-            #print(f" Latitude: {self.position['lat']}°{self.position['lat_dir']}")
-            #print(f" Longitude: {self.position['lng']}°{self.position['lng_dir']}")
+            print(f" Latitude: {self.position['lat']}°{self.position['lat_dir']}")
+            print(f" Longitude: {self.position['lng']}°{self.position['lng_dir']}")
             print(f" Altitude: {self.altitude} m")
             print(f" Speed: {self.speed} kt")
             print(f" Heading: {self.heading}°")
@@ -247,11 +255,8 @@ class NmeaMsg:
         lat_start = self.position['lat']
         lon_start = self.position['lng']
         
-        # Use WGS84 ellipsoid
-        g = Geod(ellps='WGS84')
-
         # Forward transformation - returns longitude, latitude, back azimuth of terminus points
-        lon_end, lat_end, back_azimuth = g.fwd(lon_start, lat_start, self.heading, distance)
+        lon_end, lat_end, back_azimuth = self.geod.fwd(lon_start, lat_start, self.heading, distance)
 
         # Store the new position
         self.position['lat'] = lat_end 
@@ -364,8 +369,7 @@ class NmeaMsg:
             lat = self.position['lat']
             lon = self.position['lng']
             alt = self.altitude
-            gm = GeoMag()
-            result = gm.calculate(glat=lat, glon=lon, alt=alt, time=date_decimal)
+            result = self.geomag.calculate(glat=lat, glon=lon, alt=alt, time=date_decimal, allow_date_outside_lifespan=True)
             self.magvar = abs(result.d)
             self.magvar_dec = result.d
             if result.d > 0:
@@ -765,25 +769,27 @@ class GpgsvGroup:
 
         Collection of GPGSV messages
         
-        :param int sats_total: number of satellites in use
+        :param int sats_total: total number of satellites in use
         """
         self.gpgsv_instances = []
         self.sats_total = sats_total
         self.num_of_gsv_in_group = ceil(self.sats_total / self.sats_in_sentence)
+
         # List of satellites ids for all GPGSV sentences
         self.sats_ids = random.sample([f'{_:02d}' for _ in range(1,33)], k=self.sats_total)
+        
         # Iterator for sentence sats IDs
         sats_ids_iter = iter(self.sats_ids)
         # Initialize GPGSV sentences
         for sentence_num in range(1, self.num_of_gsv_in_group + 1):
             if sentence_num == self.num_of_gsv_in_group and self.sats_total % self.sats_in_sentence != 0:
                 self.sats_in_sentence = self.sats_total % self.sats_in_sentence
-            sats_ids_sentence = [next(sats_ids_iter) for _ in range(self.sats_in_sentence)]
+            sats_ids_in_sentence = [next(sats_ids_iter) for _ in range(self.sats_in_sentence)]
             gpgsv_sentence = Gpgsv(sats_total=self.sats_total,
                                    sats_in_sentence=self.sats_in_sentence,
                                    num_of_gsv_in_group=self.num_of_gsv_in_group,
                                    sentence_num=sentence_num,
-                                   sats_ids=sats_ids_sentence)
+                                   sats_ids=sats_ids_in_sentence)
             self.gpgsv_instances.append(gpgsv_sentence)
 
     @property
@@ -832,7 +838,7 @@ class Gpgsv:
         :param int sentence_num: Message number
         :param int sats_total: Total number of SV:s visible
         :param int sats_in_sentence: Total number of SVs in this message
-        :param int sats_ids: ID:s of SV:s
+        :param int sats_ids: ID:s of SV:s generated in GpgsvGroup
         """
         self.num_of_gsv_in_group = num_of_gsv_in_group
         self.sentence_num = sentence_num
