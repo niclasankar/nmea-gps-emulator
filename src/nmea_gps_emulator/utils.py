@@ -86,9 +86,9 @@ def filter_input():
         sys.exit()
     filter_type = filters_dict.get(filter)
     if filter != 0:
-        print(f"Filtering messages by type {filter_type}.\n")
+        print(f" Filtering messages by type {filter_type}.\n")
     else:
-        print("No message filtering active.\n")
+        print(" No message filtering active.\n")
         filter_type = ""
     return filter_type
 
@@ -109,7 +109,7 @@ def poi_input(poi_file: str):
     :rtype: tuple (dict, float, float) (None, None, None) on error
     :raises: json.JSONDecodeError when JSON content i malformed
     """
-    print(f"input: {poi_file}")
+    #print(f"input: {poi_file}")
     pos_dict = default_position_dict
     try:
         # Listing of and input of selected POI
