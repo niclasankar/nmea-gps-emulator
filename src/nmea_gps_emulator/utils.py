@@ -23,7 +23,8 @@ import socket
 import psutil
 import serial.tools.list_ports
 
-from nmea_utils import ddd2nmea, ll2dir
+#from nmea_utils import ddd2nmea, ll2dir
+from nmea_utils import ll2dir
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -36,15 +37,19 @@ default_speed = 0
 default_alt = 42
 default_head = 260
 
+# List of filters for use in logging
 filters_dict = {
-    1: "$GPGGA",
-    2: "$GPGLL",
-    3: "$GPRMC",
-    4: "$GPGSA",
-    5: "$GPGSV",
-    6: "$GPHDT",
-    7: "$GPVTG",
-    8: "$GPZDA",
+    1: {"$GPGGA": "Fix data and undulation (GPGGA)"},
+    2: {"$GPGLL": "Geographic position (GPGLL)"},
+    3: {"$GPRMC": "GPS specific information (GPRMC)"},
+    4: {"$GPGSA": "GPS DOP and active satellites (GPGSA)"},
+    5: {"$GPGSV": "GPS satellites in view (GPGSV)"},
+    6: {"$GPHDT": "NMEA heading (GPHDT)"},
+    7: {"$GPVTG": "Track made good and SOG (GPVTG)"},
+    8: {"$GPZDA": "UTC time/date (GPZDA)"},
+    9: {"$GPZDA": "UTC time/date", "$GPGLL": "Geographic position"},
+    10: {"$GPZDA": "UTC time/date", "$GPGLL": "Geographic position", "$GPGSV": "GPS satellites in view"},
+    11: {"$GPGLL": "Geographic position", "$GPGSV": "GPS satellites in view"},
     0: "No filter"
 }
 default_ip = "127.0.0.1"
@@ -57,10 +62,30 @@ def exit_script():
     child thread
     """
     current_script_pid = os.getpid()
-    current_script = psutil.Process(current_script_pid)
+    current_script_proc = psutil.Process(current_script_pid)
     print(f"*** Closing the script ({current_script_pid})... ***\n")
     time.sleep(1)
-    current_script.terminate()
+    current_script_proc.terminate()
+
+def output_message(message_str, newline_mode = True):
+    """
+    Output of messages to user.
+    """
+    if newline_mode:
+        print("\n\n " + message_str)
+    else:
+        print(message_str)
+
+
+def input_prompt(message_str = ""):
+    """
+    Input prompt with message to user.
+    """
+    default_prompt = " >>> "
+    if message_str:
+        return input(message_str + "\n" + default_prompt)
+    else:
+        return input(default_prompt)
 
 def filter_input():
     """
@@ -69,12 +94,17 @@ def filter_input():
     :return: filter message id as string
     :rtype: str
     """
-    print("\n Choose message filter:")
+    #print("\n Choose message filter:")
+    output_message("Choose message filter:")
     for x, y in filters_dict.items():
-        print(f"  {x} - {y}") 
+        if isinstance(y, dict):
+            output_message(f"  {x} - {", ".join(y.values())}", False)
+        else:
+            print(f"  {x} - {y}")
+    
     try:
         filter_choice = input(" >>> ")
-        mo = re.match(r"([0-8])", filter_choice)
+        mo = re.match("^\\d+$", filter_choice)
         if mo:
             # Filter is first match group
             filter = int(mo.group())
@@ -84,12 +114,18 @@ def filter_input():
     except KeyboardInterrupt:
         print("\n\n*** Closing the script... ***\n")
         sys.exit()
+
     filter_type = filters_dict.get(filter)
+
     if filter != 0:
-        print(f" Filtering messages by type {filter_type}.\n")
+        if isinstance(filter_type, dict):
+            print(f" Filtering messages by type {", ".join(filter_type.values())}.\n")
+        else:
+            print(f" Filtering messages by type {filter_type}.\n")
     else:
         print(" No message filtering active.\n")
         filter_type = ""
+
     return filter_type
 
 def poi_input(poi_file: str):
@@ -107,9 +143,8 @@ def poi_input(poi_file: str):
     :param string poi_file: optional file name with complete path
     :return: position dictionary, float altitude, float heading
     :rtype: tuple (dict, float, float) (None, None, None) on error
-    :raises: json.JSONDecodeError when JSON content i malformed
+    :raises: json.JSONDecodeError when JSON content is malformed
     """
-    #print(f"input: {poi_file}")
     pos_dict = default_position_dict
     try:
         # Listing of and input of selected POI
@@ -122,6 +157,7 @@ def poi_input(poi_file: str):
                     # Assume the input is a filename and append it to the default directory
                     poi_filename_path = os.path.join(__location__, "pois", poi_file)
             else:
+                # If no poi file was given use the default
                 poi_filename = "poi.json"
                 poi_filename_path = os.path.join(__location__, "pois", poi_filename)
 
