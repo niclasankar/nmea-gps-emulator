@@ -22,9 +22,11 @@ import json
 
 from nmea_gps import NmeaMsg
 from utils import position_sep_input, ip_port_input, trans_proto_input, \
-                  heading_input, speed_input, change_heading_input, alt_input, \
-                  change_speed_input, change_altitude_input, \
-                  serial_config_input, filter_input, poi_input
+                  heading_input, speed_input, change_heading_input, \
+                  alt_input, change_speed_input, change_altitude_input, \
+                  serial_config_input, filter_input, poi_input, \
+                  output_message, input_prompt
+
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
 __location__ = os.path.realpath(
@@ -39,7 +41,7 @@ class Application:
     def __init__(self):
         self.nmea_thread = None
         self.nmea_obj = None
-        self.choices = {
+        self.output_modes = {
             '1': self.nmea_serial,
             '2': self.nmea_tcp_server,
             '3': self.nmea_stream,
@@ -57,7 +59,6 @@ class Application:
     based on source code by luk-kop
         ''')
         print(' ### Choose emulator output mode:     ###')
-        print(' ### -------------------------------- ###')
         print(' 1 - NMEA Serial port output')
         print(' 2 - NMEA TCP Server')
         print(' 3 - NMEA TCP or UDP Stream')
@@ -73,11 +74,12 @@ class Application:
         # Get choise from user
         while True:
             try:
-                choice = input(' >>> ')
+                menu_choice = input_prompt()# input(' >>> ')
             except KeyboardInterrupt:
                 print('\n\n*** Closing the script... ***\n')
                 sys.exit()
-            action = self.choices.get(choice)
+
+            action = self.output_modes.get(menu_choice)
             if action:
                 # Dummy 'nav_data_dict'
                 nav_data_dict = {
@@ -86,8 +88,9 @@ class Application:
                     'gps_altitude_amsl': 1.2,
                     'position': {}
                 }
-                print('\n Do you want to use a predefined starting point? (Y/N)')
-                poi_active = input(' >>> ')
+                poi_active = input_prompt("Do you want to use a predefined starting point? (Y/N)")
+                #print('\n Do you want to use a predefined starting point? (Y/N)')
+                #poi_active = input(' >>> ')
                 poi_ok = False
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
@@ -104,16 +107,22 @@ class Application:
                     nav_data_dict['heading'] = heading_input()
                     nav_data_dict['gps_speed'] = speed_input()
                     nav_data_dict['gps_altitude_amsl'] = alt_input()
+
                 # Backup start position for reset function
                 self.backup_nav_data_dict = nav_data_dict['position']
+
                 # Initialize NmeaMsg object
                 self.nmea_obj = NmeaMsg(position_init=nav_data_dict['position'],
                                         altitude_init=nav_data_dict['gps_altitude_amsl'],
                                         speed_init=nav_data_dict['gps_speed'],
                                         heading_init=nav_data_dict['heading'])
-                print(f"\n Starting emulation at {nav_data_dict['position']['lat']}, {nav_data_dict['position']['lng']}")
+                
+                output_message(f"Starting emulation at {nav_data_dict['position']['lat']}, {nav_data_dict['position']['lng']}")
+
+                # Calling the corresponding method from self.output_modes
                 action()
                 break
+
         # Changing the unit's course and speed by the user in the main thread.
         first_run = True
         while True:
