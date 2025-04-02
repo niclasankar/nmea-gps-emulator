@@ -8,4 +8,3 @@ venv/
 pyvenv.cfg
 src/nmea_gps_emulator/pois/poi_custom.json
 src/nmea_gps_emulator/pois/poi_err.json
-src/nmea_gps_emulator/main_crs.py
