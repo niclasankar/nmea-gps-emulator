@@ -158,8 +158,6 @@ class NmeaSrvThread(threading.Thread):
             self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
             time.sleep(self.thread_sleep)
 
-
-
 class NmeaStreamThread(NmeaSrvThread):
     """
     A class that represents a thread dedicated for TCP or UDP stream connection.
@@ -337,8 +335,17 @@ class NmeaOutputThread(NmeaSrvThread):
                     # Loop through list and log to file
                     for nmea in nmea_list:
                         # Check filter
-                        if self.filter_mess != '':
-                            mo = re.match(rf"(\{self.filter_mess})", nmea)
+                        if isinstance(self.filter_mess, str):
+                            if self.filter_mess =="":
+                                data_log(nmea)
+                            else:
+                                mo = re.match(rf"(\{self.filter_mess})", nmea)
+                                if mo:
+                                    data_log(nmea)
+                        elif isinstance(self.filter_mess, dict):
+                            pattern = "|".join(map(re.escape, self.filter_mess.keys()))
+                            mo = re.match(rf"({pattern})", nmea)
+                            #print(mo)
                             if mo:
                                 data_log(nmea)
                         else:
