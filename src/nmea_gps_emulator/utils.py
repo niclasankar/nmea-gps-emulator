@@ -76,6 +76,14 @@ def output_message(message_str, newline_mode = True):
     else:
         print(message_str)
 
+def output_error(message_str, newline_mode = True):
+    """
+    Output of error message to user.
+    """
+    if newline_mode:
+        print("\n\n " + "\033[0;36;41m--- " + message_str + " ---\033[0;37;40m\n")
+    else:
+        print("\033[0;36;41m--- " + message_str + " ---\033[0;37;40m\n")
 
 def input_prompt(message_str = ""):
     """
@@ -83,7 +91,7 @@ def input_prompt(message_str = ""):
     """
     default_prompt = " >>> "
     if message_str:
-        return input(message_str + "\n" + default_prompt)
+        return input("\n" + message_str + "\n" + default_prompt)
     else:
         return input(default_prompt)
 
@@ -94,7 +102,6 @@ def filter_input():
     :return: filter message id as string
     :rtype: str
     """
-    #print("\n Choose message filter:")
     output_message("Choose message filter:")
     for x, y in filters_dict.items():
         if isinstance(y, dict):
@@ -112,18 +119,18 @@ def filter_input():
             # No filter
             filter = 0
     except KeyboardInterrupt:
-        print("\n\n*** Closing the script... ***\n")
+        output_error("Closing the script...")
         sys.exit()
 
     filter_type = filters_dict.get(filter)
 
     if filter != 0:
         if isinstance(filter_type, dict):
-            print(f" Filtering messages by type {", ".join(filter_type.values())}.\n")
+            output_message(f" Filtering messages by type {", ".join(filter_type.values())}.\n")
         else:
-            print(f" Filtering messages by type {filter_type}.\n")
+            output_message(f" Filtering messages by type {filter_type}.\n")
     else:
-        print(" No message filtering active.\n")
+        output_message(" No message filtering active.\n")
         filter_type = ""
 
     return filter_type
@@ -162,7 +169,7 @@ def poi_input(poi_file: str):
                 poi_filename_path = os.path.join(__location__, "pois", poi_filename)
 
             if os.path.exists(poi_filename_path):
-                print(" Showing points from: " + poi_filename_path)
+                output_message(" Showing points from: " + poi_filename_path)
                 with open(poi_filename_path, "r") as file:
                     poi_list = json.load(file)
 
@@ -174,9 +181,9 @@ def poi_input(poi_file: str):
                 for poi in poi_list:
                     lat_dir = ll2dir(poi["lat"], "lat")
                     lng_dir = ll2dir(poi["lng"], "lng")
-                    print(f" {poi["uid"]} - {poi["name"]}, " +
+                    output_message(f" {poi["uid"]} - {poi["name"]}, " +
                           f"({poi["lat"]:2f}°{lat_dir}, " +
-                          f"{poi["lng"]:3.3f}°{lng_dir})")
+                          f"{poi["lng"]:3.3f}°{lng_dir})", False)
 
                 # Get the chosen POI
                 selected_uid = int(input(" >>> "))
@@ -191,20 +198,20 @@ def poi_input(poi_file: str):
                     # Return position dictionary, alt and heding
                     return pos_dict, sel_poi_item["alt"], sel_poi_item["head"]
                 else:
-                    print("Non valid POI choice. Continue with manual input.")
+                    output_error("Non valid POI choice. Continue with manual input.")
                     return None, None, None
             else:
-                print("The POI file doesn't exist!")
-                print("Create the POI file according to docs or supply the path to the file with argument -p.")
-                print("Continuing with manual input.")
+                output_error("The POI file doesn't exist!")
+                output_error("Create the POI file according to docs or supply the path to the file with argument -p.", False)
+                output_message("Continuing with manual input.")
                 time.sleep(2)
                 return None, None, None
             
     except json.JSONDecodeError as jsonerr:
-        print(f" Could not parse the supplied JSON file. Continuing with manual input. ({jsonerr.msg})")
+        output_error(f"Could not parse the supplied JSON file. Continuing with manual input. ({jsonerr.msg})")
         return None, None, None
     except KeyboardInterrupt:
-        print("\n\n*** Closing the script... ***\n")
+        output_error("Closing the script...")
         sys.exit()
 
 def position_sep_input() -> dict:
@@ -218,13 +225,13 @@ def position_sep_input() -> dict:
     try:
         # Input of latitude
         while True:
-            print("\n Enter unit position:")
+            output_message("\n Enter unit position:")
             try:
-                print(f"\n Latitude (defaults to {default_position_dict["lat"]}):")
-                print(f" Negative for southern hemisphere")
-                latitude_data = input(" >>> ")
+                output_message(f"Latitude (defaults to {default_position_dict["lat"]}):", False)
+                output_message(f"Negative for southern hemisphere", False)
+                latitude_data = input_prompt()
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             # Input is empty, use default value
             if latitude_data == "":
@@ -239,11 +246,11 @@ def position_sep_input() -> dict:
         # Input of longitude
         while True:
             try:
-                print(f"\n Longitude (defaults to {default_position_dict["lng"]}):")
-                print(f" Negative for west of Greenwich)")
-                longitude_data = input(" >>> ")
+                output_message(f"Longitude (defaults to {default_position_dict["lng"]}):", False)
+                output_message(f"Negative for west of Greenwich)", False)
+                longitude_data = input_prompt()
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             # Input is empty, use default value
             if longitude_data == "":
@@ -257,7 +264,7 @@ def position_sep_input() -> dict:
 
         return position_dict
     except KeyboardInterrupt:
-        print("\n\n*** Closing the script... ***\n")
+        output_error("Closing the script...")
         sys.exit()
 
 def ip_port_input(option: str) -> tuple:
@@ -271,21 +278,21 @@ def ip_port_input(option: str) -> tuple:
     while True:
         try:
             if option == "telnet":
-                print(f"\n Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
+                output_message(f"Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
                 try:
                     ip_port_socket = input(" >>> ")
                 except KeyboardInterrupt:
-                    print("\n\n*** Closing the script... ***\n")
+                    output_error("Closing the script...")
                     sys.exit()
                 if ip_port_socket == "":
                     # All available interfaces and default NMEA port.
                     return (get_ip(), default_port)
             elif option == "stream":
-                print(f"\n Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):")
+                output_message(f"Enter Remote IP address and port number (defaults to {default_ip}:{default_port}):")
                 try:
                     ip_port_socket = input(" >>> ")
                 except KeyboardInterrupt:
-                    print("\n\n*** Closing the script... ***\n")
+                    output_error("Closing the script...")
                     sys.exit()
                 if ip_port_socket == "":
                     return (default_ip, default_port)
@@ -302,9 +309,9 @@ def ip_port_input(option: str) -> tuple:
             if mo:
                 # return tuple with IP address (str) and port number (int).
                 return (mo.group(2), int(mo.group(6)))
-            print(f"\n\nError: Wrong format use - 192.168.10.10:2020.")
+            output_error(f"Error: Wrong format use - 192.168.10.10:2020.")
         except KeyboardInterrupt:
-            print("\n*** Closing the script... ***\n")
+            output_error("Closing the script...")
             sys.exit()
 
 def trans_proto_input() -> str:
@@ -316,11 +323,11 @@ def trans_proto_input() -> str:
     """
     while True:
         try:
-            print("\n Enter transport protocol - TCP or UDP (defaults to TCP):")
+            output_message("Enter transport protocol - TCP or UDP (defaults to TCP):")
             try:
-                stream_proto = input(" >>> ").strip().lower()
+                stream_proto = input_prompt().strip().lower()
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
 
             if stream_proto == "" or stream_proto == "tcp":
@@ -332,7 +339,7 @@ def trans_proto_input() -> str:
             elif stream_proto == "u":
                 return "udp"
         except KeyboardInterrupt:
-            print("\n\n*** Closing the script... ***\n")
+            output_error("Closing the script...")
             sys.exit()
 
 def get_ip() -> str:
@@ -363,11 +370,11 @@ def heading_input() -> float:
     """
     while True:
         try:
-            print(f"\n Enter unit course - range 000-359 degrees (defaults to {default_head}):")
+            output_message(f"\n Enter unit course - range 000-359 degrees (defaults to {default_head}):", False)
             try:
-                heading_data = input(" >>> ")
+                heading_data = input_prompt()
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if heading_data == "":
                 return 45.0
@@ -381,7 +388,7 @@ def heading_input() -> float:
             print("Position:", reerr.pos)
             return 0.0
         except KeyboardInterrupt:
-            print("\n\n*** Closing the script... ***\n")
+            output_error("Closing the script...")
             sys.exit()
 
 def speed_input() -> float:

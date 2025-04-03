@@ -23,7 +23,7 @@ import uuid
 
 import serial.tools.list_ports
 
-from utils import exit_script, data_log
+from utils import exit_script, data_log, output_message, output_error
 
 def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> None:
     """
@@ -41,20 +41,20 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
         try:
             sck.bind((srv_ip_address, srv_port))
         except socket.error as err:
-            print(f'\n TCP Server, bind failed. Error: {err.strerror}.')
-            print(' Change IP/port settings or try again in next 2 minutes.')
+            output_error(f'TCP Server, bind failed. Error: {err.strerror}.')
+            output_error('Change IP/port settings or try again in next 2 minutes.')
             exit_script()
             # sys.exit()
         # Start listening on socket
         sck.listen(10)
-        print(f'\n Server listening on {srv_ip_address}:{srv_port}... \n')
+        output_message(f'Server listening on {srv_ip_address}:{srv_port}...')
         while True:
             # Number of allowed connections to TCP server.
             max_threads = 10
             # Scripts waiting for client calls
             # The server is blocked (suspended) and is waiting for a client connection.
             conn, ip_add = sck.accept()
-            print(f'\n Connected with {ip_add[0]}:{ip_add[1]} ')
+            output_message(f'Connected with {ip_add[0]}:{ip_add[1]} ')
             thread_list = [thread.name for thread in threading.enumerate()]
             if len([thread_name for thread_name in thread_list if thread_name.startswith('nmea_srv')]) < max_threads:
                 nmea_srv_thread = NmeaSrvThread(name=f'nmea_srv{uuid.uuid4().hex}',
@@ -66,7 +66,7 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
             else:
                 # Close connection if number of scheduler jobs > max_sched_jobs
                 conn.close()
-                print(f'\n Connection closed with {ip_add[0]}:{ip_add[1]}')
+                output_message(f'Connection closed with {ip_add[0]}:{ip_add[1]}')
 
 class NmeaSrvThread(threading.Thread):
     """
@@ -152,7 +152,7 @@ class NmeaSrvThread(threading.Thread):
                         time.sleep(0.05)
                 except (BrokenPipeError, OSError):
                     self.conn.close()
-                    print(f'\n Connection closed with {self.ip_add[0]}:{self.ip_add[1]}')
+                    output_error(f'Connection closed with {self.ip_add[0]}:{self.ip_add[1]}')
                     # Close thread
                     sys.exit()
             self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
@@ -179,7 +179,7 @@ class NmeaStreamThread(NmeaSrvThread):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.connect((self.ip_add, self.port))
-                    print(f'\n Sending NMEA data - TCP stream to {self.ip_add}:{self.port}...\n')
+                    output_message(f'Sending NMEA data - TCP stream to {self.ip_add}:{self.port}...')
                     while True:
                         timer_start = time.perf_counter()
                         with self._lock:
@@ -204,11 +204,11 @@ class NmeaStreamThread(NmeaSrvThread):
                         self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
                         time.sleep(self.thread_sleep)
             except (OSError, TimeoutError, ConnectionRefusedError, BrokenPipeError) as err:
-                print(f'\n Error: {err.strerror}\n')
+                output_error(f'\n Error: {err.strerror}\n')
                 exit_script()
         elif self.proto == 'udp':
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                print(f'\n Sending NMEA data - UDP stream to {self.ip_add}:{self.port}... \n')
+                output_message(f'Sending NMEA data - UDP stream to {self.ip_add}:{self.port}...')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
@@ -231,7 +231,7 @@ class NmeaStreamThread(NmeaSrvThread):
                                 s.sendto(nmea.encode(), (self.ip_add, self.port))
                                 time.sleep(0.05)
                             except OSError as err:
-                                print(f' Error: {err.strerror} ')
+                                output_error(f'Error: {err.strerror}')
                                 exit_script()
                         # Start next loop after 1 sec
                     self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
@@ -253,7 +253,7 @@ class NmeaSerialThread(NmeaSrvThread):
 
     def run(self):
         # Print serial settings
-        print(
+        output_message(
             f'\n Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
             f'{self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]}')
         # Open serial port.
@@ -263,7 +263,7 @@ class NmeaSerialThread(NmeaSrvThread):
                                parity=self.serial_config['parity'],
                                stopbits=self.serial_config['stopbits'],
                                timeout=self.serial_config['timeout']) as ser:
-                print(f'\n Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
+                output_message(f'Started sending NMEA data - on serial port {self.serial_config["port"]}@{self.serial_config["baudrate"]} ({self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]})')
                 while True:
                     timer_start = time.perf_counter()
                     with self._lock:
@@ -290,8 +290,8 @@ class NmeaSerialThread(NmeaSrvThread):
         except serial.serialutil.SerialException as error:
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            print(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
-            print(f'or check if the port is occupied.')
+            output_error(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
+            output_error(f'or check if the port is occupied.')
             exit_script()
 
 class NmeaOutputThread(NmeaSrvThread):
@@ -312,7 +312,7 @@ class NmeaOutputThread(NmeaSrvThread):
 
     def run(self):
         # Output data to file.
-        print(f'\n Logging NMEA data to file...\n')
+        output_message(f'Logging NMEA data to file...')
         try:
             while True:
                 timer_start = time.perf_counter()
@@ -356,11 +356,14 @@ class NmeaOutputThread(NmeaSrvThread):
         except RuntimeError as rt_error:
             # Remove error number from output [...]
             error_formatted = 'RuntimeError: ' + re.sub(r'\[(.*?)\]', '', str(rt_error)).strip().replace('  ', ' ').capitalize()
-            print(f"{error_formatted}.")
+            output_error(f"{error_formatted}.")
             exit_script()
         except Exception as error:
             # Remove error number from output [...]
             error_formatted = 'Exception: ' + re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
-            print(f"{error_formatted}.")
+            output_error(f"{error_formatted}.")
             exit_script()
-            
+
+    def __str__(self) -> str:
+        return "NmeaOutputThread"
+

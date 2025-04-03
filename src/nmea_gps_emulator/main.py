@@ -25,7 +25,7 @@ from utils import position_sep_input, ip_port_input, trans_proto_input, \
                   heading_input, speed_input, change_heading_input, \
                   alt_input, change_speed_input, change_altitude_input, \
                   serial_config_input, filter_input, poi_input, \
-                  output_message, input_prompt
+                  output_message, output_error, input_prompt
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
 
@@ -74,9 +74,9 @@ class Application:
         # Get choise from user
         while True:
             try:
-                menu_choice = input_prompt()# input(' >>> ')
+                menu_choice = input_prompt()
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                output_error('Closing the script...')
                 sys.exit()
 
             action = self.output_modes.get(menu_choice)
@@ -127,16 +127,16 @@ class Application:
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
-                print('\n\n*** Closing the script... NMEA Thread not started ***\n')
+                output_error('Closing the script... NMEA Thread not started')
                 sys.exit()
             try:
                 if first_run:
                     time.sleep(3)
                     first_run = False
                 try:
-                    prompt = input('\n Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
+                    prompt = input_prompt("Press 'Enter' to change course/speed/altitude or 'Ctrl + c' to exit...")
                 except KeyboardInterrupt:
-                    print('\n\n*** Closing the script... ***\n')
+                    output_error('Closing the script...')
                     sys.exit()
                 if prompt == '':
                     # Get active values
@@ -166,7 +166,7 @@ class Application:
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                output_error('Closing the script...')
                 sys.exit()
 
     def run_args(self, config):
@@ -187,7 +187,7 @@ class Application:
                     speed = config_list['speed']
                     head = config_list['head']
         except FileNotFoundError:
-            print('\n Config file not found!')
+            output_error("Config file not found!")
             sys.exit()
 
         while True:
@@ -206,7 +206,7 @@ class Application:
                                         speed_init=speed,
                                         heading_init=head)
                 # Start message
-                print(f"\n Starting emulation at {position_dict['lat']}, {position_dict['lng']}")
+                output_message(f"Starting emulation at {position_dict['lat']}, {position_dict['lng']}")
                 action()
                 break
         
@@ -214,7 +214,7 @@ class Application:
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
-                print('\n\n*** Closing the script... Thread not started ***\n')
+                output_error('Closing the script... Thread not started')
                 sys.exit()
             try:
                 if first_run:
@@ -223,7 +223,7 @@ class Application:
                 try:
                     prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
                 except KeyboardInterrupt:
-                    print('\n\n*** Closing the script... ***\n')
+                    output_error('Closing the script...')
                     sys.exit()
                 if prompt == '':
                     # Get active values
@@ -253,7 +253,7 @@ class Application:
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
             except KeyboardInterrupt:
-                print('\n\n*** Closing the script... ***\n')
+                output_error('Closing the script...')
                 sys.exit()
 
     def nmea_serial(self):
