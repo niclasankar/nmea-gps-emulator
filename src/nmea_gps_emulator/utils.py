@@ -105,7 +105,8 @@ def filter_input():
     output_message("Choose message filter:")
     for x, y in filters_dict.items():
         if isinstance(y, dict):
-            output_message(f"  {x} - {", ".join(y.values())}", False)
+            filters_str = ", ".join(y.values())
+            output_message(f"  {x} - {filters_str}", False)
         else:
             print(f"  {x} - {y}")
     
