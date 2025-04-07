@@ -266,7 +266,6 @@ class NmeaGuiApplication(QDialog):
 
     def select_poi(self, selected_item):
         item_uid = selected_item.data(32)
-        # print(self.poi_list)
         item = next((p for p in self.poi_list if p["uid"] == item_uid), None)
 
         if item:
@@ -487,7 +486,6 @@ class NmeaGuiApplication(QDialog):
     def update_filter(self, filters_button):
         key = filters_button.property('key')
         filter = filters_button.property('filter')
-        # print(f"Selected: {filter} with value {key}")
         if key == 0:
             self.filter_mess = ''
         else:
@@ -624,7 +622,6 @@ class NmeaGuiApplication(QDialog):
                     thr.set_heading(new_heading)
                     thr.set_speed(new_speed)
                     thr.set_altitude(new_altitude)
-                    #print(time.time() - a)
 
     def updateAltPlus(self):
         self.nmea_obj.altitude_targeted += 1

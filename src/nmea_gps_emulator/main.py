@@ -76,7 +76,7 @@ class Application:
             try:
                 menu_choice = input_prompt()
             except KeyboardInterrupt:
-                output_error('Closing the script...')
+                output_error("Closing the script...")
                 sys.exit()
 
             action = self.output_modes.get(menu_choice)
@@ -89,8 +89,6 @@ class Application:
                     'position': {}
                 }
                 poi_active = input_prompt("Do you want to use a predefined starting point? (Y/N)")
-                #print('\n Do you want to use a predefined starting point? (Y/N)')
-                #poi_active = input(' >>> ')
                 poi_ok = False
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
@@ -127,7 +125,7 @@ class Application:
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
-                output_error('Closing the script... NMEA Thread not started')
+                output_error("Closing the script... NMEA Thread not started...")
                 sys.exit()
             try:
                 if first_run:
@@ -136,7 +134,7 @@ class Application:
                 try:
                     prompt = input_prompt("Press 'Enter' to change course/speed/altitude or 'Ctrl + c' to exit...")
                 except KeyboardInterrupt:
-                    output_error('Closing the script...')
+                    output_error("Closing the script...")
                     sys.exit()
                 if prompt == '':
                     # Get active values
@@ -152,21 +150,20 @@ class Application:
                     if thread_list:
                         for thr in thread_list:
                             # Update speed, heading and altitude
-                            #a = time.time()
                             if new_heading != old_heading:
                                 thr.set_heading(new_heading)
                             if new_speed != old_speed:
                                 thr.set_speed(new_speed)
                             if new_altitude != old_altitude:
                                 thr.set_altitude(new_altitude)
-                            #print(time.time() - a)
+                            #output_message(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
             except KeyboardInterrupt:
-                output_error('Closing the script...')
+                output_error("Closing the script...")
                 sys.exit()
 
     def run_args(self, config):
@@ -214,7 +211,7 @@ class Application:
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
-                output_error('Closing the script... Thread not started')
+                output_error('Closing the script... NMEA Thread not started...')
                 sys.exit()
             try:
                 if first_run:
@@ -223,7 +220,7 @@ class Application:
                 try:
                     prompt = input('Press "Enter" to change course/speed/altitude or "Ctrl + c" to exit...\n')
                 except KeyboardInterrupt:
-                    output_error('Closing the script...')
+                    output_error("Closing the script...")
                     sys.exit()
                 if prompt == '':
                     # Get active values
@@ -246,14 +243,14 @@ class Application:
                                 thr.set_speed(new_speed)
                             if new_altitude != old_altitude:
                                 thr.set_altitude(new_altitude)
-                            #print(time.time() - a)
+                            #output_message(time.time() - a)
                     else:
                         # Set targeted head, speed and altitude without connected clients
                         self.nmea_obj.heading_targeted = new_heading
                         self.nmea_obj.speed_targeted = new_speed
                         self.nmea_obj.altitude_targeted = new_altitude
             except KeyboardInterrupt:
-                output_error('Closing the script...')
+                output_error("Closing the script...")
                 sys.exit()
 
     def nmea_serial(self):

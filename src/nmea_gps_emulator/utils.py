@@ -56,29 +56,34 @@ default_ip = "127.0.0.1"
 default_port = 10110
 default_telnet_port = 10110
 
-def exit_script():
-    """
-    The method terminates the script (main thread) from inside of
-    child thread
-    """
-    current_script_pid = os.getpid()
-    current_script_proc = psutil.Process(current_script_pid)
-    print(f"*** Closing the script ({current_script_pid})... ***\n")
-    time.sleep(1)
-    current_script_proc.terminate()
-
 def output_message(message_str, newline_mode = True):
     """
     Output of messages to user.
+
+    :param string message_str: message to output
+    :param bool newline_mode: should the message be surrounded by newlines
     """
     if newline_mode:
         print("\n\n " + message_str)
     else:
         print(message_str)
 
+def output_listrow(message_str, listsign_str = "-"):
+    """
+    Output row in list to user.
+    The row is indented with blanks and a list char
+
+    :param string message_str: message to output
+    :param string listsign_str: chars to use before list row
+    """
+    print(f"  {listsign_str} {message_str}")
+    
 def output_error(message_str, newline_mode = True):
     """
     Output of error message to user.
+
+    :param string message_str: message to output
+    :param bool newline_mode: should the message be surrounded by newlines
     """
     if newline_mode:
         print("\n\n " + "\033[0;36;41m--- " + message_str + " ---\033[0;37;40m\n")
@@ -88,12 +93,27 @@ def output_error(message_str, newline_mode = True):
 def input_prompt(message_str = ""):
     """
     Input prompt with message to user.
+
+    :param string message_str: message to output
+    :return: input string defaults to "" which gives a >>> prompt
+    :rtype: str
     """
     default_prompt = " >>> "
     if message_str:
         return input("\n" + message_str + "\n" + default_prompt)
     else:
         return input(default_prompt)
+
+def exit_script():
+    """
+    The method terminates the script (main thread) from inside of
+    child thread
+    """
+    current_script_pid = os.getpid()
+    current_script_proc = psutil.Process(current_script_pid)
+    output_error(f"Closing the script ({current_script_pid})...")
+    time.sleep(1)
+    current_script_proc.terminate()
 
 def filter_input():
     """
@@ -106,9 +126,9 @@ def filter_input():
     for x, y in filters_dict.items():
         if isinstance(y, dict):
             filters_str = ", ".join(y.values())
-            output_message(f"  {x} - {filters_str}", False)
+            output_listrow(filters_str, x)
         else:
-            print(f"  {x} - {y}")
+            output_listrow(y, x)
     
     try:
         filter_choice = input(" >>> ")
@@ -127,11 +147,11 @@ def filter_input():
 
     if filter != 0:
         if isinstance(filter_type, dict):
-            output_message(f" Filtering messages by type {", ".join(filter_type.values())}.\n")
+            output_message(f"Filtering messages by type {", ".join(filter_type.values())}.\n")
         else:
-            output_message(f" Filtering messages by type {filter_type}.\n")
+            output_message(f"Filtering messages by type {filter_type}.\n")
     else:
-        output_message(" No message filtering active.\n")
+        output_message("No message filtering active.\n")
         filter_type = ""
 
     return filter_type
@@ -170,7 +190,7 @@ def poi_input(poi_file: str):
                 poi_filename_path = os.path.join(__location__, "pois", poi_filename)
 
             if os.path.exists(poi_filename_path):
-                output_message(" Showing points from: " + poi_filename_path)
+                output_message("Showing points from: " + poi_filename_path)
                 with open(poi_filename_path, "r") as file:
                     poi_list = json.load(file)
 
@@ -182,9 +202,9 @@ def poi_input(poi_file: str):
                 for poi in poi_list:
                     lat_dir = ll2dir(poi["lat"], "lat")
                     lng_dir = ll2dir(poi["lng"], "lng")
-                    output_message(f" {poi["uid"]} - {poi["name"]}, " +
-                          f"({poi["lat"]:2f}°{lat_dir}, " +
-                          f"{poi["lng"]:3.3f}°{lng_dir})", False)
+                    output_listrow(f"{poi["name"]}, " +
+                                   f"({poi["lat"]:2f}°{lat_dir}, " +
+                                   f"{poi["lng"]:3.3f}°{lng_dir})", poi["uid"])
 
                 # Get the chosen POI
                 selected_uid = int(input(" >>> "))
@@ -226,7 +246,7 @@ def position_sep_input() -> dict:
     try:
         # Input of latitude
         while True:
-            output_message("\n Enter unit position:")
+            output_message("Enter unit position:")
             try:
                 output_message(f"Latitude (defaults to {default_position_dict["lat"]}):", False)
                 output_message(f"Negative for southern hemisphere", False)
@@ -281,7 +301,7 @@ def ip_port_input(option: str) -> tuple:
             if option == "telnet":
                 output_message(f"Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
                 try:
-                    ip_port_socket = input(" >>> ")
+                    ip_port_socket = input_prompt()
                 except KeyboardInterrupt:
                     output_error("Closing the script...")
                     sys.exit()
@@ -360,6 +380,7 @@ def get_ip() -> str:
         _ip_local = "127.0.0.1"
     finally:
         sck.close()
+    output_message("Local IP address: " + _ip_local)
     return _ip_local
 
 def heading_input() -> float:
@@ -371,7 +392,7 @@ def heading_input() -> float:
     """
     while True:
         try:
-            output_message(f"\n Enter unit course - range 000-359 degrees (defaults to {default_head}):", False)
+            output_message(f"Enter unit course - range 000-359 degrees (defaults to {default_head}):", False)
             try:
                 heading_data = input_prompt()
             except KeyboardInterrupt:
@@ -384,9 +405,9 @@ def heading_input() -> float:
             if mo:
                 return float(mo.group())
         except re.error as reerr:
-            print("Error occurred:", reerr.msg)
-            print("Pattern:", reerr.pattern)
-            print("Position:", reerr.pos)
+            output_error("Error occurred: " + reerr.msg)
+            output_error("Pattern: " + reerr.pattern, False)
+            output_error("Position: " + reerr.pos, False)
             return 0.0
         except KeyboardInterrupt:
             output_error("Closing the script...")
@@ -401,11 +422,11 @@ def speed_input() -> float:
     """
     while True:
         try:
-            print(f"\n Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):")
+            output_message(f"Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):")
             try:
-                speed_data = input(" >>> ")
+                speed_data = input_prompt()
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if speed_data == "":
                 return default_speed
@@ -417,12 +438,12 @@ def speed_input() -> float:
                     match = match.lstrip("0")
                 return float(match)
         except re.error as reerr:
-            print("Error occurred:", reerr.msg)
-            print("Pattern:", reerr.pattern)
-            print("Position:", reerr.pos)
+            output_error("Error occurred: " + reerr.msg)
+            output_error("Pattern: " + reerr.pattern, False)
+            output_error("Position: " + reerr.pos, False)
             return 0.0
         except KeyboardInterrupt:
-            print("\n\n*** Closing the script... ***\n")
+            output_error("Closing the script...")
             sys.exit()
 
 def alt_input() -> float:
@@ -434,11 +455,11 @@ def alt_input() -> float:
     """
     while True:
         try:
-            print(f"\n Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):")
+            output_message(f"Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):")
             try:
-                alt_data = input(" >>> ")
+                alt_data = input_prompt()
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if alt_data == "":
                 return default_alt
@@ -450,12 +471,12 @@ def alt_input() -> float:
                     match = match.lstrip("0")
                 return float(match)
         except re.error as reerr:
-            print("Error occurred:", reerr.msg)
-            print("Pattern:", reerr.pattern)
-            print("Position:", reerr.pos)
+            output_error("Error occurred: " + reerr.msg)
+            output_error("Pattern: " + reerr.pattern, False)
+            output_error("Position: " + reerr.pos, False)
             return 0.0
         except KeyboardInterrupt:
-            print("\n\n*** Closing the script... ***\n")
+            output_error("Closing the script...")
             sys.exit()
 
 def change_heading_input(self, heading_old: float) -> float:
@@ -469,10 +490,10 @@ def change_heading_input(self, heading_old: float) -> float:
     try:
         while True:
             try:
-                print(f"\n Enter new course or press \"Enter\" to skip (Target {heading_old})")
+                output_message(f"Enter new course or press \"Enter\" to skip (Target {heading_old})", False)
                 heading_data = input(" >>> ")
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if heading_data == "":
                 heading_new = heading_old
@@ -485,7 +506,7 @@ def change_heading_input(self, heading_old: float) -> float:
                     break
         return heading_new
     except KeyboardInterrupt:
-        print("\n\n*** Closing the script... ***\n")
+        output_error("Closing the script...")
         sys.exit()
 
 def change_speed_input(self, speed_old:float) -> float:
@@ -499,10 +520,10 @@ def change_speed_input(self, speed_old:float) -> float:
     try:
         while True:
             try:
-                print(f"\n Enter new speed or press \"Enter\" to skip (Target {speed_old})")
+                output_message(f"Enter new speed or press \"Enter\" to skip (Target {speed_old})", False)
                 speed_data = input(" >>> ")
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if speed_data == "":
                 speed_new = speed_old
@@ -518,7 +539,7 @@ def change_speed_input(self, speed_old:float) -> float:
                     break
         return speed_new
     except KeyboardInterrupt:
-        print("\n\n*** Closing the script... ***\n")
+        output_error("Closing the script...")
         sys.exit()
 
 def change_altitude_input(self, altitude_old: float) -> float:
@@ -532,10 +553,10 @@ def change_altitude_input(self, altitude_old: float) -> float:
     try:
         while True:
             try:
-                print(f"\n Enter new altitude or press \"Enter\" to skip (Target {altitude_old})")
+                output_message(f"Enter new altitude or press \"Enter\" to skip (Target {altitude_old})", False)
                 alt_data = input(" >>> ")
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if alt_data == "":
                 altitude_new = altitude_old
@@ -551,7 +572,7 @@ def change_altitude_input(self, altitude_old: float) -> float:
                     break
         return altitude_new
     except KeyboardInterrupt:
-        print("\n\n*** Closing the script... ***\n")
+        output_error("Closing the script...")
         sys.exit()
 
 def serial_config_input() -> dict:
@@ -582,9 +603,9 @@ def serial_config_input() -> dict:
 
     # List of available serial port's names.
     ports_connected_names = [port.device for port in ports_connected]
-    print("\n Connected Serial Ports:")
+    output_message("Connected Serial Ports:", False)
     for port in sorted(ports_connected):
-        print(f" - {port}")
+        output_listrow(port)
     
     # Check OS platform.
     platform_os = platform.system()
@@ -592,28 +613,28 @@ def serial_config_input() -> dict:
     # Asks for serial port name and checks the name validity.
     while True:
         if platform_os.lower() == "linux":
-            print("\n Choose Serial Port (defaults to /dev/ttyS0):")
+            output_message("Choose Serial Port (defaults to /dev/ttyS0):")
             try:
                 serial_set["port"] = input(" >>> ")
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if serial_set["port"] == "":
                 serial_set["port"] = "/dev/ttyS0"
             if serial_set["port"] in ports_connected_names:
                 break
         elif platform_os.lower() == "windows":
-            print("\n Choose Serial Port (defaults to COM1):")
+            output_message("Choose Serial Port (defaults to COM1):")
             try:
                 serial_set["port"] = input(" >>> ")
             except KeyboardInterrupt:
-                print("\n\n*** Closing the script... ***\n")
+                output_error("Closing the script...")
                 sys.exit()
             if serial_set["port"] == "":
                 serial_set["port"] = "COM1"
             if serial_set["port"] in ports_connected_names:
                 break
-        print(f"\nError: '{serial_set["port"]}' is not a valid port name.")
+        output_error(f"Error: '{serial_set["port"]}' is not a valid port name.")
 
     # Serial port settings:
     baudrate_list = ["300", "600", "1200", "2400", "4800", "9600", "14400",
@@ -621,18 +642,17 @@ def serial_config_input() -> dict:
     
     # Ask for baud rate, defaults to 9600 (NMEA standard)
     while True:
-        print("\n Enter serial baudrate (defaults to 9600):")
+        output_message("Enter serial baudrate (defaults to 9600):")
         try:
             serial_set["baudrate"] = input(" >>> ")
         except KeyboardInterrupt:
-            print("\n\n*** Closing the script... ***\n")
+            output_error("Closing the script...")
             sys.exit()
         if serial_set["baudrate"] == "":
             serial_set["baudrate"] = 9600
         if str(serial_set["baudrate"]) in baudrate_list:
             break
-        print(f"\n Error: '{serial_set["baudrate"]}' is not a valid baudrate.")
-    # print(serial_set)
+        output_error(f"Error: '{serial_set["baudrate"]}' is not a valid baudrate.")
     return serial_set
 
 def _setup_logger(logger_name, log_file, log_format="%(message)s", level=logging.INFO):

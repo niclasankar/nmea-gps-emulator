@@ -252,9 +252,9 @@ class NmeaSerialThread(NmeaSrvThread):
         self.serial_config = serial_config
 
     def run(self):
-        # Print serial settings
+        # Output serial settings
         output_message(
-            f'\n Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
+            f'Serial port settings: {self.serial_config["port"]} {self.serial_config["baudrate"]} '
             f'{self.serial_config["bytesize"]}{self.serial_config["parity"]}{self.serial_config["stopbits"]}')
         # Open serial port.
         try:
@@ -345,7 +345,6 @@ class NmeaOutputThread(NmeaSrvThread):
                         elif isinstance(self.filter_mess, dict):
                             pattern = "|".join(map(re.escape, self.filter_mess.keys()))
                             mo = re.match(rf"({pattern})", nmea)
-                            #print(mo)
                             if mo:
                                 data_log(nmea)
                         else:

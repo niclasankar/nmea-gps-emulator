@@ -26,6 +26,7 @@ from pygeomag import GeoMag
 from pygeomag import decimal_year_from_date
 
 from nmea_utils import ddd2nmea, ll2dir
+from utils import output_message, output_error
 
 class NmeaMsg:
     """
@@ -72,11 +73,11 @@ class NmeaMsg:
 
         # The GeoMag object is created and magnetic variation values are calculated from given coordinates
         self.geomag = GeoMag()
-        print('\n Loaded VMM: ' + self.geomag.model )
+        output_message('Loaded VMM: ' + self.geomag.model )
         date_decimal = decimal_year_from_date(self.utc_date_time)
-        # Print message if todays date is not within WMM life span
+        # Output message if todays date is not within WMM life span
         if date_decimal > max(self.geomag.life_span) or date_decimal < min(self.geomag.life_span):
-            print('\n Todays date is not within the WMM lifespan.')
+            output_message('Todays date is not within the WMM lifespan.')
         self._magvar_update()
 
         # The unit's heading provided by the user during the operation of the script
@@ -165,19 +166,19 @@ class NmeaMsg:
         self.position['lat_dir'] = ll2dir(lat, 'lat')
         self.position['lng_dir'] = ll2dir(lon, 'lng')
         
-        # All updates done, print message
+        # All updates done, output message
         if self.change_in_progress == True \
              and self.heading == self.heading_targeted \
              and self.speed == self.speed_targeted \
              and self.altitude == self.altitude_targeted:
             self.change_in_progress = False
-            print('\n All updates ready...')
-            print(f" Latitude: {self.position['lat']}°{self.position['lat_dir']}")
-            print(f" Longitude: {self.position['lng']}°{self.position['lng_dir']}")
-            print(f" Altitude: {self.altitude} m")
-            print(f" Speed: {self.speed} kt")
-            print(f" Heading: {self.heading}°")
-            print("\n Press \"Enter\" to change course/speed/altitude or \"Ctrl + c\" to exit...\n")
+            output_message('All updates ready...')
+            output_message(f"Latitude: {self.position['lat']}°{self.position['lat_dir']}", False)
+            output_message(f"Longitude: {self.position['lng']}°{self.position['lng_dir']}", False)
+            output_message(f"Altitude: {self.altitude} m", False)
+            output_message(f"Speed: {self.speed} kt", False)
+            output_message(f"Heading: {self.heading}°", False)
+            output_message("Press \"Enter\" to change course/speed/altitude or \"Ctrl + c\" to exit...\n")
             
         # Set new values in messages
         self.gpgga.utc_time = self.utc_date_time
@@ -328,10 +329,10 @@ class NmeaMsg:
             speed_current = speed_target
         elif speed_target > speed_current:
             speed_current += speed_increment
-            #print(f'Increase to {speed_current} towards {speed_target}')
+            #output_message(f'Increase to {speed_current} towards {speed_target}')
         else:
             speed_current -= speed_increment
-            #print(f'Decrease to {speed_current} towards {speed_target}')
+            #output_message(f'Decrease to {speed_current} towards {speed_target}')
         self.speed = round(speed_current, 1)
 
     def _altitude_update(self):
@@ -377,7 +378,7 @@ class NmeaMsg:
             else:
                 self.magvar_direct = 'W'
         except Exception as error:
-            print('Magnetic variation calculation error! Setting value to 0°E')
+            output_message('Magnetic variation calculation error! Setting value to 0°E')
             self.magvar_dec = 0
             self.magvar_direct = 'E'
 
