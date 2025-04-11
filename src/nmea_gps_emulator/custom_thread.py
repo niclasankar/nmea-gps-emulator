@@ -41,13 +41,12 @@ def run_telnet_server_thread(srv_ip_address: str, srv_port: str, nmea_obj) -> No
         try:
             sck.bind((srv_ip_address, srv_port))
         except socket.error as err:
-            output_error(f'TCP Server, bind failed. Error: {err.strerror}.')
-            output_error('Change IP/port settings or try again in next 2 minutes.')
+            output_error(f"TCP Server, bind failed. Error: {err.strerror}.")
+            output_error("Change IP/port settings or try again in next 2 minutes.")
             exit_script()
-            # sys.exit()
         # Start listening on socket
         sck.listen(10)
-        output_message(f'Server listening on {srv_ip_address}:{srv_port}...')
+        output_message(f"Server listening on {srv_ip_address}:{srv_port}...")
         while True:
             # Number of allowed connections to TCP server.
             max_threads = 10
@@ -72,7 +71,7 @@ class NmeaSrvThread(threading.Thread):
     """
     A class that represents a thread dedicated for TCP (telnet) server-client connection.
     """
-    def __init__(self, nmea_object, ip_add=None, conn=None, *args, **kwargs):
+    def __init__(self, nmea_object, ip_add=None, conn=None, gui=False, *args, **kwargs):
         """ Class constructor
 
         :param object nmea_object: NmeaMsg object
@@ -152,7 +151,7 @@ class NmeaSrvThread(threading.Thread):
                         time.sleep(0.05)
                 except (BrokenPipeError, OSError):
                     self.conn.close()
-                    output_error(f'Connection closed with {self.ip_add[0]}:{self.ip_add[1]}')
+                    output_error(f"Connection closed with {self.ip_add[0]}:{self.ip_add[1]}...")
                     # Close thread
                     sys.exit()
             self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
@@ -204,7 +203,7 @@ class NmeaStreamThread(NmeaSrvThread):
                         self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
                         time.sleep(self.thread_sleep)
             except (OSError, TimeoutError, ConnectionRefusedError, BrokenPipeError) as err:
-                output_error(f'\n Error: {err.strerror}\n')
+                output_error(f"Error: {err.strerror}")
                 exit_script()
         elif self.proto == 'udp':
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -231,7 +230,7 @@ class NmeaStreamThread(NmeaSrvThread):
                                 s.sendto(nmea.encode(), (self.ip_add, self.port))
                                 time.sleep(0.05)
                             except OSError as err:
-                                output_error(f'Error: {err.strerror}')
+                                output_error(f"Error: {err.strerror}")
                                 exit_script()
                         # Start next loop after 1 sec
                     self.thread_sleep = abs(1.1 - (time.perf_counter() - timer_start))
@@ -291,7 +290,7 @@ class NmeaSerialThread(NmeaSrvThread):
             # Remove error number from output [...]
             error_formatted = re.sub(r'\[(.*?)\]', '', str(error)).strip().replace('  ', ' ').capitalize()
             output_error(f"{error_formatted}. Please try \'sudo chmod a+rw {self.serial_config['port']}\'")
-            output_error(f'or check if the port is occupied.')
+            output_error(f"or check if the port is occupied.")
             exit_script()
 
 class NmeaOutputThread(NmeaSrvThread):
