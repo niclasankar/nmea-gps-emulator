@@ -57,7 +57,7 @@ class NmeaMsg:
         self.position['lat_dir'] = ll2dir(lat, 'lat')
         self.position['lng_dir'] = ll2dir(lon, 'lng')
 
-        # Create Geod object for position calculation
+        # Create Geod object for position calculation on spheroid
         self.geod = Geod(ellps='WGS84')
 
         # Get timezone offset
@@ -73,11 +73,12 @@ class NmeaMsg:
 
         # The GeoMag object is created and magnetic variation values are calculated from given coordinates
         self.geomag = GeoMag()
-        output_message('Loaded VMM: ' + self.geomag.model )
+        output_message(f"Loaded VMM: {self.geomag.model}")
         date_decimal = decimal_year_from_date(self.utc_date_time)
+        
         # Output message if todays date is not within WMM life span
         if date_decimal > max(self.geomag.life_span) or date_decimal < min(self.geomag.life_span):
-            output_message('Todays date is not within the WMM lifespan.')
+            output_message("Todays date is not within the WMM lifespan.")
         self._magvar_update()
 
         # The unit's heading provided by the user during the operation of the script
@@ -172,7 +173,7 @@ class NmeaMsg:
              and self.speed == self.speed_targeted \
              and self.altitude == self.altitude_targeted:
             self.change_in_progress = False
-            output_message('All updates ready...')
+            output_message("All updates ready...")
             output_message(f"Latitude: {self.position['lat']}°{self.position['lat_dir']}", False)
             output_message(f"Longitude: {self.position['lng']}°{self.position['lng_dir']}", False)
             output_message(f"Altitude: {self.altitude} m", False)
@@ -378,7 +379,7 @@ class NmeaMsg:
             else:
                 self.magvar_direct = 'W'
         except Exception as error:
-            output_message('Magnetic variation calculation error! Setting value to 0°E')
+            output_message("Magnetic variation calculation error! Setting value to 0°E")
             self.magvar_dec = 0
             self.magvar_direct = 'E'
 
