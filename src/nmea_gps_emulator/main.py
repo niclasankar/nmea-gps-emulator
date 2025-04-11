@@ -211,7 +211,7 @@ class Application:
         first_run = True
         while True:
             if not self.nmea_thread.is_alive():
-                output_error('Closing the script... NMEA Thread not started...')
+                output_error("Closing the script... NMEA Thread not started...")
                 sys.exit()
             try:
                 if first_run:
