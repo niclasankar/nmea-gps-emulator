@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QComboBox,
 from PySide6.QtGui import QDoubleValidator, QIntValidator, QRegularExpressionValidator
 
 from nmea_gps import NmeaMsg
-from nmea_utils import ddd2nmeall
+from nmea_utils import ddd2nmea
 from utils import get_ip
 
 from custom_thread import NmeaStreamThread, NmeaSerialThread, NmeaOutputThread, run_telnet_server_thread
@@ -70,17 +70,17 @@ class NmeaGuiApplication(QDialog):
             'port_str': 10110
         }
         self.pos_data_dict = {
-            'latitude_value': 57.70011131,
-            'latitude_nmea_value': '',
-            'latitude_direction': 'N',
-            'longitude_value': 11.98827852,
-            'longitude_nmea_value': '',
-            'longitude_direction': 'E'
+            'lat': 57.70011131,
+            'lat_nmea': '',
+            'lat_dir': 'N',
+            'lng': 11.98827852,
+            'lng_nmea': '',
+            'lng_dir': 'E'
         }
         self.nav_data_dict = {
-            'speed': 2,
+            'gps_speed': 2,
             'heading': 45,
-            'altitude_amsl': 42,
+            'gps_altitude_amsl': 42,
             'position': self.pos_data_dict
         }
         self.filters_dict = {
@@ -103,7 +103,7 @@ class NmeaGuiApplication(QDialog):
 
         # Setup window
         self.setWindowTitle("NMEA GPS Emulator")
-        self.resize(800,600)
+        self.resize(800,660)
 
         # Create group boxes with controls
         self.create_modegroupbox()
@@ -240,7 +240,7 @@ class NmeaGuiApplication(QDialog):
         # Create list box with POI:s in the file poi.json
         self.poi_list_box = QListWidget(self)
         poi_filename = 'poi.json'
-        poi_filename_path = os.path.join(__location__, poi_filename)
+        poi_filename_path = os.path.join(__location__, "pois", poi_filename)
         if os.path.exists(poi_filename_path):
             with open(poi_filename_path, 'r') as file:
                 self.poi_list = json.load(file)
@@ -252,8 +252,8 @@ class NmeaGuiApplication(QDialog):
             # Loop through each object in the list
             for poi in self.poi_list:
                 poi_list_item = QListWidgetItem(str(poi['name']))
-                poi_list_item.setToolTip(f"({poi['lon']:3.3f}º{poi['lon_d']}, " +
-                          f"{poi['lat']:2f}º{poi['lat_d']})")
+                poi_list_item.setToolTip(f"({poi['lng']:3.3f}º, " +
+                          f"{poi['lat']:2f}º)")
                 poi_list_item.setData(32, poi["uid"])  # 32 is the role for UserRole
                 self.poi_list_box.addItem(poi_list_item)
 
@@ -270,7 +270,7 @@ class NmeaGuiApplication(QDialog):
 
         if item:
             self.lat_txt.setText(str(item['lat']))
-            self.lng_txt.setText(str(item['lon']))
+            self.lng_txt.setText(str(item['lng']))
             self.alt_txt.setText(str(item['alt']))
             self.head_txt.setText(str(item['head']))
 
@@ -365,7 +365,7 @@ class NmeaGuiApplication(QDialog):
 
         self.lat_txt = QLineEdit(self)
         self.lat_txt.width = 60
-        self.lat_txt.setText(str(self.nav_data_dict['position']['latitude_value']))
+        self.lat_txt.setText(str(self.nav_data_dict['position']['lat']))
         self.lat_txt.setToolTip(f'Latitude in degrees, negative if on the southern hemisphere')
         lat_validator = QDoubleValidator(-89.9999999, 89.9999999, 8, self)
         lat_validator.setLocale(self.locale_en)
@@ -373,7 +373,7 @@ class NmeaGuiApplication(QDialog):
 
         self.lng_txt = QLineEdit(self)
         self.lng_txt.width = 60
-        self.lng_txt.setText(str(self.nav_data_dict['position']['longitude_value']))
+        self.lng_txt.setText(str(self.nav_data_dict['position']['lng']))
         self.lng_txt.setToolTip(f'Longitude in degrees, negative if west of Greenwich, London')
         lng_validator = QDoubleValidator(-179.99999999, 179.99999999, 8, self)
         lng_validator.setLocale(self.locale_en)
@@ -381,14 +381,14 @@ class NmeaGuiApplication(QDialog):
 
         self.alt_txt = QLineEdit(self)
         self.alt_txt.width = 60
-        self.alt_txt.setText(str(self.nav_data_dict['altitude_amsl']))
+        self.alt_txt.setText(str(self.nav_data_dict['gps_altitude_amsl']))
         self.alt_txt.setToolTip(f'Altitude in meters above sea level')
         alt_validator = QIntValidator(-400, 9000, self)
         self.alt_txt.setValidator(alt_validator)
 
         self.speed_txt = QLineEdit(self)
         self.speed_txt.width = 60
-        self.speed_txt.setText(str(self.nav_data_dict['speed']))
+        self.speed_txt.setText(str(self.nav_data_dict['gps_speed']))
         self.speed_txt.setToolTip(f'Speed in knots')
         speed_validator = QIntValidator(0, 200, self)
         self.speed_txt.setValidator(speed_validator)
@@ -512,6 +512,9 @@ class NmeaGuiApplication(QDialog):
         self.status_magvar_label = QLabel("-", self)
         self.status_magvar_label.width = 250
 
+        #self.status_magvar_label = QLabel("-", self)
+        #self.status_magvar_label.width = 250
+
         self.status_system_label = QLabel("-", self)
         self.status_system_label.width = 250
 
@@ -522,17 +525,18 @@ class NmeaGuiApplication(QDialog):
         status_stack.addWidget(self.status_head_label)
         status_stack.addWidget(self.status_speed_label)
         status_stack.addWidget(self.status_magvar_label)
+        #status_stack.addWidget(self.status_magvar_label)
         status_stack.addWidget(self.status_system_label)
 
         self.statusgroupbox.setLayout(status_stack)
 
     def update_status(self):
-        self.status_lat_label.setText(f"Latitude: {str(self.nmea_obj.position['latitude_value'])}°")
-        self.status_lng_label.setText(f"Longitude: {str(self.nmea_obj.position['longitude_value'])}°")
+        self.status_lat_label.setText(f"Latitude: {str(self.nmea_obj.position['lat'])}°")
+        self.status_lng_label.setText(f"Longitude: {str(self.nmea_obj.position['lng'])}°")
         self.status_speed_label.setText(f"Speed: {str(self.nmea_obj.speed)} kt")
         self.status_alt_label.setText(f"Altitude: {str(self.nmea_obj.altitude)} msl")
         self.status_head_label.setText(f"Heading: {str(self.nmea_obj.heading)}°")
-        self.status_magvar_label.setText(f"M: {self.nmea_obj.magvar_dec:.3f}°")
+        self.status_magvar_label.setText(f"Magvar: {self.nmea_obj.magvar_dec:.3f}°")
 
     def run(self):
         """
@@ -561,25 +565,25 @@ class NmeaGuiApplication(QDialog):
         if ready_to_run:
 
             nav_data_dict = {
-                'speed': float(self.speed_txt.text()),
+                'gps_speed': float(self.speed_txt.text()),
                 'heading': float(self.head_txt.text()),
-                'altitude_amsl': float(self.alt_txt.text()),
+                'gps_altitude_amsl': float(self.alt_txt.text()),
                 'position': {}
             }
             pos_data_dict = {
-                'latitude_value': float(self.lat_txt.text()),
-                'latitude_nmea_value': ddd2nmeall(float(self.lat_txt.text()), 'lat'),
-                'latitude_direction': 'N',
-                'longitude_value': float(self.lng_txt.text()),
-                'longitude_nmea_value': ddd2nmeall(float(self.lng_txt.text()), 'lng'),
-                'longitude_direction': 'E'
+                'lat': float(self.lat_txt.text()),
+                'lat_nmea': ddd2nmea(float(self.lat_txt.text()), 'lat'),
+                'lat_dir': 'N',
+                'lng': float(self.lng_txt.text()),
+                'lng_nmea': ddd2nmea(float(self.lng_txt.text()), 'lng'),
+                'lng_dir': 'E'
             }
             nav_data_dict['position'] = pos_data_dict
 
-            self.nmea_obj = NmeaMsg(position=nav_data_dict['position'],
-                                    altitude=nav_data_dict['altitude_amsl'],
-                                    speed=nav_data_dict['speed'],
-                                    heading=nav_data_dict['heading'])
+            self.nmea_obj = NmeaMsg(position_init=nav_data_dict['position'],
+                                    altitude_init=nav_data_dict['gps_altitude_amsl'],
+                                    speed_init=nav_data_dict['gps_speed'],
+                                    heading_init=nav_data_dict['heading'])
         
             time.sleep(1)
 
