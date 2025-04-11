@@ -66,7 +66,7 @@ def output_message(message_str, newline_mode = True):
     if newline_mode:
         print("\n\n " + message_str)
     else:
-        print(message_str)
+        print(" " + message_str)
 
 def output_listrow(message_str, listsign_str = "-"):
     """
@@ -76,7 +76,7 @@ def output_listrow(message_str, listsign_str = "-"):
     :param string message_str: message to output
     :param string listsign_str: chars to use before list row
     """
-    print(f"  {listsign_str} {message_str}")
+    print(f"   {listsign_str} {message_str}")
     
 def output_error(message_str, newline_mode = True):
     """
@@ -100,9 +100,9 @@ def input_prompt(message_str = ""):
     """
     default_prompt = " >>> "
     if message_str:
-        return input("\n" + message_str + "\n" + default_prompt)
+        return input("\n " + message_str + "\n" + default_prompt)
     else:
-        return input(default_prompt)
+        return input(" " + default_prompt)
 
 def exit_script():
     """
@@ -248,9 +248,9 @@ def position_sep_input() -> dict:
         while True:
             output_message("Enter unit position:")
             try:
-                output_message(f"Latitude (defaults to {default_position_dict["lat"]}):", False)
-                output_message(f"Negative for southern hemisphere", False)
-                latitude_data = input_prompt()
+                output_message(f"Latitude (defaults to {default_position_dict["lat"]}).", False)
+                output_message(f"Negative value for southern hemisphere.", False)
+                latitude_data = input_prompt("Latitude:")
             except KeyboardInterrupt:
                 output_error("Closing the script...")
                 sys.exit()
@@ -268,8 +268,8 @@ def position_sep_input() -> dict:
         while True:
             try:
                 output_message(f"Longitude (defaults to {default_position_dict["lng"]}):", False)
-                output_message(f"Negative for west of Greenwich)", False)
-                longitude_data = input_prompt()
+                output_message(f"Negative value for west of Greenwich)", False)
+                longitude_data = input_prompt("Longitude:")
             except KeyboardInterrupt:
                 output_error("Closing the script...")
                 sys.exit()
@@ -299,9 +299,9 @@ def ip_port_input(option: str) -> tuple:
     while True:
         try:
             if option == "telnet":
-                output_message(f"Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
+                #output_message(f"Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
                 try:
-                    ip_port_socket = input_prompt()
+                    ip_port_socket = input_prompt(f"Enter Local IP address and port number (defaults to local ip: {get_ip()}:{default_telnet_port}):")
                 except KeyboardInterrupt:
                     output_error("Closing the script...")
                     sys.exit()
@@ -344,9 +344,9 @@ def trans_proto_input() -> str:
     """
     while True:
         try:
-            output_message("Enter transport protocol - TCP or UDP (defaults to TCP):")
+            #output_message("Enter transport protocol - TCP or UDP (defaults to TCP):")
             try:
-                stream_proto = input_prompt().strip().lower()
+                stream_proto = input_prompt("Enter transport protocol - TCP or UDP (defaults to TCP):").strip().lower()
             except KeyboardInterrupt:
                 output_error("Closing the script...")
                 sys.exit()
@@ -392,9 +392,9 @@ def heading_input() -> float:
     """
     while True:
         try:
-            output_message(f"Enter unit course - range 000-359 degrees (defaults to {default_head}):", False)
+            #output_message(f"Enter unit course - range 000-359 degrees (defaults to {default_head}):", False)
             try:
-                heading_data = input_prompt()
+                heading_data = input_prompt(f"Enter unit course - range 000-359 degrees (defaults to {default_head}):")
             except KeyboardInterrupt:
                 output_error("Closing the script...")
                 sys.exit()
@@ -422,9 +422,9 @@ def speed_input() -> float:
     """
     while True:
         try:
-            output_message(f"Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):")
+            #output_message(f"Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):")
             try:
-                speed_data = input_prompt()
+                speed_data = input_prompt(f"Enter unit speed in knots - range 0-999 (defaults to {default_speed} knots):")
             except KeyboardInterrupt:
                 output_error("Closing the script...")
                 sys.exit()
@@ -455,9 +455,9 @@ def alt_input() -> float:
     """
     while True:
         try:
-            output_message(f"Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):")
+            #output_message(f"Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):")
             try:
-                alt_data = input_prompt()
+                alt_data = input_prompt(f"Enter unit altitude in meters above sea level - range -40-9000 (defaults to {default_alt}):")
             except KeyboardInterrupt:
                 output_error("Closing the script...")
                 sys.exit()
@@ -679,6 +679,6 @@ def _setup_logger(logger_name, log_file, log_format="%(message)s", level=logging
     return new_logger
 
 def data_log(log_message):
-    data_logger.info(log_message)
+    data_logger.info(log_message.rstrip("\r\n"))
 
 data_logger = _setup_logger("data_logger", "emulator_data.log")
