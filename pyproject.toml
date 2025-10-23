@@ -12,6 +12,7 @@ dependencies = [
     "pygeomag==1.1.0",
     "timezonefinder>=6",
     "pytz>=2023.4",
+    "textual>=6.3",
     "PySide6>=6.7"
 ]
 readme = "README.md"
