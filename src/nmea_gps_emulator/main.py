@@ -89,17 +89,17 @@ class Application:
                     'position': {}
                 }
                 poi_active = input_prompt("Do you want to use a predefined starting point? (Y/N)")
-                poi_ok = False
+                poi_success = False
+                heading = 5
                 if poi_active.upper() == 'Y':
                     # Position, initial course, speed and altitude from file
-                    poi_data, alt, heading = poi_input(poi_file)
-                    if poi_data != None:
+                    poi_success, poi_data, alt, heading = poi_input(poi_file)
+                    if poi_success != False:
                         nav_data_dict['position'] = poi_data
-                        nav_data_dict['heading'] = heading
+                        nav_data_dict['heading'] = float(heading)
                         nav_data_dict['gps_speed'] = 0
-                        nav_data_dict['gps_altitude_amsl'] = alt
-                        poi_ok = True
-                if poi_ok == False:
+                        nav_data_dict['gps_altitude_amsl'] = float(alt)
+                if poi_success == False:
                     # Position, initial course, speed and altitude queries
                     nav_data_dict['position'] = position_sep_input()
                     nav_data_dict['heading'] = heading_input()
@@ -188,7 +188,7 @@ class Application:
             sys.exit()
 
         while True:
-            action = self.choices.get(str(output))
+            action = self.output_modes.get(str(output))
             if action:
                 position_dict = {
                     'lat': 57.70011131,

@@ -4,11 +4,11 @@ Module for utilities in NMEA-GPS-EMULATOR containing:
 - Log methods
 - Helpers
 
-Created in 2024
+Created in 2025
 Based on the works of luk-kop
 
 :author: ankars
-:copyright: Ankars.se © 2024
+:copyright: Ankars.se © 2025
 :license: MIT
 """
 
@@ -23,7 +23,6 @@ import socket
 import psutil
 import serial.tools.list_ports
 
-#from nmea_utils import ddd2nmea, ll2dir
 from nmea_utils import ll2dir
 
 __location__ = os.path.realpath(
@@ -34,8 +33,8 @@ default_position_dict = {
     "lng": 11.98827852,
 }
 default_speed = 0
-default_alt = 42
-default_head = 260
+default_alt = 42.0
+default_head = 260.0
 
 # List of filters for use in logging
 filters_dict = {
@@ -126,9 +125,9 @@ def filter_input():
     for x, y in filters_dict.items():
         if isinstance(y, dict):
             filters_str = ", ".join(y.values())
-            output_listrow(filters_str, x)
+            output_listrow(filters_str, str(x))
         else:
-            output_listrow(y, x)
+            output_listrow(y, str(x))
     
     try:
         filter_choice = input(" >>> ")
@@ -169,8 +168,8 @@ def poi_input(poi_file: str):
     }]
 
     :param string poi_file: optional file name with complete path
-    :return: position dictionary, float altitude, float heading
-    :rtype: tuple (dict, float, float) (None, None, None) on error
+    :return: boolean status of process, position dictionary, float altitude, float heading
+    :rtype: tuple (bool, dict, float, float) (False, None, 0.0, 0.0) on error
     :raises: json.JSONDecodeError when JSON content is malformed
     """
     pos_dict = default_position_dict
@@ -214,23 +213,23 @@ def poi_input(poi_file: str):
                         sel_poi_item = poi_item
 
                 if sel_poi_item != None:
-                    pos_dict["lat"] = sel_poi_item["lat"]
-                    pos_dict["lng"] = sel_poi_item["lng"]
-                    # Return position dictionary, alt and heding
-                    return pos_dict, sel_poi_item["alt"], sel_poi_item["head"]
+                    pos_dict["lat"] = float(sel_poi_item["lat"])
+                    pos_dict["lng"] = float(sel_poi_item["lng"])
+                    # Return boolean status, position dictionary, alt and heding
+                    return True, pos_dict, float(sel_poi_item["alt"]), float(sel_poi_item["head"])
                 else:
                     output_error("Non valid POI choice. Continue with manual input.")
-                    return None, None, None
+                    return False, default_position_dict, 0.0, 0.0
             else:
                 output_error("The POI file doesn't exist!")
                 output_error("Create the POI file according to docs or supply the path to the file with argument -p.", False)
                 output_message("Continuing with manual input.")
                 time.sleep(2)
-                return None, None, None
+                return False, default_position_dict, 0.0, 0.0
             
     except json.JSONDecodeError as jsonerr:
         output_error(f"Could not parse the supplied JSON file. Continuing with manual input. ({jsonerr.msg})")
-        return None, None, None
+        return False, None, 0.0, 0.0
     except KeyboardInterrupt:
         output_error("Closing the script...")
         sys.exit()
@@ -315,7 +314,7 @@ def ip_port_input(option: str) -> tuple:
                 except KeyboardInterrupt:
                     output_error("Closing the script...")
                     sys.exit()
-                if ip_port_socket == "":
+                if not ip_port_socket: # Test other way to detect empty input. Used to be ip_port_socket == ""
                     return (default_ip, default_port)
             # Regex matchs only unicast IP addr from range 0.0.0.0 - 223.255.255.255
             # and port numbers from range 1 - 65535.
@@ -405,10 +404,10 @@ def heading_input() -> float:
             if mo:
                 return float(mo.group())
         except re.error as reerr:
-            output_error("Error occurred: " + reerr.msg)
-            output_error("Pattern: " + reerr.pattern, False)
-            output_error("Position: " + reerr.pos, False)
-            return 0.0
+            output_error(f"Error occurred: {reerr.msg}")
+            output_error(f"Pattern: {reerr.pattern}", False)
+            output_error(f"Position: {reerr.pos}", False)
+            return default_head
         except KeyboardInterrupt:
             output_error("Closing the script...")
             sys.exit()
@@ -438,9 +437,9 @@ def speed_input() -> float:
                     match = match.lstrip("0")
                 return float(match)
         except re.error as reerr:
-            output_error("Error occurred: " + reerr.msg)
-            output_error("Pattern: " + reerr.pattern, False)
-            output_error("Position: " + reerr.pos, False)
+            output_error(f"Error occurred: {reerr.msg}")
+            output_error(f"Pattern: {reerr.pattern}", False)
+            output_error(f"Position: {reerr.pos}", False)
             return 0.0
         except KeyboardInterrupt:
             output_error("Closing the script...")
@@ -471,9 +470,9 @@ def alt_input() -> float:
                     match = match.lstrip("0")
                 return float(match)
         except re.error as reerr:
-            output_error("Error occurred: " + reerr.msg)
-            output_error("Pattern: " + reerr.pattern, False)
-            output_error("Position: " + reerr.pos, False)
+            output_error(f"Error occurred: {reerr.msg}")
+            output_error(f"Pattern: {reerr.pattern}", False)
+            output_error(f"Position: {reerr.pos}", False)
             return 0.0
         except KeyboardInterrupt:
             output_error("Closing the script...")

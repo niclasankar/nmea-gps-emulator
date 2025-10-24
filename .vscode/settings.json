@@ -13,4 +13,5 @@
         "./src/nmea_gps_emulator",
         "./venv/lib/python3.12/site-packages/"
     ],
+    "python.analysis.inlayHints.functionReturnTypes": true,
 }

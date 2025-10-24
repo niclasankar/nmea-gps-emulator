@@ -32,7 +32,7 @@ class NmeaMsg:
     """
     The class represent a group of NMEA sentences.
     """
-    def __init__(self, position_init: dict, altitude_init: float, speed_init: float, heading_init: float):
+    def __init__(self, position_init: dict[float, float], altitude_init: float, speed_init: float, heading_init: float):
         """ Class Constructor.
 
         Creates the initial collection of NMEA messages from supplied values.
